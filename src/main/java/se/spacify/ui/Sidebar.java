@@ -14,7 +14,8 @@ import java.awt.event.MouseEvent;
 public class Sidebar extends JPanel implements NavigationListener {
 
     private final SPViewStack viewStack;
-    private final JTree tree;
+    private final JTree       tree;
+    private final JScrollPane scroll;
     private final DefaultMutableTreeNode root;
     private boolean suppressSelection = false;
 
@@ -22,19 +23,20 @@ public class Sidebar extends JPanel implements NavigationListener {
         this.viewStack = viewStack;
         setLayout(new BorderLayout());
         setPreferredSize(new Dimension(220, 0));
+        setOpaque(true);
 
         root = new DefaultMutableTreeNode("root");
         root.add(nodeFor(new SidebarNode("Now Playing", "spacify:now-playing")));
 
         DefaultMutableTreeNode library = nodeFor(new SidebarNode("Your Library", "spacify:library"));
-        library.add(nodeFor(new SidebarNode("Liked Songs", "spacify:library:liked")));
-        library.add(nodeFor(new SidebarNode("Albums", "spacify:library:albums")));
-        library.add(nodeFor(new SidebarNode("Artists", "spacify:library:artists")));
+        library.add(nodeFor(new SidebarNode("Liked Songs",   "spacify:library:liked")));
+        library.add(nodeFor(new SidebarNode("Albums",        "spacify:library:albums")));
+        library.add(nodeFor(new SidebarNode("Artists",       "spacify:library:artists")));
         root.add(library);
 
         DefaultMutableTreeNode playlists = nodeFor(new SidebarNode("Playlists", "spacify:library:playlists"));
-        playlists.add(nodeFor(new SidebarNode("Chill Mix", "spacify:playlist:chill-mix")));
-        playlists.add(nodeFor(new SidebarNode("Workout", "spacify:playlist:workout")));
+        playlists.add(nodeFor(new SidebarNode("Chill Mix",  "spacify:playlist:chill-mix")));
+        playlists.add(nodeFor(new SidebarNode("Workout",    "spacify:playlist:workout")));
         playlists.add(nodeFor(new SidebarNode("Late Night", "spacify:playlist:late-night")));
         root.add(playlists);
 
@@ -43,12 +45,8 @@ public class Sidebar extends JPanel implements NavigationListener {
         tree.setShowsRootHandles(true);
         tree.setBorder(BorderFactory.createEmptyBorder(8, 4, 8, 4));
         tree.setRowHeight(28);
-
-        DefaultTreeCellRenderer renderer = new DefaultTreeCellRenderer();
-        renderer.setLeafIcon(null);
-        renderer.setOpenIcon(null);
-        renderer.setClosedIcon(null);
-        tree.setCellRenderer(renderer);
+        tree.setOpaque(true);
+        tree.setCellRenderer(new ThemedTreeCellRenderer());
 
         for (int i = 0; i < tree.getRowCount(); i++) tree.expandRow(i);
 
@@ -67,27 +65,66 @@ public class Sidebar extends JPanel implements NavigationListener {
             }
         });
 
-        JScrollPane scroll = new JScrollPane(tree);
+        scroll = new JScrollPane(tree);
+        scroll.setBorder(null);
+        // Keep scroll and viewport opaque so they paint a background;
+        // colours are kept in sync by updateColors() below.
         scroll.setOpaque(true);
         scroll.getViewport().setOpaque(true);
-        scroll.setBorder(null);
         add(scroll, BorderLayout.CENTER);
 
         viewStack.addNavigationListener(this);
+
+        updateColors();
+        ThemeManager.addChangeListener(this::updateColors);
     }
+
+    // ── Theme-aware colour sync ───────────────────────────────────────────────
+
+    private void updateColors() {
+        Color bg = ThemeManager.getBackground();
+        setBackground(bg);
+        tree.setBackground(bg);
+        scroll.setBackground(bg);
+        scroll.getViewport().setBackground(bg);
+        tree.repaint();
+    }
+
+    // ── Custom cell renderer ──────────────────────────────────────────────────
+
+    private static final class ThemedTreeCellRenderer extends DefaultTreeCellRenderer {
+        @Override
+        public Component getTreeCellRendererComponent(JTree tree, Object value,
+                boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
+            super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
+            setOpaque(true);
+            if (sel) {
+                setBackground(ThemeManager.getAccentColor());
+                setForeground(Color.WHITE);
+            } else {
+                setBackground(ThemeManager.getBackground());
+                setForeground(ThemeManager.getForeground());
+            }
+            setBorderSelectionColor(ThemeManager.getAccentColor());
+            return this;
+        }
+    }
+
+    // ── Sidebar tree model ────────────────────────────────────────────────────
 
     private DefaultMutableTreeNode nodeFor(SidebarNode sn) {
         DefaultMutableTreeNode node = new DefaultMutableTreeNode(sn);
-        for (SidebarNode child : sn.getChildren()) {
-            node.add(nodeFor(child));
-        }
+        for (SidebarNode child : sn.getChildren()) node.add(nodeFor(child));
         return node;
     }
+
+    public DefaultMutableTreeNode getRootNode() { return root; }
+
+    // ── NavigationListener ────────────────────────────────────────────────────
 
     @Override
     public void onNavigate(String uri, boolean canGoBack, boolean canGoForward) {
         if (suppressSelection) return;
-        // Select matching tree node when navigation happens externally
         selectNodeForUri(uri, (DefaultMutableTreeNode) tree.getModel().getRoot());
     }
 
@@ -103,7 +140,4 @@ public class Sidebar extends JPanel implements NavigationListener {
         }
         return false;
     }
-
-    /** Exposes the root node so ServiceManager can attach Feature sidebar nodes. */
-    public DefaultMutableTreeNode getRootNode() { return root; }
 }

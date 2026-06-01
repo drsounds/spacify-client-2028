@@ -16,6 +16,15 @@ public class ThemeManager {
     private static final Color CHROME_DARK = new Color(14, 14, 14);
     private static final List<Runnable> listeners = new ArrayList<>();
 
+    // Cached per applyToDefaults() — safe to read from any component at render time
+    private static Color currentBg   = new Color(22, 22, 22);
+    private static Color currentFg   = new Color(210, 210, 210);
+    private static Color currentGrid = new Color(35, 35, 35);
+
+    public static Color getBackground() { return currentBg; }
+    public static Color getForeground()  { return currentFg; }
+    public static Color getGridColor()   { return currentGrid; }
+
     public static void setHue(float h)           { hue = h;           applyToDefaults(); notify_(); }
     public static void setSaturation(float s)    { saturation = s;    applyToDefaults(); notify_(); }
     public static void setLightness(float l)     { lightness = l;     applyToDefaults(); notify_(); }
@@ -30,7 +39,7 @@ public class ThemeManager {
 
     public static void addChangeListener(Runnable r) { listeners.add(r); }
 
-    /** Call once at startup to seed UIManager before the first window is built. */
+    /** Call once at startup and on every theme change to seed UIManager. */
     public static void applyToDefaults() {
         UIDefaults d = UIManager.getLookAndFeelDefaults();
         if (darkMode) {
@@ -38,77 +47,56 @@ public class ThemeManager {
             float mid = bg + 0.05f;
             float acc = 0.28f + lightness * 0.10f;
 
-            Color bgColor  = hsl(hue, saturation * 0.75f, bg);
-            Color fgColor  = new Color(210, 210, 210);
-            Color gridColor = hsl(hue, saturation * 0.75f, Math.min(1f, bg + 0.06f));
-
-            put(d, "control",        bgColor);
-            put(d, "nimbusBase",     hsl(hue, saturation, acc));
-            put(d, "nimbusBlueGrey", hsl(hue, saturation, mid));
-            put(d, "text",                        fgColor);
-            put(d, "textForeground",              fgColor);
-            put(d, "nimbusDisabledText",          new Color(100, 100, 100));
-            put(d, "nimbusSelectedText",          Color.WHITE);
-            put(d, "nimbusFocus",               accentColor);
-            put(d, "nimbusSelectionBackground", accentColor);
-
-            // Component-specific keys — read by DefaultTreeCellRenderer.updateUI(),
-            // JTable.updateUI(), and JScrollPane viewport
-            put(d, "Tree.textBackground",        bgColor);
-            put(d, "Tree.textForeground",         fgColor);
-            put(d, "Tree.selectionBackground",    accentColor);
-            put(d, "Tree.selectionForeground",    Color.WHITE);
-            put(d, "Tree.selectionBorderColor",   accentColor);
-            put(d, "Table.background",            bgColor);
-            put(d, "Table.foreground",            fgColor);
-            put(d, "Table.selectionBackground",   accentColor);
-            put(d, "Table.selectionForeground",   Color.WHITE);
-            put(d, "Table.gridColor",             gridColor);
-            put(d, "TableHeader.background",      gridColor);
-            put(d, "TableHeader.foreground",      fgColor);
-            put(d, "List.background",             bgColor);
-            put(d, "List.foreground",             fgColor);
-            put(d, "List.selectionBackground",    accentColor);
-            put(d, "List.selectionForeground",    Color.WHITE);
-            put(d, "ScrollPane.background",       bgColor);
-            put(d, "Viewport.background",         bgColor);
+            currentBg   = hsl(hue, saturation * 0.75f, bg);
+            currentFg   = new Color(210, 210, 210);
+            currentGrid = hsl(hue, saturation * 0.75f, Math.min(1f, bg + 0.06f));
         } else {
             float bg  = 0.84f + lightness * 0.08f;
             float acc = 0.42f + lightness * 0.10f;
 
-            Color bgColor   = hsl(hue, saturation * 0.08f, bg);
-            Color fgColor   = hsl(hue, saturation, 0.15f);
-            Color gridColor = hsl(hue, saturation * 0.08f, Math.max(0f, bg - 0.06f));
-
-            put(d, "control",        bgColor);
-            put(d, "nimbusBase",     hsl(hue, saturation, acc));
-            put(d, "nimbusBlueGrey", hsl(hue, saturation, 0.68f));
-            put(d, "text",           fgColor);
-            put(d, "textForeground", fgColor);
-            put(d, "nimbusDisabledText",          new Color(120, 120, 120));
-            put(d, "nimbusSelectedText",          Color.BLACK);
-            put(d, "nimbusFocus",               accentColor);
-            put(d, "nimbusSelectionBackground", accentColor);
-
-            put(d, "Tree.textBackground",        bgColor);
-            put(d, "Tree.textForeground",         fgColor);
-            put(d, "Tree.selectionBackground",    accentColor);
-            put(d, "Tree.selectionForeground",    Color.WHITE);
-            put(d, "Tree.selectionBorderColor",   accentColor);
-            put(d, "Table.background",            bgColor);
-            put(d, "Table.foreground",            fgColor);
-            put(d, "Table.selectionBackground",   accentColor);
-            put(d, "Table.selectionForeground",   Color.WHITE);
-            put(d, "Table.gridColor",             gridColor);
-            put(d, "TableHeader.background",      gridColor);
-            put(d, "TableHeader.foreground",      fgColor);
-            put(d, "List.background",             bgColor);
-            put(d, "List.foreground",             fgColor);
-            put(d, "List.selectionBackground",    accentColor);
-            put(d, "List.selectionForeground",    Color.WHITE);
-            put(d, "ScrollPane.background",       bgColor);
-            put(d, "Viewport.background",         bgColor);
+            currentBg   = hsl(hue, saturation * 0.08f, bg);
+            currentFg   = hsl(hue, saturation, 0.15f);
+            currentGrid = hsl(hue, saturation * 0.08f, Math.max(0f, bg - 0.06f));
         }
+
+        // Shared keys
+        float acc = darkMode ? (0.28f + lightness * 0.10f) : (0.42f + lightness * 0.10f);
+        float mid = darkMode ? (0.07f + lightness * 0.50f + 0.05f) : 0.68f;
+
+        put(d, "control",        currentBg);
+        put(d, "nimbusBase",     hsl(hue, saturation, acc));
+        put(d, "nimbusBlueGrey", hsl(hue, saturation, mid));
+        put(d, "text",           currentFg);
+        put(d, "textForeground", currentFg);
+        put(d, "nimbusDisabledText",          darkMode ? new Color(100,100,100) : new Color(120,120,120));
+        put(d, "nimbusSelectedText",          darkMode ? Color.WHITE : Color.BLACK);
+        put(d, "nimbusFocus",               accentColor);
+        put(d, "nimbusSelectionBackground", accentColor);
+
+        // Component-specific keys read by DefaultTreeCellRenderer/JTable.updateUI()
+        // and by our themed renderers as fallback
+        put(d, "Tree.textBackground",       currentBg);
+        put(d, "Tree.textForeground",        currentFg);
+        put(d, "Tree.selectionBackground",   accentColor);
+        put(d, "Tree.selectionForeground",   Color.WHITE);
+        put(d, "Tree.selectionBorderColor",  accentColor);
+        put(d, "Table.background",           currentBg);
+        put(d, "Table.foreground",           currentFg);
+        put(d, "Table.selectionBackground",  accentColor);
+        put(d, "Table.selectionForeground",  Color.WHITE);
+        put(d, "Table.gridColor",            currentGrid);
+        put(d, "TableHeader.background",     currentGrid);
+        put(d, "TableHeader.foreground",     currentFg);
+        put(d, "List.background",            currentBg);
+        put(d, "List.foreground",            currentFg);
+        put(d, "List.selectionBackground",   accentColor);
+        put(d, "List.selectionForeground",   Color.WHITE);
+        put(d, "ScrollPane.background",      currentBg);
+        put(d, "Viewport.background",        currentBg);
+        put(d, "EditorPane.background",      currentBg);
+        put(d, "EditorPane.foreground",      currentFg);
+        put(d, "TextArea.background",        currentBg);
+        put(d, "TextArea.foreground",        currentFg);
     }
 
     /** Color derived from the background-tint HSL sliders — used for chrome gradients. */

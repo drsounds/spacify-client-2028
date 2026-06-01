@@ -1,53 +1,88 @@
 package se.spacify.views;
 
 import se.spacify.navigation.SPView;
+import se.spacify.ui.theme.ThemeManager;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 
 public class LibraryView extends SPView {
 
-    private final JPanel panel;
+    private final JPanel     panel;
+    private final JTable     table;
+    private final JScrollPane scroll;
 
     public LibraryView() {
         panel = new JPanel(new BorderLayout(0, 12));
         panel.setOpaque(false);
         panel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
 
-        
-        JLabel title = new JLabel("Your Library");
-        title.setFont(title.getFont().deriveFont(Font.BOLD, 20f));
-        title.setForeground(Color.WHITE);
-        //panel.add(title, BorderLayout.NORTH);
-
         String[] columns = {"Title", "Artist", "Album"};
         Object[][] data = {
-            {"Midnight City", "M83", "Hurry Up, We're Dreaming"},
-            {"Breathe", "Pink Floyd", "Dark Side of the Moon"},
-            {"Teardrop", "Massive Attack", "Mezzanine"},
-            {"Pyramid Song", "Radiohead", "Amnesiac"},
+            {"Midnight City",  "M83",           "Hurry Up, We're Dreaming"},
+            {"Breathe",        "Pink Floyd",     "Dark Side of the Moon"},
+            {"Teardrop",       "Massive Attack", "Mezzanine"},
+            {"Pyramid Song",   "Radiohead",      "Amnesiac"},
             {"Dissolved Girl", "Massive Attack", "Mezzanine"},
         };
-        JTable table = new JTable(data, columns);
+
+        table = new JTable(data, columns);
         table.setFillsViewportHeight(true);
         table.setRowHeight(28);
+        table.setOpaque(true);
+        table.setShowGrid(true);
 
-        JScrollPane scroll = new JScrollPane(table);
+        ThemedTableCellRenderer renderer = new ThemedTableCellRenderer();
+        for (int i = 0; i < table.getColumnCount(); i++)
+            table.getColumnModel().getColumn(i).setCellRenderer(renderer);
+
+        scroll = new JScrollPane(table);
         scroll.setBorder(null);
+        scroll.setOpaque(true);
+        scroll.getViewport().setOpaque(true);
+
         panel.add(scroll, BorderLayout.CENTER);
+
+        updateColors();
+        ThemeManager.addChangeListener(this::updateColors);
     }
 
-    @Override
-    public boolean acceptsUri(String uri) {
-        return uri != null && uri.matches("spacify:library.*");
+    private void updateColors() {
+        Color bg   = ThemeManager.getBackground();
+        Color fg   = ThemeManager.getForeground();
+        Color grid = ThemeManager.getGridColor();
+
+        table.setBackground(bg);
+        table.setForeground(fg);
+        table.setGridColor(grid);
+        table.getTableHeader().setBackground(grid);
+        table.getTableHeader().setForeground(fg);
+        scroll.setBackground(bg);
+        scroll.getViewport().setBackground(bg);
+        table.repaint();
     }
 
-    @Override
-    public void navigate(String uri) {}
+    // ── Custom renderer ───────────────────────────────────────────────────────
 
-    @Override
-    public JComponent getComponent() { return panel; }
+    private static final class ThemedTableCellRenderer extends DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value,
+                boolean isSelected, boolean hasFocus, int row, int column) {
+            super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            if (isSelected) {
+                setBackground(ThemeManager.getAccentColor());
+                setForeground(Color.WHITE);
+            } else {
+                setBackground(ThemeManager.getBackground());
+                setForeground(ThemeManager.getForeground());
+            }
+            return this;
+        }
+    }
 
-    @Override
-    public String getTitle() { return "Your Library"; }
+    @Override public boolean acceptsUri(String uri) { return uri != null && uri.matches("spacify:library.*"); }
+    @Override public void navigate(String uri) {}
+    @Override public JComponent getComponent() { return panel; }
+    @Override public String getTitle() { return "Your Library"; }
 }
