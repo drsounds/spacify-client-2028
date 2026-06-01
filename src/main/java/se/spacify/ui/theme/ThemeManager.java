@@ -62,6 +62,12 @@ public class ThemeManager {
         }
     }
 
+    /** Color derived from the background-tint HSL sliders — used for chrome gradients. */
+    public static Color getTintColor() {
+        float l = darkMode ? (0.28f + lightness * 0.10f) : (0.42f + lightness * 0.10f);
+        return hsl(hue, saturation, l);
+    }
+
     // ── HSL conversion ────────────────────────────────────────────────────────
 
     public static Color hsl(float h, float s, float l) {

@@ -90,9 +90,8 @@ public class NavigationBar extends JPanel implements NavigationListener {
         g2.dispose();
     }
 
-    /** Blend accentColor into CHROME_DARK at the given ratio. */
     private static Color accentDark(float ratio) {
-        Color a = ThemeManager.getAccentColor();
+        Color a = ThemeManager.getTintColor();
         float r = 1 - ratio;
         return new Color(
             Math.min(255, (int)(a.getRed()   * ratio + CHROME_DARK.getRed()   * r)),
