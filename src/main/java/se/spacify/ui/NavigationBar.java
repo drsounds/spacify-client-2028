@@ -72,20 +72,20 @@ public class NavigationBar extends JPanel implements NavigationListener {
         viewStack.addNavigationListener(this);
         ThemeManager.addChangeListener(this::repaint);
     }
-
     @Override
     protected void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D) g.create();
         int w = getWidth(), h = getHeight();
-
-        // Gradient: accent-tinted dark at top → near-black at bottom (WMP chrome)
-        Color top = accentDark(0.22f);
-        g2.setPaint(new GradientPaint(0, 0, top, 0, h, CHROME_DARK));
+        
+        Color tintColor = ThemeManager.getTintColor();
+        // Gradient: near-black at top → accent-tinted dark at bottom (mirror of header)
+        Color bottom = ThemeManager.accentDark(0.22f);
+        g2.setPaint(new GradientPaint(0, 0, ThemeManager.accentLight(2f), 0, h, tintColor));
         g2.fillRect(0, 0, w, h);
 
-        // 1 px white sheen along the very top edge
+        // 1 px white sheen along the very bottom edge
         g2.setColor(HIGHLIGHT);
-        g2.drawLine(0, 0, w, 0);
+        g2.drawLine(0, h - 1, w, h - 1);
 
         g2.dispose();
     }
