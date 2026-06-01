@@ -23,7 +23,7 @@ public class Sidebar extends JPanel implements NavigationListener {
         setPreferredSize(new Dimension(220, 0));
 
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("root");
-        root.add(nodeFor(new SidebarNode("Home", "spacify:home")));
+        root.add(nodeFor(new SidebarNode("Now Playing", "spacify:now-playing")));
 
         DefaultMutableTreeNode library = nodeFor(new SidebarNode("Your Library", "spacify:library"));
         library.add(nodeFor(new SidebarNode("Liked Songs", "spacify:library:liked")));

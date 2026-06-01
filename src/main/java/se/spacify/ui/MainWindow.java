@@ -1,6 +1,7 @@
 package se.spacify.ui;
 
 import se.spacify.navigation.SPViewStack;
+import se.spacify.ui.theme.ThemeManager;
 import se.spacify.views.*;
 
 import javax.swing.*;
@@ -18,7 +19,7 @@ public class MainWindow extends JFrame {
         setLocationRelativeTo(null);
 
         viewStack = new SPViewStack();
-        viewStack.registerView(new HomeView());
+        viewStack.registerView(new NowPlayingView());
         viewStack.registerView(new SearchView());
         viewStack.registerView(new LibraryView());
         viewStack.registerView(new PlaylistView());
@@ -52,7 +53,10 @@ public class MainWindow extends JFrame {
         add(mainSplit, BorderLayout.CENTER);
         add(new PlayerBar(), BorderLayout.SOUTH);
 
-        viewStack.navigate("spacify:home");
+        ThemeManager.addChangeListener(() ->
+            SwingUtilities.updateComponentTreeUI(this));
+
+        viewStack.navigate("spacify:now-playing");
     }
 
     private JPanel buildRightPanel() {
