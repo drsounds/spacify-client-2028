@@ -78,8 +78,8 @@ public class PlayerBar extends JPanel {
         int w = getWidth(), h = getHeight();
 
         // Gradient: near-black at top → accent-tinted dark at bottom (mirror of header)
-        Color bottom = accentDark(0.22f);
-        g2.setPaint(new GradientPaint(0, 0, bottom, 0, h, CHROME_DARK));
+        Color top = accentDark(0.22f);
+        g2.setPaint(new GradientPaint(0, 0, top, 0, h, CHROME_DARK));
         g2.fillRect(0, 0, w, h);
 
         // 1 px white sheen along the very bottom edge
@@ -99,6 +99,15 @@ public class PlayerBar extends JPanel {
         );
     }
 
+    private static Color accentLight(float ratio) {
+        Color a = ThemeManager.getTintColor();
+        float r = ratio;
+        return new Color(
+            Math.min(255, (int)(a.getRed()   * ratio + CHROME_DARK.getRed()   * r)),
+            Math.min(255, (int)(a.getGreen() * ratio + CHROME_DARK.getGreen() * r)),
+            Math.min(255, (int)(a.getBlue()  * ratio + CHROME_DARK.getBlue()  * r))
+        );
+    }
     private JButton makeControlButton(String text) {
         JButton btn = new JButton(text);
         btn.setFocusPainted(false);

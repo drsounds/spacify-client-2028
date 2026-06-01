@@ -54,7 +54,7 @@ public class ThemeManager {
             put(d, "nimbusBase",     hsl(hue, saturation,         acc));
             put(d, "nimbusBlueGrey", hsl(hue, saturation * 0.18f, 0.68f));
             put(d, "text",                        new Color(30, 30, 30));
-            put(d, "textForeground",              new Color(30, 30, 30));
+            put(d, "textForeground", hsl(hue, saturation, 1));
             put(d, "nimbusDisabledText",          new Color(130, 130, 130));
             put(d, "nimbusSelectedText",          Color.BLACK);
             put(d, "nimbusFocus",               accentColor);
