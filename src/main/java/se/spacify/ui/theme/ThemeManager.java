@@ -69,6 +69,26 @@ public class ThemeManager {
         return hsl(hue, saturation, l);
     }
 
+    /** Darken the tint: each channel multiplied by ratio (0–1). */
+    public static Color accentDark(float ratio) {
+        Color a = getTintColor();
+        return new Color(
+            Math.min(255, (int)(a.getRed()   * ratio)),
+            Math.min(255, (int)(a.getGreen() * ratio)),
+            Math.min(255, (int)(a.getBlue()  * ratio))
+        );
+    }
+
+    /** Brighten the tint: each channel multiplied by ratio (>1 boosts toward white). */
+    public static Color accentLight(float ratio) {
+        Color a = getTintColor();
+        return new Color(
+            Math.min(255, (int)(a.getRed()   * ratio)),
+            Math.min(255, (int)(a.getGreen() * ratio)),
+            Math.min(255, (int)(a.getBlue()  * ratio))
+        );
+    }
+
     // ── HSL conversion ────────────────────────────────────────────────────────
 
     public static Color hsl(float h, float s, float l) {
@@ -99,25 +119,5 @@ public class ThemeManager {
 
     private static void notify_() {
         for (Runnable r : listeners) r.run();
-    }
-
-    public static Color accentDark(float ratio) {
-        Color a = ThemeManager.getTintColor();
-        float r = 1 - ratio;
-        return new Color(
-            Math.min(255, (int)(a.getRed()   * ratio + CHROME_DARK.getRed()   * r)),
-            Math.min(255, (int)(a.getGreen() * ratio + CHROME_DARK.getGreen() * r)),
-            Math.min(255, (int)(a.getBlue()  * ratio + CHROME_DARK.getBlue()  * r))
-        );
-    }
-
-    public static Color accentLight(float ratio) {
-        Color a = ThemeManager.getTintColor();
-        float r = ratio;
-        return new Color(
-            Math.min(255, (int)(a.getRed()   * ratio * r)),
-            Math.min(255, (int)(a.getGreen() * ratio * r)),
-            Math.min(255, (int)(a.getBlue()  * ratio * r))
-        );
     }
 }

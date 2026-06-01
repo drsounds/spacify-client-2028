@@ -77,8 +77,6 @@ public class PlayerBar extends JPanel {
         int w = getWidth(), h = getHeight();
         
         Color tintColor = ThemeManager.getTintColor();
-        // Gradient: near-black at top → accent-tinted dark at bottom (mirror of header)
-        Color bottom = ThemeManager.accentDark(0.22f);
         g2.setPaint(new GradientPaint(0, 0, ThemeManager.accentLight(2f), 0, h, tintColor));
         g2.fillRect(0, 0, w, h);
 

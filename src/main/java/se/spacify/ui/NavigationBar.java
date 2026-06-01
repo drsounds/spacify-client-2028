@@ -78,8 +78,6 @@ public class NavigationBar extends JPanel implements NavigationListener {
         int w = getWidth(), h = getHeight();
         
         Color tintColor = ThemeManager.getTintColor();
-        // Gradient: near-black at top → accent-tinted dark at bottom (mirror of header)
-        Color bottom = ThemeManager.accentDark(0.22f);
         g2.setPaint(new GradientPaint(0, 0, ThemeManager.accentLight(2f), 0, h, tintColor));
         g2.fillRect(0, 0, w, h);
 
@@ -88,16 +86,6 @@ public class NavigationBar extends JPanel implements NavigationListener {
         g2.drawLine(0, h - 1, w, h - 1);
 
         g2.dispose();
-    }
-
-    private static Color accentDark(float ratio) {
-        Color a = ThemeManager.getTintColor();
-        float r = 1 - ratio;
-        return new Color(
-            Math.min(255, (int)(a.getRed()   * ratio + CHROME_DARK.getRed()   * r)),
-            Math.min(255, (int)(a.getGreen() * ratio + CHROME_DARK.getGreen() * r)),
-            Math.min(255, (int)(a.getBlue()  * ratio + CHROME_DARK.getBlue()  * r))
-        );
     }
 
     private JButton makeNavButton(String text) {

@@ -1,5 +1,6 @@
 package se.spacify.app;
 
+import se.spacify.config.ConfigManager;
 import se.spacify.ui.MainWindow;
 import se.spacify.ui.theme.ThemeManager;
 
@@ -18,7 +19,9 @@ public class SpacifyApp {
             // fall back to default L&F
         }
 
-        ThemeManager.applyToDefaults();
+        ConfigManager.load();          // restore saved HSL + accent (calls applyToDefaults internally)
+        ThemeManager.applyToDefaults(); // ensure defaults applied even when no config file exists
+        ThemeManager.addChangeListener(ConfigManager::save);  // auto-save on every change
 
         SwingUtilities.invokeLater(() -> {
             MainWindow window = new MainWindow();
