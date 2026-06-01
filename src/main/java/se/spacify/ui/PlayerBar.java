@@ -1,17 +1,20 @@
 package se.spacify.ui;
 
+import se.spacify.ui.theme.ThemeManager;
+
 import javax.swing.*;
 import java.awt.*;
 
 public class PlayerBar extends JPanel {
 
+    private static final Color CHROME_DARK = new Color(14, 14, 14);
+    private static final Color HIGHLIGHT   = new Color(255, 255, 255, 35);
+
     public PlayerBar() {
         setLayout(new BorderLayout(12, 0));
-        setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(50, 50, 50)),
-            BorderFactory.createEmptyBorder(8, 16, 8, 16)
-        ));
+        setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
         setPreferredSize(new Dimension(0, 72));
+        setOpaque(true);
 
         // Left: track info
         JPanel trackInfo = new JPanel(new GridLayout(2, 1, 0, 2));
@@ -21,7 +24,7 @@ public class PlayerBar extends JPanel {
         trackName.setForeground(Color.WHITE);
         trackName.setFont(trackName.getFont().deriveFont(Font.BOLD, 13f));
         JLabel artist = new JLabel("");
-        artist.setForeground(new Color(160, 160, 160));
+        artist.setForeground(new Color(180, 180, 180));
         artist.setFont(artist.getFont().deriveFont(11f));
         trackInfo.add(trackName);
         trackInfo.add(artist);
@@ -55,6 +58,7 @@ public class PlayerBar extends JPanel {
         rightPanel.setOpaque(false);
         rightPanel.setPreferredSize(new Dimension(160, 0));
         JLabel volIcon = new JLabel("🔊");
+        volIcon.setForeground(Color.WHITE);
         JSlider volume = new JSlider(0, 100, 70);
         volume.setPreferredSize(new Dimension(100, 20));
         volume.setOpaque(false);
@@ -64,6 +68,35 @@ public class PlayerBar extends JPanel {
         add(trackInfo, BorderLayout.WEST);
         add(controls, BorderLayout.CENTER);
         add(rightPanel, BorderLayout.EAST);
+
+        ThemeManager.addChangeListener(this::repaint);
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        Graphics2D g2 = (Graphics2D) g.create();
+        int w = getWidth(), h = getHeight();
+
+        // Gradient: near-black at top → accent-tinted dark at bottom (mirror of header)
+        Color bottom = accentDark(0.22f);
+        g2.setPaint(new GradientPaint(0, 0, CHROME_DARK, 0, h, bottom));
+        g2.fillRect(0, 0, w, h);
+
+        // 1 px white sheen along the very bottom edge
+        g2.setColor(HIGHLIGHT);
+        g2.drawLine(0, h - 1, w, h - 1);
+
+        g2.dispose();
+    }
+
+    private static Color accentDark(float ratio) {
+        Color a = ThemeManager.getAccentColor();
+        float r = 1 - ratio;
+        return new Color(
+            Math.min(255, (int)(a.getRed()   * ratio + CHROME_DARK.getRed()   * r)),
+            Math.min(255, (int)(a.getGreen() * ratio + CHROME_DARK.getGreen() * r)),
+            Math.min(255, (int)(a.getBlue()  * ratio + CHROME_DARK.getBlue()  * r))
+        );
     }
 
     private JButton makeControlButton(String text) {
@@ -71,7 +104,7 @@ public class PlayerBar extends JPanel {
         btn.setFocusPainted(false);
         btn.setContentAreaFilled(false);
         btn.setBorderPainted(false);
-        btn.setForeground(new Color(210, 210, 210));
+        btn.setForeground(Color.WHITE);
         btn.setFont(btn.getFont().deriveFont(14f));
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         return btn;

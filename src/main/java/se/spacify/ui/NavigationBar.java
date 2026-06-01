@@ -2,6 +2,7 @@ package se.spacify.ui;
 
 import se.spacify.navigation.NavigationListener;
 import se.spacify.navigation.SPViewStack;
+import se.spacify.ui.theme.ThemeManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,6 +11,9 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
 public class NavigationBar extends JPanel implements NavigationListener {
+
+    private static final Color CHROME_DARK  = new Color(14, 14, 14);
+    private static final Color HIGHLIGHT    = new Color(255, 255, 255, 35);
 
     private final SPViewStack viewStack;
     private final JButton backBtn;
@@ -22,6 +26,7 @@ public class NavigationBar extends JPanel implements NavigationListener {
         setLayout(new BorderLayout(8, 0));
         setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
         setPreferredSize(new Dimension(0, 56));
+        setOpaque(true);
 
         backBtn = makeNavButton("◄");
         forwardBtn = makeNavButton("►");
@@ -65,6 +70,35 @@ public class NavigationBar extends JPanel implements NavigationListener {
         add(right, BorderLayout.EAST);
 
         viewStack.addNavigationListener(this);
+        ThemeManager.addChangeListener(this::repaint);
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        Graphics2D g2 = (Graphics2D) g.create();
+        int w = getWidth(), h = getHeight();
+
+        // Gradient: accent-tinted dark at top → near-black at bottom (WMP chrome)
+        Color top = accentDark(0.22f);
+        g2.setPaint(new GradientPaint(0, 0, top, 0, h, CHROME_DARK));
+        g2.fillRect(0, 0, w, h);
+
+        // 1 px white sheen along the very top edge
+        g2.setColor(HIGHLIGHT);
+        g2.drawLine(0, 0, w, 0);
+
+        g2.dispose();
+    }
+
+    /** Blend accentColor into CHROME_DARK at the given ratio. */
+    private static Color accentDark(float ratio) {
+        Color a = ThemeManager.getAccentColor();
+        float r = 1 - ratio;
+        return new Color(
+            Math.min(255, (int)(a.getRed()   * ratio + CHROME_DARK.getRed()   * r)),
+            Math.min(255, (int)(a.getGreen() * ratio + CHROME_DARK.getGreen() * r)),
+            Math.min(255, (int)(a.getBlue()  * ratio + CHROME_DARK.getBlue()  * r))
+        );
     }
 
     private JButton makeNavButton(String text) {
