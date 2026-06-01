@@ -34,13 +34,13 @@ public class ThemeManager {
     public static void applyToDefaults() {
         UIDefaults d = UIManager.getLookAndFeelDefaults();
         if (darkMode) {
-            float bg  = 0.07f + lightness * 0.10f;   // 0.07 – 0.17
+            float bg  = 0.07f + lightness * 0.50f;   // 0.07 – 0.17
             float mid = bg + 0.05f;
             float acc = 0.28f + lightness * 0.10f;   // 0.28 – 0.38
 
-            put(d, "control",        hsl(hue, saturation * 0.12f, bg));
+            put(d, "control",        hsl(hue, saturation * 0.75f, bg));
             put(d, "nimbusBase",     hsl(hue, saturation,         acc));
-            put(d, "nimbusBlueGrey", hsl(hue, saturation * 0.20f, mid));
+            put(d, "nimbusBlueGrey", hsl(hue, saturation , mid));
             put(d, "text",                        new Color(210, 210, 210));
             put(d, "textForeground",              new Color(210, 210, 210));
             put(d, "nimbusDisabledText",          new Color(100, 100, 100));
@@ -53,10 +53,10 @@ public class ThemeManager {
 
             put(d, "control",        hsl(hue, saturation * 0.08f, bg));
             put(d, "nimbusBase",     hsl(hue, saturation,         acc));
-            put(d, "nimbusBlueGrey", hsl(hue, saturation * 0.18f, 0.68f));
-            put(d, "text",                        new Color(30, 30, 30));
-            put(d, "textForeground", hsl(hue, saturation, 1));
-            put(d, "nimbusDisabledText",          new Color(130, 130, 130));
+            put(d, "nimbusBlueGrey", hsl(hue, saturation, 0.68f));
+            put(d, "text",                         hsl(hue, saturation, 0.5f));
+            put(d, "textForeground", hsl(hue, saturation, 0.5f));
+            put(d, "nimbusDisabledText",          Color.BLACK);
             put(d, "nimbusSelectedText",          Color.BLACK);
             put(d, "nimbusFocus",               accentColor);
             put(d, "nimbusSelectionBackground", accentColor);

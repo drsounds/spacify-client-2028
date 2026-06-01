@@ -3,6 +3,7 @@ package se.spacify.ui;
 import se.spacify.navigation.SPViewStack;
 import se.spacify.service.ServiceManager;
 import se.spacify.service.media.MediaService;
+import se.spacify.service.media.MediaService.PlaybackState;
 import se.spacify.ui.theme.ThemeManager;
 import se.spacify.views.*;
 
@@ -16,6 +17,8 @@ public class MainWindow extends JFrame {
     private final PlayerBar      playerBar;
     private final NowPlayingView nowPlayingView;
     private final Sidebar        sidebar;
+    private final JSlider progress;
+    private boolean updatingProgress = false;  // guard against slider feedback loop
 
     public MainWindow() {
         super("Spacify");
@@ -58,6 +61,11 @@ public class MainWindow extends JFrame {
         add(mainSplit, BorderLayout.CENTER);
 
         playerBar = new PlayerBar();
+        progress = new JSlider(0, 1000, 0);
+        progress.setOpaque(false);
+        progress.setMaximumSize(new Dimension(400, 20));
+        progress.setAlignmentX(CENTER_ALIGNMENT);
+        add(progress, BorderLayout.SOUTH);
         add(playerBar, BorderLayout.SOUTH);
 
         ThemeManager.addChangeListener(() ->
@@ -73,6 +81,45 @@ public class MainWindow extends JFrame {
         viewStack.navigate("spacify:now-playing");
     }
 
+    /**
+     * Wire this bar to a MediaService.
+     * Playback events update labels and progress; controls drive the service.
+     */
+    public void setMediaService(MediaService ms) {
+        // Progress seek
+        progress.addChangeListener(e -> {
+            if (!updatingProgress && !progress.getValueIsAdjusting()) {
+                long dur = ms.getDurationMs();
+                if (dur > 0) ms.seek((long)(progress.getValue() / 1000.0 * dur));
+            }
+        });
+
+        ms.addPlaybackListener(new MediaService.PlaybackListener() {
+            @Override
+            public void onStateChanged(PlaybackState state) {
+            }
+
+            @Override
+            public void onPositionChanged(long posMs, long durMs) {
+                if (durMs <= 0) return;
+                SwingUtilities.invokeLater(() -> {
+                    updatingProgress = true;
+                    progress.setValue((int)(posMs * 1000.0 / durMs));
+                    updatingProgress = false;
+                });
+            }
+
+            @Override
+            public void onTrackChanged(String title, String artist, String album) {
+             
+            }
+
+            @Override
+            public void onError(Exception e) {
+            }
+        });
+    }
+
     /** Connects a MediaService to PlayerBar and NowPlayingView. */
     public void wireMediaService(MediaService ms) {
         playerBar.setMediaService(ms);
@@ -85,27 +132,8 @@ public class MainWindow extends JFrame {
     public Sidebar        getSidebar()        { return sidebar; }
 
     private JPanel buildRightPanel() {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setPreferredSize(new Dimension(220, 0));
-        panel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 1, 0, 0, new Color(50, 50, 50)),
-            BorderFactory.createEmptyBorder(16, 12, 16, 12)
-        ));
-
-        JLabel title = new JLabel("Now Playing");
-        title.setForeground(new Color(160, 160, 160));
-        title.setFont(title.getFont().deriveFont(Font.BOLD, 11f));
-        title.setAlignmentX(LEFT_ALIGNMENT);
-
-        JLabel placeholder = new JLabel("Nothing playing");
-        placeholder.setForeground(new Color(100, 100, 100));
-        placeholder.setFont(placeholder.getFont().deriveFont(12f));
-        placeholder.setAlignmentX(LEFT_ALIGNMENT);
-
-        panel.add(title);
-        panel.add(Box.createVerticalStrut(8));
-        panel.add(placeholder);
+        JPanel panel = new NowPlayingPanel(viewStack);
+        
         return panel;
     }
 }

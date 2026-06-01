@@ -15,9 +15,6 @@ public class PlayerBar extends JPanel {
     private final JLabel  trackNameLabel;
     private final JLabel  artistLabel;
     private final JButton playPauseBtn;
-    private final JSlider progress;
-
-    private boolean updatingProgress = false;  // guard against slider feedback loop
 
     public PlayerBar() {
         setLayout(new BorderLayout(12, 0));
@@ -53,14 +50,9 @@ public class PlayerBar extends JPanel {
         buttons.add(makeControlButton("⏩"));
         buttons.add(makeControlButton("⏭"));
 
-        progress = new JSlider(0, 1000, 0);
-        progress.setOpaque(false);
-        progress.setMaximumSize(new Dimension(400, 20));
-        progress.setAlignmentX(CENTER_ALIGNMENT);
-
         controls.add(buttons);
         controls.add(Box.createVerticalStrut(4));
-        controls.add(progress);
+
 
         // Right: volume
         JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
@@ -92,14 +84,6 @@ public class PlayerBar extends JPanel {
             else ms.play();
         });
 
-        // Progress seek
-        progress.addChangeListener(e -> {
-            if (!updatingProgress && !progress.getValueIsAdjusting()) {
-                long dur = ms.getDurationMs();
-                if (dur > 0) ms.seek((long)(progress.getValue() / 1000.0 * dur));
-            }
-        });
-
         ms.addPlaybackListener(new MediaService.PlaybackListener() {
             @Override
             public void onStateChanged(PlaybackState state) {
@@ -109,12 +93,7 @@ public class PlayerBar extends JPanel {
 
             @Override
             public void onPositionChanged(long posMs, long durMs) {
-                if (durMs <= 0) return;
-                SwingUtilities.invokeLater(() -> {
-                    updatingProgress = true;
-                    progress.setValue((int)(posMs * 1000.0 / durMs));
-                    updatingProgress = false;
-                });
+              
             }
 
             @Override
@@ -139,6 +118,8 @@ public class PlayerBar extends JPanel {
         Color tintColor = ThemeManager.getTintColor();
         g2.setPaint(new GradientPaint(0, 0, ThemeManager.accentLight(2f), 0, h, tintColor));
         g2.fillRect(0, 0, w, h);
+        g2.setPaint(new GradientPaint(0, 0, new Color(255, 255, 255, 127), 0, h, new Color(255, 255, 255, 0)));
+        g2.fillRect(0, 1, w, (h / 2));
         g2.setColor(HIGHLIGHT);
         g2.drawLine(0, h - 1, w, h - 1);
         g2.dispose();
@@ -147,11 +128,7 @@ public class PlayerBar extends JPanel {
     private JButton makeControlButton(String text) {
         JButton btn = new JButton(text);
         btn.setFocusPainted(false);
-        btn.setContentAreaFilled(false);
-        btn.setBorderPainted(false);
-        btn.setForeground(Color.WHITE);
         btn.setFont(btn.getFont().deriveFont(14f));
-        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         return btn;
     }
 }

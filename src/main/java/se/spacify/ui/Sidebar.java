@@ -3,6 +3,7 @@ package se.spacify.ui;
 import se.spacify.navigation.NavigationListener;
 import se.spacify.navigation.SPViewStack;
 import se.spacify.navigation.SidebarNode;
+import se.spacify.ui.theme.ThemeManager;
 
 import javax.swing.*;
 import javax.swing.tree.*;
@@ -67,8 +68,8 @@ public class Sidebar extends JPanel implements NavigationListener {
         });
 
         JScrollPane scroll = new JScrollPane(tree);
-        scroll.setOpaque(false);
-        scroll.getViewport().setOpaque(false);
+        scroll.setOpaque(true);
+        scroll.getViewport().setOpaque(true);
         scroll.setBorder(null);
         add(scroll, BorderLayout.CENTER);
 

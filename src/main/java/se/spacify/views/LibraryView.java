@@ -12,12 +12,13 @@ public class LibraryView extends SPView {
     public LibraryView() {
         panel = new JPanel(new BorderLayout(0, 12));
         panel.setOpaque(false);
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        panel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
 
+        
         JLabel title = new JLabel("Your Library");
         title.setFont(title.getFont().deriveFont(Font.BOLD, 20f));
         title.setForeground(Color.WHITE);
-        panel.add(title, BorderLayout.NORTH);
+        //panel.add(title, BorderLayout.NORTH);
 
         String[] columns = {"Title", "Artist", "Album"};
         Object[][] data = {
