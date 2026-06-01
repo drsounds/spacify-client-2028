@@ -74,9 +74,12 @@ public class LibraryView extends SPView {
                 setBackground(ThemeManager.getAccentColor());
                 setForeground(Color.WHITE);
             } else {
-                setBackground(ThemeManager.getBackground());
+                setBackground(row % 2 == 0
+                    ? ThemeManager.getBackground()
+                    : ThemeManager.getAlternateBackground());
                 setForeground(ThemeManager.getForeground());
             }
+            setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 6));
             return this;
         }
     }

@@ -3,7 +3,6 @@ package se.spacify.ui;
 import se.spacify.navigation.SPViewStack;
 import se.spacify.service.ServiceManager;
 import se.spacify.service.media.MediaService;
-import se.spacify.service.media.MediaService.PlaybackState;
 import se.spacify.ui.theme.ThemeManager;
 import se.spacify.views.*;
 
@@ -17,8 +16,6 @@ public class MainWindow extends JFrame {
     private final PlayerBar      playerBar;
     private final NowPlayingView nowPlayingView;
     private final Sidebar        sidebar;
-    private final JSlider progress;
-    private boolean updatingProgress = false;  // guard against slider feedback loop
 
     public MainWindow() {
         super("Spacify");
@@ -44,15 +41,13 @@ public class MainWindow extends JFrame {
         JPanel centerPanel = new JPanel(new BorderLayout());
         centerPanel.add(viewStack, BorderLayout.CENTER);
 
-        JPanel rightPanel = buildRightPanel();
-
         JSplitPane leftSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, sidebar, centerPanel);
         leftSplit.setDividerLocation(220);
         leftSplit.setDividerSize(1);
         leftSplit.setBorder(null);
         leftSplit.setContinuousLayout(true);
 
-        JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftSplit, rightPanel);
+        JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftSplit, new NowPlayingPanel(viewStack));
         mainSplit.setDividerLocation(880);
         mainSplit.setDividerSize(1);
         mainSplit.setBorder(null);
@@ -61,63 +56,38 @@ public class MainWindow extends JFrame {
         add(mainSplit, BorderLayout.CENTER);
 
         playerBar = new PlayerBar();
-        progress = new JSlider(0, 1000, 0);
-        progress.setOpaque(false);
-        progress.setMaximumSize(new Dimension(400, 20));
-        progress.setAlignmentX(CENTER_ALIGNMENT);
-        add(progress, BorderLayout.SOUTH);
         add(playerBar, BorderLayout.SOUTH);
 
-        ThemeManager.addChangeListener(() ->
-            SwingUtilities.invokeLater(() -> SwingUtilities.updateComponentTreeUI(this)));
+        // Debounced Nimbus L&F reinstall — the only way to flush SynthStyleFactory
+        // caches so all Nimbus-painted panels pick up updated colours.
+        // Debouncing prevents stutter during slider drags.
+        Timer themeRebuildTimer = new Timer(250, e -> rebuildTheme());
+        themeRebuildTimer.setRepeats(false);
+        ThemeManager.addChangeListener(themeRebuildTimer::restart);
 
         // Wire any already-registered MediaService
         MediaService ms = ServiceManager.getInstance().getService(MediaService.class);
         if (ms != null) wireMediaService(ms);
 
-        // Let registered Features add their views and sidebar nodes
         ServiceManager.getInstance().activateFeatures(viewStack, sidebar.getRootNode());
 
         viewStack.navigate("spacify:now-playing");
     }
 
-    /**
-     * Wire this bar to a MediaService.
-     * Playback events update labels and progress; controls drive the service.
-     */
-    public void setMediaService(MediaService ms) {
-        // Progress seek
-        progress.addChangeListener(e -> {
-            if (!updatingProgress && !progress.getValueIsAdjusting()) {
-                long dur = ms.getDurationMs();
-                if (dur > 0) ms.seek((long)(progress.getValue() / 1000.0 * dur));
+    private void rebuildTheme() {
+        // 1. Reinstall Nimbus to clear its SynthStyleFactory painter cache
+        try {
+            for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
             }
-        });
-
-        ms.addPlaybackListener(new MediaService.PlaybackListener() {
-            @Override
-            public void onStateChanged(PlaybackState state) {
-            }
-
-            @Override
-            public void onPositionChanged(long posMs, long durMs) {
-                if (durMs <= 0) return;
-                SwingUtilities.invokeLater(() -> {
-                    updatingProgress = true;
-                    progress.setValue((int)(posMs * 1000.0 / durMs));
-                    updatingProgress = false;
-                });
-            }
-
-            @Override
-            public void onTrackChanged(String title, String artist, String album) {
-             
-            }
-
-            @Override
-            public void onError(Exception e) {
-            }
-        });
+        } catch (Exception ignored) {}
+        // 2. Re-apply our colour overrides to the freshly-installed L&F defaults
+        ThemeManager.applyToDefaults();
+        // 3. Propagate to all components
+        SwingUtilities.updateComponentTreeUI(this);
     }
 
     /** Connects a MediaService to PlayerBar and NowPlayingView. */
@@ -126,14 +96,8 @@ public class MainWindow extends JFrame {
         nowPlayingView.setMediaService(ms);
     }
 
-    public SPViewStack    getViewStack()      { return viewStack; }
-    public PlayerBar      getPlayerBar()      { return playerBar; }
-    public NowPlayingView getNowPlayingView()  { return nowPlayingView; }
-    public Sidebar        getSidebar()        { return sidebar; }
-
-    private JPanel buildRightPanel() {
-        JPanel panel = new NowPlayingPanel(viewStack);
-        
-        return panel;
-    }
+    public SPViewStack    getViewStack()     { return viewStack; }
+    public PlayerBar      getPlayerBar()     { return playerBar; }
+    public NowPlayingView getNowPlayingView() { return nowPlayingView; }
+    public Sidebar        getSidebar()       { return sidebar; }
 }

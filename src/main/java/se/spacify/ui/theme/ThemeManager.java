@@ -17,13 +17,15 @@ public class ThemeManager {
     private static final List<Runnable> listeners = new ArrayList<>();
 
     // Cached per applyToDefaults() — safe to read from any component at render time
-    private static Color currentBg   = new Color(22, 22, 22);
-    private static Color currentFg   = new Color(210, 210, 210);
-    private static Color currentGrid = new Color(35, 35, 35);
+    private static Color currentBg    = new Color(22, 22, 22);
+    private static Color currentAltBg = new Color(30, 30, 30);
+    private static Color currentFg    = new Color(210, 210, 210);
+    private static Color currentGrid  = new Color(35, 35, 35);
 
-    public static Color getBackground() { return currentBg; }
-    public static Color getForeground()  { return currentFg; }
-    public static Color getGridColor()   { return currentGrid; }
+    public static Color getBackground()          { return currentBg; }
+    public static Color getAlternateBackground() { return currentAltBg; }
+    public static Color getForeground()           { return currentFg; }
+    public static Color getGridColor()            { return currentGrid; }
 
     public static void setHue(float h)           { hue = h;           applyToDefaults(); notify_(); }
     public static void setSaturation(float s)    { saturation = s;    applyToDefaults(); notify_(); }
@@ -45,18 +47,18 @@ public class ThemeManager {
         if (darkMode) {
             float bg  = 0.07f + lightness * 0.50f;
             float mid = bg + 0.05f;
-            float acc = 0.28f + lightness * 0.10f;
 
-            currentBg   = hsl(hue, saturation * 0.75f, bg);
-            currentFg   = new Color(210, 210, 210);
-            currentGrid = hsl(hue, saturation * 0.75f, Math.min(1f, bg + 0.06f));
+            currentBg    = hsl(hue, saturation * 0.75f, bg);
+            currentAltBg = hsl(hue, saturation * 0.75f, Math.min(1f, bg + 0.04f));
+            currentFg    = new Color(210, 210, 210);
+            currentGrid  = hsl(hue, saturation * 0.75f, Math.min(1f, bg + 0.06f));
         } else {
             float bg  = 0.84f + lightness * 0.08f;
-            float acc = 0.42f + lightness * 0.10f;
 
-            currentBg   = hsl(hue, saturation * 0.08f, bg);
-            currentFg   = hsl(hue, saturation, 0.15f);
-            currentGrid = hsl(hue, saturation * 0.08f, Math.max(0f, bg - 0.06f));
+            currentBg    = hsl(hue, saturation * 0.08f, bg);
+            currentAltBg = hsl(hue, saturation * 0.08f, Math.max(0f, bg - 0.04f));
+            currentFg    = hsl(hue, saturation, 0.15f);
+            currentGrid  = hsl(hue, saturation * 0.08f, Math.max(0f, bg - 0.06f));
         }
 
         // Shared keys
