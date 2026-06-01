@@ -25,7 +25,6 @@ public class MainWindow extends JFrame {
         viewStack.registerView(new PlaylistView());
 
         getContentPane().setLayout(new BorderLayout());
-        getContentPane().setBackground(new Color(18, 18, 18));
 
         NavigationBar navBar = new NavigationBar(viewStack);
         add(navBar, BorderLayout.NORTH);
@@ -33,7 +32,6 @@ public class MainWindow extends JFrame {
         Sidebar sidebar = new Sidebar(viewStack);
 
         JPanel centerPanel = new JPanel(new BorderLayout());
-        centerPanel.setBackground(new Color(30, 30, 30));
         centerPanel.add(viewStack, BorderLayout.CENTER);
 
         JPanel rightPanel = buildRightPanel();
@@ -54,7 +52,7 @@ public class MainWindow extends JFrame {
         add(new PlayerBar(), BorderLayout.SOUTH);
 
         ThemeManager.addChangeListener(() ->
-            SwingUtilities.updateComponentTreeUI(this));
+            SwingUtilities.invokeLater(() -> SwingUtilities.updateComponentTreeUI(this)));
 
         viewStack.navigate("spacify:now-playing");
     }
@@ -62,7 +60,6 @@ public class MainWindow extends JFrame {
     private JPanel buildRightPanel() {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBackground(new Color(24, 24, 24));
         panel.setPreferredSize(new Dimension(220, 0));
         panel.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createMatteBorder(0, 1, 0, 0, new Color(50, 50, 50)),

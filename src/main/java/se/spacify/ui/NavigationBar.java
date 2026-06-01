@@ -21,7 +21,6 @@ public class NavigationBar extends JPanel implements NavigationListener {
         this.viewStack = viewStack;
         setLayout(new BorderLayout(8, 0));
         setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
-        setBackground(new Color(24, 24, 24));
         setPreferredSize(new Dimension(0, 56));
 
         backBtn = makeNavButton("◄");

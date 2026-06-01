@@ -7,22 +7,25 @@ import java.util.List;
 
 public class ThemeManager {
 
-    private static float hue        = 0.0f;  // 0-1
-    private static float saturation = 0.0f;  // 0-1
-    private static float lightness  = 0.5f;  // 0-1 (relative slider position)
+    private static float hue        = 0.0f;  // 0-1  (background tint)
+    private static float saturation = 0.0f;  // 0-1  (background tint)
+    private static float lightness  = 0.5f;  // 0-1  (background tint)
     private static boolean darkMode = true;
+    private static Color accentColor = new Color(30, 215, 96);  // Spotify green default
 
     private static final List<Runnable> listeners = new ArrayList<>();
 
-    public static void setHue(float h)        { hue = h;        applyToDefaults(); notify_(); }
-    public static void setSaturation(float s) { saturation = s; applyToDefaults(); notify_(); }
-    public static void setLightness(float l)  { lightness = l;  applyToDefaults(); notify_(); }
-    public static void setDarkMode(boolean d) { darkMode = d;   applyToDefaults(); notify_(); }
+    public static void setHue(float h)           { hue = h;           applyToDefaults(); notify_(); }
+    public static void setSaturation(float s)    { saturation = s;    applyToDefaults(); notify_(); }
+    public static void setLightness(float l)     { lightness = l;     applyToDefaults(); notify_(); }
+    public static void setDarkMode(boolean d)    { darkMode = d;      applyToDefaults(); notify_(); }
+    public static void setAccentColor(Color c)   { accentColor = c;   applyToDefaults(); notify_(); }
 
-    public static float   getHue()        { return hue; }
-    public static float   getSaturation() { return saturation; }
-    public static float   getLightness()  { return lightness; }
-    public static boolean isDarkMode()    { return darkMode; }
+    public static float   getHue()          { return hue; }
+    public static float   getSaturation()   { return saturation; }
+    public static float   getLightness()    { return lightness; }
+    public static boolean isDarkMode()      { return darkMode; }
+    public static Color   getAccentColor()  { return accentColor; }
 
     public static void addChangeListener(Runnable r) { listeners.add(r); }
 
@@ -41,9 +44,8 @@ public class ThemeManager {
             put(d, "textForeground",              new Color(210, 210, 210));
             put(d, "nimbusDisabledText",          new Color(100, 100, 100));
             put(d, "nimbusSelectedText",          Color.WHITE);
-            put(d, "nimbusFocus",    hsl(hue, Math.max(saturation, 0.6f), acc + 0.12f));
-            put(d, "nimbusSelectionBackground",
-                                     hsl(hue, Math.max(saturation, 0.6f), acc + 0.08f));
+            put(d, "nimbusFocus",               accentColor);
+            put(d, "nimbusSelectionBackground", accentColor);
         } else {
             float bg  = 0.84f + lightness * 0.08f;   // 0.84 – 0.92
             float acc = 0.42f + lightness * 0.10f;   // 0.42 – 0.52
@@ -54,17 +56,10 @@ public class ThemeManager {
             put(d, "text",                        new Color(30, 30, 30));
             put(d, "textForeground",              new Color(30, 30, 30));
             put(d, "nimbusDisabledText",          new Color(130, 130, 130));
-            put(d, "nimbusSelectedText",          Color.WHITE);
-            put(d, "nimbusFocus",    hsl(hue, Math.max(saturation, 0.5f), acc));
-            put(d, "nimbusSelectionBackground",
-                                     hsl(hue, Math.max(saturation, 0.5f), acc - 0.05f));
+            put(d, "nimbusSelectedText",          Color.BLACK);
+            put(d, "nimbusFocus",               accentColor);
+            put(d, "nimbusSelectionBackground", accentColor);
         }
-    }
-
-    /** The accent color used for the preview swatch. */
-    public static Color getAccentColor() {
-        float base = darkMode ? (0.28f + lightness * 0.10f) : (0.42f + lightness * 0.10f);
-        return hsl(hue, Math.max(saturation, 0.55f), base + 0.10f);
     }
 
     // ── HSL conversion ────────────────────────────────────────────────────────

@@ -19,7 +19,6 @@ public class Sidebar extends JPanel implements NavigationListener {
     public Sidebar(SPViewStack viewStack) {
         this.viewStack = viewStack;
         setLayout(new BorderLayout());
-        setBackground(new Color(18, 18, 18));
         setPreferredSize(new Dimension(220, 0));
 
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("root");
@@ -40,17 +39,10 @@ public class Sidebar extends JPanel implements NavigationListener {
         tree = new JTree(root);
         tree.setRootVisible(false);
         tree.setShowsRootHandles(true);
-        tree.setBackground(new Color(18, 18, 18));
-        tree.setForeground(new Color(210, 210, 210));
         tree.setBorder(BorderFactory.createEmptyBorder(8, 4, 8, 4));
         tree.setRowHeight(28);
 
         DefaultTreeCellRenderer renderer = new DefaultTreeCellRenderer();
-        renderer.setBackgroundNonSelectionColor(new Color(18, 18, 18));
-        renderer.setBackgroundSelectionColor(new Color(40, 40, 40));
-        renderer.setTextNonSelectionColor(new Color(210, 210, 210));
-        renderer.setTextSelectionColor(Color.WHITE);
-        renderer.setBorderSelectionColor(new Color(40, 40, 40));
         renderer.setLeafIcon(null);
         renderer.setOpenIcon(null);
         renderer.setClosedIcon(null);

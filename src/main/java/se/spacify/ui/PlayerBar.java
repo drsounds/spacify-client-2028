@@ -7,7 +7,6 @@ public class PlayerBar extends JPanel {
 
     public PlayerBar() {
         setLayout(new BorderLayout(12, 0));
-        setBackground(new Color(24, 24, 24));
         setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(50, 50, 50)),
             BorderFactory.createEmptyBorder(8, 16, 8, 16)
