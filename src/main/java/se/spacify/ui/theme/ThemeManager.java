@@ -34,32 +34,80 @@ public class ThemeManager {
     public static void applyToDefaults() {
         UIDefaults d = UIManager.getLookAndFeelDefaults();
         if (darkMode) {
-            float bg  = 0.07f + lightness * 0.50f;   // 0.07 – 0.17
+            float bg  = 0.07f + lightness * 0.50f;
             float mid = bg + 0.05f;
-            float acc = 0.28f + lightness * 0.10f;   // 0.28 – 0.38
+            float acc = 0.28f + lightness * 0.10f;
 
-            put(d, "control",        hsl(hue, saturation * 0.75f, bg));
-            put(d, "nimbusBase",     hsl(hue, saturation,         acc));
-            put(d, "nimbusBlueGrey", hsl(hue, saturation , mid));
-            put(d, "text",                        new Color(210, 210, 210));
-            put(d, "textForeground",              new Color(210, 210, 210));
+            Color bgColor  = hsl(hue, saturation * 0.75f, bg);
+            Color fgColor  = new Color(210, 210, 210);
+            Color gridColor = hsl(hue, saturation * 0.75f, Math.min(1f, bg + 0.06f));
+
+            put(d, "control",        bgColor);
+            put(d, "nimbusBase",     hsl(hue, saturation, acc));
+            put(d, "nimbusBlueGrey", hsl(hue, saturation, mid));
+            put(d, "text",                        fgColor);
+            put(d, "textForeground",              fgColor);
             put(d, "nimbusDisabledText",          new Color(100, 100, 100));
             put(d, "nimbusSelectedText",          Color.WHITE);
             put(d, "nimbusFocus",               accentColor);
             put(d, "nimbusSelectionBackground", accentColor);
-        } else {
-            float bg  = 0.84f + lightness * 0.08f;   // 0.84 – 0.92
-            float acc = 0.42f + lightness * 0.10f;   // 0.42 – 0.52
 
-            put(d, "control",        hsl(hue, saturation * 0.08f, bg));
-            put(d, "nimbusBase",     hsl(hue, saturation,         acc));
+            // Component-specific keys — read by DefaultTreeCellRenderer.updateUI(),
+            // JTable.updateUI(), and JScrollPane viewport
+            put(d, "Tree.textBackground",        bgColor);
+            put(d, "Tree.textForeground",         fgColor);
+            put(d, "Tree.selectionBackground",    accentColor);
+            put(d, "Tree.selectionForeground",    Color.WHITE);
+            put(d, "Tree.selectionBorderColor",   accentColor);
+            put(d, "Table.background",            bgColor);
+            put(d, "Table.foreground",            fgColor);
+            put(d, "Table.selectionBackground",   accentColor);
+            put(d, "Table.selectionForeground",   Color.WHITE);
+            put(d, "Table.gridColor",             gridColor);
+            put(d, "TableHeader.background",      gridColor);
+            put(d, "TableHeader.foreground",      fgColor);
+            put(d, "List.background",             bgColor);
+            put(d, "List.foreground",             fgColor);
+            put(d, "List.selectionBackground",    accentColor);
+            put(d, "List.selectionForeground",    Color.WHITE);
+            put(d, "ScrollPane.background",       bgColor);
+            put(d, "Viewport.background",         bgColor);
+        } else {
+            float bg  = 0.84f + lightness * 0.08f;
+            float acc = 0.42f + lightness * 0.10f;
+
+            Color bgColor   = hsl(hue, saturation * 0.08f, bg);
+            Color fgColor   = hsl(hue, saturation, 0.15f);
+            Color gridColor = hsl(hue, saturation * 0.08f, Math.max(0f, bg - 0.06f));
+
+            put(d, "control",        bgColor);
+            put(d, "nimbusBase",     hsl(hue, saturation, acc));
             put(d, "nimbusBlueGrey", hsl(hue, saturation, 0.68f));
-            put(d, "text",                         hsl(hue, saturation, 0.5f));
-            put(d, "textForeground", hsl(hue, saturation, 0.5f));
-            put(d, "nimbusDisabledText",          Color.BLACK);
+            put(d, "text",           fgColor);
+            put(d, "textForeground", fgColor);
+            put(d, "nimbusDisabledText",          new Color(120, 120, 120));
             put(d, "nimbusSelectedText",          Color.BLACK);
             put(d, "nimbusFocus",               accentColor);
             put(d, "nimbusSelectionBackground", accentColor);
+
+            put(d, "Tree.textBackground",        bgColor);
+            put(d, "Tree.textForeground",         fgColor);
+            put(d, "Tree.selectionBackground",    accentColor);
+            put(d, "Tree.selectionForeground",    Color.WHITE);
+            put(d, "Tree.selectionBorderColor",   accentColor);
+            put(d, "Table.background",            bgColor);
+            put(d, "Table.foreground",            fgColor);
+            put(d, "Table.selectionBackground",   accentColor);
+            put(d, "Table.selectionForeground",   Color.WHITE);
+            put(d, "Table.gridColor",             gridColor);
+            put(d, "TableHeader.background",      gridColor);
+            put(d, "TableHeader.foreground",      fgColor);
+            put(d, "List.background",             bgColor);
+            put(d, "List.foreground",             fgColor);
+            put(d, "List.selectionBackground",    accentColor);
+            put(d, "List.selectionForeground",    Color.WHITE);
+            put(d, "ScrollPane.background",       bgColor);
+            put(d, "Viewport.background",         bgColor);
         }
     }
 

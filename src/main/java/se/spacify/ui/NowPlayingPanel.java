@@ -35,6 +35,8 @@ public class NowPlayingPanel extends JPanel implements NavigationListener {
         add(title);
         add(Box.createVerticalStrut(8));
         add(placeholder);
+
+        ThemeManager.addChangeListener(this::repaint);
     }
     @Override
     protected void paintComponent(Graphics g) {
