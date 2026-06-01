@@ -1,0 +1,194 @@
+package se.spacify.service.media;
+
+import se.spacify.db.DatabaseManager;
+import se.spacify.db.entity.Recording;
+import se.spacify.db.entity.RecordingArtistCredit;
+
+import javax.sound.sampled.*;
+import javax.swing.*;
+import java.awt.Component;
+import java.io.File;
+import java.util.List;
+import java.util.function.Consumer;
+
+/**
+ * JavaSound-based implementation of MusicService for local audio files.
+ * Supports WAV, AIFF, and AU formats natively; other formats require a SPI codec on the classpath.
+ */
+public class LocalMusicService extends MusicService {
+
+    private Clip          clip;
+    private PlaybackState state        = PlaybackState.IDLE;
+    private long          durationMs   = 0;
+    private Timer         positionTimer;
+
+    // ── Service identity & auth (local — always authenticated) ───────────────
+
+    @Override public String  getServiceId()   { return "spacify.local.music"; }
+    @Override public String  getServiceName() { return "Local Music"; }
+    @Override public boolean isAuthenticated() { return true; }
+
+    @Override
+    public void login(Component parent, Runnable onSuccess, Consumer<Exception> onError) {
+        onSuccess.run();
+    }
+
+    @Override public void   logout()     {}
+    @Override public Object getAccount() { return null; }
+
+    // ── Lifecycle ─────────────────────────────────────────────────────────────
+
+    @Override
+    public void onCreate() {
+        // Fire position updates every 500 ms while playing
+        positionTimer = new Timer(500, e -> {
+            if (clip != null && clip.isRunning())
+                firePositionChanged(clip.getMicrosecondPosition() / 1000L, durationMs);
+        });
+    }
+
+    @Override public void onStart()   {}
+
+    @Override
+    public void onStop() {
+        stop();
+        if (positionTimer != null) positionTimer.stop();
+    }
+
+    @Override
+    public void onDestroy() {
+        if (clip != null) { clip.close(); clip = null; }
+    }
+
+    // ── Playback ──────────────────────────────────────────────────────────────
+
+    @Override
+    public void play() {
+        if (clip == null || state == PlaybackState.PLAYING) return;
+        clip.start();
+        positionTimer.start();
+        setState(PlaybackState.PLAYING);
+    }
+
+    @Override
+    public void pause() {
+        if (clip == null || state != PlaybackState.PLAYING) return;
+        clip.stop();
+        positionTimer.stop();
+        setState(PlaybackState.PAUSED);
+    }
+
+    @Override
+    public void stop() {
+        if (clip == null) return;
+        clip.stop();
+        clip.setMicrosecondPosition(0);
+        positionTimer.stop();
+        setState(PlaybackState.STOPPED);
+        firePositionChanged(0, durationMs);
+    }
+
+    @Override
+    public void seek(long positionMs) {
+        if (clip == null) return;
+        clip.setMicrosecondPosition(positionMs * 1000L);
+        firePositionChanged(positionMs, durationMs);
+    }
+
+    @Override
+    public void loadUri(String uri) {
+        if (uri == null) return;
+        if (uri.startsWith("spacify:local:")) {
+            loadFile(new File(uri.substring("spacify:local:".length())), null, null, null);
+        } else if (uri.startsWith("spacify:recording:isrc:")) {
+            loadByIsrc(uri.substring("spacify:recording:isrc:".length()));
+        }
+    }
+
+    @Override
+    public void loadByIsrc(String isrc) {
+        try {
+            List<Recording> results = DatabaseManager.getInstance().recordingDao()
+                .queryForEq("isrc", isrc);
+            if (results.isEmpty()) { fireError(new Exception("No recording found for ISRC: " + isrc)); return; }
+            Recording rec = results.get(0);
+            if (rec.getFilePath() == null) { fireError(new Exception("No local file for ISRC: " + isrc)); return; }
+            loadFile(new File(rec.getFilePath()), rec.getTitle(), primaryArtist(rec), null);
+        } catch (Exception e) {
+            fireError(e);
+        }
+    }
+
+    @Override
+    public void loadByTitleArtist(String title, String artist) {
+        try {
+            List<Recording> all = DatabaseManager.getInstance().recordingDao().queryForAll();
+            Recording match = all.stream()
+                .filter(r -> r.getTitle().equalsIgnoreCase(title))
+                .findFirst().orElse(null);
+            if (match == null) { fireError(new Exception("Not found: " + title)); return; }
+            loadUri(match.getPlayUri());
+        } catch (Exception e) {
+            fireError(e);
+        }
+    }
+
+    @Override
+    public Recording lookup(String isrc) {
+        try {
+            return DatabaseManager.getInstance().recordingDao()
+                .queryForEq("isrc", isrc).stream().findFirst().orElse(null);
+        } catch (Exception e) { return null; }
+    }
+
+    // ── State helpers ─────────────────────────────────────────────────────────
+
+    @Override public PlaybackState getPlaybackState() { return state; }
+    @Override public long getPositionMs() { return clip != null ? clip.getMicrosecondPosition() / 1000L : 0; }
+    @Override public long getDurationMs() { return durationMs; }
+
+    // ── Private ───────────────────────────────────────────────────────────────
+
+    private void loadFile(File file, String title, String artist, String album) {
+        setState(PlaybackState.LOADING);
+        try {
+            if (clip != null) { clip.stop(); clip.close(); }
+            AudioInputStream raw = AudioSystem.getAudioInputStream(file);
+            AudioFormat fmt = raw.getFormat();
+            // Convert to PCM if needed (e.g. MP3 via SPI)
+            if (fmt.getEncoding() != AudioFormat.Encoding.PCM_SIGNED) {
+                AudioFormat pcm = new AudioFormat(fmt.getSampleRate(), 16, fmt.getChannels(), true, false);
+                raw = AudioSystem.getAudioInputStream(pcm, raw);
+            }
+            clip = AudioSystem.getClip();
+            clip.open(raw);
+            durationMs = clip.getMicrosecondLength() / 1000L;
+            setState(PlaybackState.PAUSED);
+
+            String t = title  != null ? title  : file.getName();
+            String a = artist != null ? artist : "";
+            String al = album != null ? album  : "";
+            fireTrackChanged(t, a, al);
+            firePositionChanged(0, durationMs);
+        } catch (Exception e) {
+            setState(PlaybackState.ERROR);
+            fireError(e);
+        }
+    }
+
+    private void setState(PlaybackState s) {
+        state = s;
+        fireStateChanged(s);
+    }
+
+    private String primaryArtist(Recording rec) {
+        try {
+            return DatabaseManager.getInstance().recordingArtistCreditDao()
+                .queryForEq("recording_id", rec.getId()).stream()
+                .filter(RecordingArtistCredit::isPrimary)
+                .findFirst()
+                .map(c -> c.getArtist().getName())
+                .orElse("");
+        } catch (Exception e) { return ""; }
+    }
+}

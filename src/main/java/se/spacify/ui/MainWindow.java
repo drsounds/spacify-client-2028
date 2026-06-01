@@ -1,15 +1,21 @@
 package se.spacify.ui;
 
 import se.spacify.navigation.SPViewStack;
+import se.spacify.service.ServiceManager;
+import se.spacify.service.media.MediaService;
 import se.spacify.ui.theme.ThemeManager;
 import se.spacify.views.*;
 
 import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
 import java.awt.*;
 
 public class MainWindow extends JFrame {
 
-    private final SPViewStack viewStack;
+    private final SPViewStack    viewStack;
+    private final PlayerBar      playerBar;
+    private final NowPlayingView nowPlayingView;
+    private final Sidebar        sidebar;
 
     public MainWindow() {
         super("Spacify");
@@ -18,8 +24,9 @@ public class MainWindow extends JFrame {
         setMinimumSize(new Dimension(800, 500));
         setLocationRelativeTo(null);
 
-        viewStack = new SPViewStack();
-        viewStack.registerView(new NowPlayingView());
+        viewStack      = new SPViewStack();
+        nowPlayingView = new NowPlayingView();
+        viewStack.registerView(nowPlayingView);
         viewStack.registerView(new SearchView());
         viewStack.registerView(new LibraryView());
         viewStack.registerView(new PlaylistView());
@@ -29,7 +36,7 @@ public class MainWindow extends JFrame {
         NavigationBar navBar = new NavigationBar(viewStack);
         add(navBar, BorderLayout.NORTH);
 
-        Sidebar sidebar = new Sidebar(viewStack);
+        sidebar = new Sidebar(viewStack);
 
         JPanel centerPanel = new JPanel(new BorderLayout());
         centerPanel.add(viewStack, BorderLayout.CENTER);
@@ -49,13 +56,33 @@ public class MainWindow extends JFrame {
         mainSplit.setContinuousLayout(true);
 
         add(mainSplit, BorderLayout.CENTER);
-        add(new PlayerBar(), BorderLayout.SOUTH);
+
+        playerBar = new PlayerBar();
+        add(playerBar, BorderLayout.SOUTH);
 
         ThemeManager.addChangeListener(() ->
             SwingUtilities.invokeLater(() -> SwingUtilities.updateComponentTreeUI(this)));
 
+        // Wire any already-registered MediaService
+        MediaService ms = ServiceManager.getInstance().getService(MediaService.class);
+        if (ms != null) wireMediaService(ms);
+
+        // Let registered Features add their views and sidebar nodes
+        ServiceManager.getInstance().activateFeatures(viewStack, sidebar.getRootNode());
+
         viewStack.navigate("spacify:now-playing");
     }
+
+    /** Connects a MediaService to PlayerBar and NowPlayingView. */
+    public void wireMediaService(MediaService ms) {
+        playerBar.setMediaService(ms);
+        nowPlayingView.setMediaService(ms);
+    }
+
+    public SPViewStack    getViewStack()      { return viewStack; }
+    public PlayerBar      getPlayerBar()      { return playerBar; }
+    public NowPlayingView getNowPlayingView()  { return nowPlayingView; }
+    public Sidebar        getSidebar()        { return sidebar; }
 
     private JPanel buildRightPanel() {
         JPanel panel = new JPanel();

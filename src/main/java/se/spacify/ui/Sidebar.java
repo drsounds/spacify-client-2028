@@ -14,6 +14,7 @@ public class Sidebar extends JPanel implements NavigationListener {
 
     private final SPViewStack viewStack;
     private final JTree tree;
+    private final DefaultMutableTreeNode root;
     private boolean suppressSelection = false;
 
     public Sidebar(SPViewStack viewStack) {
@@ -21,7 +22,7 @@ public class Sidebar extends JPanel implements NavigationListener {
         setLayout(new BorderLayout());
         setPreferredSize(new Dimension(220, 0));
 
-        DefaultMutableTreeNode root = new DefaultMutableTreeNode("root");
+        root = new DefaultMutableTreeNode("root");
         root.add(nodeFor(new SidebarNode("Now Playing", "spacify:now-playing")));
 
         DefaultMutableTreeNode library = nodeFor(new SidebarNode("Your Library", "spacify:library"));
@@ -101,4 +102,7 @@ public class Sidebar extends JPanel implements NavigationListener {
         }
         return false;
     }
+
+    /** Exposes the root node so ServiceManager can attach Feature sidebar nodes. */
+    public DefaultMutableTreeNode getRootNode() { return root; }
 }

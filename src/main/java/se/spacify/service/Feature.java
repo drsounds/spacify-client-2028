@@ -1,0 +1,27 @@
+package se.spacify.service;
+
+import se.spacify.navigation.SPView;
+import se.spacify.navigation.SidebarNode;
+
+import java.util.Collections;
+import java.util.List;
+
+/**
+ * Base class for app features that contribute views and sidebar navigation.
+ * Features are registered with ServiceManager alongside Services.
+ */
+public abstract class Feature {
+
+    public abstract String getFeatureId();
+
+    public abstract String getFeatureName();
+
+    /** SPView instances to register with the view stack at activation time. */
+    public List<SPView> getViews() { return Collections.emptyList(); }
+
+    /** SidebarNode trees to append to the sidebar at activation time. */
+    public List<SidebarNode> getSidebarNodes() { return Collections.emptyList(); }
+
+    /** Called once when this feature is activated via ServiceManager. */
+    public void onRegister(ServiceManager serviceManager) {}
+}

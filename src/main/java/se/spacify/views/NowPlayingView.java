@@ -2,6 +2,7 @@ package se.spacify.views;
 
 import se.spacify.navigation.PlayerView;
 import se.spacify.navigation.SPView;
+import se.spacify.service.media.MediaService;
 import se.spacify.ui.SettingsPanel;
 
 import javax.swing.*;
@@ -84,6 +85,19 @@ public class NowPlayingView extends SPView {
 
     @Override
     public JComponent getComponent() { return panel; }
+
+    /** Wire a MediaService so track-change events propagate to the active PlayerView. */
+    public void setMediaService(MediaService ms) {
+        ms.addPlaybackListener(new MediaService.PlaybackListener() {
+            @Override public void onStateChanged(MediaService.PlaybackState s) {}
+            @Override public void onPositionChanged(long pos, long dur) {}
+            @Override public void onError(Exception e) {}
+            @Override
+            public void onTrackChanged(String title, String artist, String album) {
+                if (activeView != null) activeView.onTrackChanged(title, artist, album);
+            }
+        });
+    }
 
     @Override
     public String getTitle() { return "Now Playing"; }
