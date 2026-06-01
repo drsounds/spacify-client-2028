@@ -13,6 +13,7 @@ public class ThemeManager {
     private static boolean darkMode = true;
     private static Color accentColor = new Color(30, 215, 96);  // Spotify green default
 
+    private static final Color CHROME_DARK = new Color(14, 14, 14);
     private static final List<Runnable> listeners = new ArrayList<>();
 
     public static void setHue(float h)           { hue = h;           applyToDefaults(); notify_(); }
@@ -98,5 +99,25 @@ public class ThemeManager {
 
     private static void notify_() {
         for (Runnable r : listeners) r.run();
+    }
+
+    public static Color accentDark(float ratio) {
+        Color a = ThemeManager.getTintColor();
+        float r = 1 - ratio;
+        return new Color(
+            Math.min(255, (int)(a.getRed()   * ratio + CHROME_DARK.getRed()   * r)),
+            Math.min(255, (int)(a.getGreen() * ratio + CHROME_DARK.getGreen() * r)),
+            Math.min(255, (int)(a.getBlue()  * ratio + CHROME_DARK.getBlue()  * r))
+        );
+    }
+
+    public static Color accentLight(float ratio) {
+        Color a = ThemeManager.getTintColor();
+        float r = ratio;
+        return new Color(
+            Math.min(255, (int)(a.getRed()   * ratio * r)),
+            Math.min(255, (int)(a.getGreen() * ratio * r)),
+            Math.min(255, (int)(a.getBlue()  * ratio * r))
+        );
     }
 }

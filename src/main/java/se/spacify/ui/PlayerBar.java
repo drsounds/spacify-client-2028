@@ -7,7 +7,6 @@ import java.awt.*;
 
 public class PlayerBar extends JPanel {
 
-    private static final Color CHROME_DARK = new Color(14, 14, 14);
     private static final Color HIGHLIGHT   = new Color(255, 255, 255, 35);
 
     public PlayerBar() {
@@ -76,10 +75,11 @@ public class PlayerBar extends JPanel {
     protected void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D) g.create();
         int w = getWidth(), h = getHeight();
-
+        
+        Color tintColor = ThemeManager.getTintColor();
         // Gradient: near-black at top → accent-tinted dark at bottom (mirror of header)
-        Color top = accentDark(0.22f);
-        g2.setPaint(new GradientPaint(0, 0, top, 0, h, CHROME_DARK));
+        Color bottom = ThemeManager.accentDark(0.22f);
+        g2.setPaint(new GradientPaint(0, 0, ThemeManager.accentLight(2f), 0, h, tintColor));
         g2.fillRect(0, 0, w, h);
 
         // 1 px white sheen along the very bottom edge
@@ -89,25 +89,6 @@ public class PlayerBar extends JPanel {
         g2.dispose();
     }
 
-    private static Color accentDark(float ratio) {
-        Color a = ThemeManager.getTintColor();
-        float r = 1 - ratio;
-        return new Color(
-            Math.min(255, (int)(a.getRed()   * ratio + CHROME_DARK.getRed()   * r)),
-            Math.min(255, (int)(a.getGreen() * ratio + CHROME_DARK.getGreen() * r)),
-            Math.min(255, (int)(a.getBlue()  * ratio + CHROME_DARK.getBlue()  * r))
-        );
-    }
-
-    private static Color accentLight(float ratio) {
-        Color a = ThemeManager.getTintColor();
-        float r = ratio;
-        return new Color(
-            Math.min(255, (int)(a.getRed()   * ratio + CHROME_DARK.getRed()   * r)),
-            Math.min(255, (int)(a.getGreen() * ratio + CHROME_DARK.getGreen() * r)),
-            Math.min(255, (int)(a.getBlue()  * ratio + CHROME_DARK.getBlue()  * r))
-        );
-    }
     private JButton makeControlButton(String text) {
         JButton btn = new JButton(text);
         btn.setFocusPainted(false);
