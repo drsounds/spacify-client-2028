@@ -14,6 +14,8 @@ import javax.swing.tree.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 public class Sidebar extends JPanel implements NavigationListener {
 
@@ -24,6 +26,8 @@ public class Sidebar extends JPanel implements NavigationListener {
     private final DefaultMutableTreeNode releasesNode;
     private final DefaultMutableTreeNode artistsNode;
     private boolean suppressSelection = false;
+	private JToolBar toolbar;
+	private JTextField searchField;
 
     public Sidebar(SPViewStack viewStack) {
         this.viewStack = viewStack;
@@ -44,9 +48,32 @@ public class Sidebar extends JPanel implements NavigationListener {
         library.add(artistsNode);
         library.add(nodeFor(new SidebarNode("Local Files", "spacify:library:local")));
         root.add(library);
-
+        DefaultMutableTreeNode downloads = nodeFor(new SidebarNode("Downloads", "spacify:downloads"));
+        root.add(downloads);
+         DefaultMutableTreeNode sites = nodeFor(new SidebarNode("Sites", "spacify:"));
+        root.add(sites);
         populateReleases();
         populateArtists();
+
+        toolbar = new JToolBar();
+        toolbar.setFloatable(false);
+        toolbar.setOpaque(true);
+        toolbar.setBackground(ThemeManager.getTintColor());
+        add(toolbar, BorderLayout.NORTH);
+        
+
+        searchField = new JTextField();
+        searchField.putClientProperty("JTextField.placeholderText", "Search...");
+        searchField.setPreferredSize(new Dimension(180, 28));
+        searchField.addActionListener(e -> {
+            String q = searchField.getText().trim();
+            if (!q.isEmpty()) {
+                String encoded = URLEncoder.encode(q, StandardCharsets.UTF_8);
+                viewStack.navigate("spacify:search?q=" + encoded);
+            }
+        });
+        toolbar.add(searchField);
+
 
         tree = new JTree(root);
         tree.setRootVisible(false);

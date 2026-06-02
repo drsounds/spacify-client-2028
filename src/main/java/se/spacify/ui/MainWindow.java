@@ -48,15 +48,22 @@ public class MainWindow extends JFrame {
         viewStack.registerView(new SPWebView(viewStack));
         viewStack.registerView(new PlaylistView());
 
-        getContentPane().setLayout(new BorderLayout());
-
+        getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.PAGE_AXIS));
+        
+        TopBar topBar = new TopBar();
+        topBar.add(new JButton());
+        add(topBar);
+        topBar.setMaximumSize(new Dimension(Short.MAX_VALUE, 18));
+        topBar.setMinimumSize(new Dimension(0, 18));
         NavigationBar navBar = new NavigationBar(viewStack);
-        add(navBar, BorderLayout.NORTH);
+        navBar.setMaximumSize(new Dimension(Short.MAX_VALUE, 28));
+        navBar.setMinimumSize(new Dimension(0, 28));
+        add(navBar);
 
         sidebar = new Sidebar(viewStack);
 
         JPanel centerPanel = new JPanel(new BorderLayout());
-        centerPanel.add(viewStack, BorderLayout.CENTER);
+        centerPanel.add(viewStack);
 
         leftSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, sidebar, centerPanel);
         leftSplit.setDividerLocation(220);
@@ -78,7 +85,9 @@ public class MainWindow extends JFrame {
         add(progress, BorderLayout.SOUTH);
 
         playerBar = new PlayerBar();
-        add(playerBar, BorderLayout.SOUTH);
+        add(playerBar);
+        playerBar.setMaximumSize(new Dimension(Short.MAX_VALUE, 18));
+        playerBar.setMinimumSize(new Dimension(0, 18));
 
         // Debounced Nimbus L&F reinstall — the only way to flush SynthStyleFactory
         // caches so all Nimbus-painted panels pick up updated colours.

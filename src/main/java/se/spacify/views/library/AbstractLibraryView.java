@@ -65,7 +65,9 @@ public abstract class AbstractLibraryView extends SPView {
         // ── CRUD toolbar ───────────────────────────────────────────────────────
         JToolBar toolbar = new JToolBar();
         toolbar.setFloatable(false);
-        toolbar.setOpaque(false);
+        toolbar.setOpaque(true);
+        toolbar.setBackground(ThemeManager.getTintColor());
+        
 
         JButton refreshBtn = new JButton("Refresh");
         refreshBtn.addActionListener(e -> reload());
@@ -98,8 +100,8 @@ public abstract class AbstractLibraryView extends SPView {
 
         JPanel north = new JPanel(new BorderLayout());
         north.setOpaque(false);
-        north.add(headerLabel, BorderLayout.NORTH);
         north.add(toolbar, BorderLayout.CENTER);
+        panel.add(headerLabel, BorderLayout.NORTH);
 
         panel.add(north, BorderLayout.NORTH);
         panel.add(scroll, BorderLayout.CENTER);

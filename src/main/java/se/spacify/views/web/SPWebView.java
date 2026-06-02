@@ -35,6 +35,8 @@ public class SPWebView extends SPView {
     private CefBrowser browser;
     private boolean    initStarted = false;
     private String     pendingUrl;
+	private JToolBar toolbar;
+	private JButton btnRefresh;
 
     public SPWebView(SPViewStack viewStack) {
         this.viewStack = viewStack;
@@ -109,6 +111,16 @@ public class SPWebView extends SPView {
 
         browser = client.createBrowser(url, false, false);
         panel.remove(status);
+        toolbar = new JToolBar();
+        toolbar.setFloatable(false);
+        toolbar.setOpaque(true);
+        toolbar.setBackground(ThemeManager.getTintColor());
+        
+        JTextField uriField = new JTextField();
+        toolbar.add(uriField, BorderLayout.CENTER);
+        btnRefresh = new JButton();
+        toolbar.add(btnRefresh, BorderLayout.EAST);
+        panel.add(toolbar, BorderLayout.NORTH);
         panel.add(browser.getUIComponent(), BorderLayout.CENTER);
         panel.revalidate();
         panel.repaint();

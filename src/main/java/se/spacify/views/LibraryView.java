@@ -20,11 +20,7 @@ public class LibraryView extends SPView {
 
         String[] columns = {"Title", "Artist", "Album"};
         Object[][] data = {
-            {"Midnight City",  "M83",           "Hurry Up, We're Dreaming"},
-            {"Breathe",        "Pink Floyd",     "Dark Side of the Moon"},
-            {"Teardrop",       "Massive Attack", "Mezzanine"},
-            {"Pyramid Song",   "Radiohead",      "Amnesiac"},
-            {"Dissolved Girl", "Massive Attack", "Mezzanine"},
+      
         };
 
         table = new JTable(data, columns);

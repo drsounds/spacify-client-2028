@@ -63,7 +63,7 @@ public class NavigationBar extends JPanel implements NavigationListener {
         center.setOpaque(false);
         navButtons.add(uriField);
         
-        nowPlayingTabButton = makeNavButton("Now Playing");
+        /*nowPlayingTabButton = makeNavButton("Now Playing");
         center.add(nowPlayingTabButton);
         nowPlayingTabButton.addActionListener(e -> {
         	viewStack.getMainWindow().navigate("spacify:now-playing");
@@ -73,15 +73,22 @@ public class NavigationBar extends JPanel implements NavigationListener {
         	viewStack.getMainWindow().navigate("spacify:library");
         });
         center.add(libraryTabButton);
-
-        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        */
+        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 5));
         right.setOpaque(false);
-        right.add(searchField);
-
+     
+        //right.add(searchField);
+        GlassPanel storePanel = new GlassPanel();
+        storePanel.setPreferredSize(new Dimension(200, 56));
+        
         add(navButtons, BorderLayout.WEST);
         add(center, BorderLayout.CENTER);
         add(right, BorderLayout.EAST);
 
+        right.add(storePanel, BorderLayout.CENTER);
+        
+        
+        
         viewStack.addNavigationListener(this);
         ThemeManager.addChangeListener(this::repaint);
     }
@@ -93,7 +100,7 @@ public class NavigationBar extends JPanel implements NavigationListener {
         Color tintColor = ThemeManager.getTintColor();
         g2.setPaint(new GradientPaint(0, 0, ThemeManager.accentLight(2f), 0, h, tintColor));
         g2.fillRect(0, 0, w, h);
-        g2.setPaint(new GradientPaint(0, 0, new Color(255, 255, 255, 127), 0, h, new Color(255, 255, 255, 0)));
+        g2.setPaint(new GradientPaint(0, 0, new Color(255, 255, 255, 10), 0, h, new Color(255, 255, 255, 0)));
         g2.fillRect(0, 1, w, (h / 2));
         // 1 px white sheen along the very bottom edge
         g2.setColor(HIGHLIGHT);
