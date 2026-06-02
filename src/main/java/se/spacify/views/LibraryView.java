@@ -34,7 +34,7 @@ public class LibraryView extends SPView {
             table.getColumnModel().getColumn(i).setCellRenderer(renderer);
 
         scroll = new JScrollPane(table);
-        scroll.setBorder(null);
+        scroll.setBorder(BorderFactory.createEmptyBorder());
         scroll.setOpaque(true);
         scroll.getViewport().setOpaque(true);
 

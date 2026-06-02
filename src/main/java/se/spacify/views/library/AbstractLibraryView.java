@@ -58,7 +58,9 @@ public abstract class AbstractLibraryView extends SPView {
         }
 
         scroll = new JScrollPane(table);
-        scroll.setBorder(null);
+        // Non-UIResource empty border so the Nimbus reinstall on theme change
+        // doesn't re-install a default scroll-pane border.
+        scroll.setBorder(BorderFactory.createEmptyBorder());
         scroll.setOpaque(true);
         scroll.getViewport().setOpaque(true);
 

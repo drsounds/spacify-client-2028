@@ -103,7 +103,7 @@ public class Sidebar extends JPanel implements NavigationListener {
         });
 
         scroll = new JScrollPane(tree);
-        scroll.setBorder(null);
+        scroll.setBorder(BorderFactory.createEmptyBorder());
         // Keep scroll and viewport opaque so they paint a background;
         // colours are kept in sync by updateColors() below.
         scroll.setOpaque(true);

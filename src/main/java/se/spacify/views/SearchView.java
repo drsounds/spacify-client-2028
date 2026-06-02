@@ -30,7 +30,7 @@ public class SearchView extends SPView {
         JScrollPane scroll = new JScrollPane(resultsPanel);
         scroll.setOpaque(false);
         scroll.getViewport().setOpaque(false);
-        scroll.setBorder(null);
+        scroll.setBorder(BorderFactory.createEmptyBorder());
         panel.add(scroll, BorderLayout.CENTER);
     }
 

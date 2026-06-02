@@ -68,13 +68,15 @@ public class MainWindow extends JFrame {
         leftSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, sidebar, centerPanel);
         leftSplit.setDividerLocation(220);
         leftSplit.setDividerSize(1);
-        leftSplit.setBorder(null);
+        // Empty (non-UIResource) border survives the Nimbus reinstall in
+        // rebuildTheme(); a null border would get a default border re-installed.
+        leftSplit.setBorder(BorderFactory.createEmptyBorder());
         leftSplit.setContinuousLayout(true);
 
         mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftSplit, new NowPlayingPanel(viewStack));
         mainSplit.setDividerLocation(880);
         mainSplit.setDividerSize(1);
-        mainSplit.setBorder(null);
+        mainSplit.setBorder(BorderFactory.createEmptyBorder());
         mainSplit.setContinuousLayout(true);
 
         add(mainSplit, BorderLayout.CENTER);
