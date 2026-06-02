@@ -6,6 +6,7 @@ import se.spacify.service.media.MediaService;
 import se.spacify.service.media.MediaService.PlaybackState;
 import se.spacify.ui.theme.ThemeManager;
 import se.spacify.views.*;
+import se.spacify.views.library.*;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -36,7 +37,11 @@ public class MainWindow extends JFrame {
         nowPlayingView = new NowPlayingView();
         viewStack.registerView(nowPlayingView);
         viewStack.registerView(new SearchView());
-        viewStack.registerView(new LibraryView());
+        viewStack.registerView(new ArtistsLibraryView());
+        viewStack.registerView(new RecordingsLibraryView());
+        viewStack.registerView(new ReleasesLibraryView());
+        viewStack.registerView(new LocalFileLibraryView());
+        viewStack.registerView(new TracksLibraryView());
         viewStack.registerView(new PlaylistView());
 
         getContentPane().setLayout(new BorderLayout());

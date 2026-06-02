@@ -28,9 +28,11 @@ public class Sidebar extends JPanel implements NavigationListener {
         root = new DefaultMutableTreeNode("root");
 
         DefaultMutableTreeNode library = nodeFor(new SidebarNode("Your Library", "spacify:library"));
-        library.add(nodeFor(new SidebarNode("Liked Songs",   "spacify:library:liked")));
-        library.add(nodeFor(new SidebarNode("Albums",        "spacify:library:albums")));
-        library.add(nodeFor(new SidebarNode("Artists",       "spacify:library:artists")));
+        library.add(nodeFor(new SidebarNode("Tracks",     "spacify:library:tracks")));
+        library.add(nodeFor(new SidebarNode("Recordings", "spacify:library:recordings")));
+        library.add(nodeFor(new SidebarNode("Releases",   "spacify:library:releases")));
+        library.add(nodeFor(new SidebarNode("Artists",    "spacify:library:artists")));
+        library.add(nodeFor(new SidebarNode("Local Files", "spacify:library:local")));
         root.add(library);
 
         tree = new JTree(root);

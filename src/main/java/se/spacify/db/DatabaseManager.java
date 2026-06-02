@@ -28,6 +28,7 @@ public class DatabaseManager {
     private Dao<Track,                 Integer> trackDao;
     private Dao<RecordingArtistCredit, Integer> recordingArtistCreditDao;
     private Dao<ReleaseArtistCredit,   Integer> releaseArtistCreditDao;
+    private Dao<LocalFile,             Integer> localFileDao;
 
     private DatabaseManager() {}
 
@@ -50,6 +51,7 @@ public class DatabaseManager {
         TableUtils.createTableIfNotExists(connectionSource, Track.class);
         TableUtils.createTableIfNotExists(connectionSource, RecordingArtistCredit.class);
         TableUtils.createTableIfNotExists(connectionSource, ReleaseArtistCredit.class);
+        TableUtils.createTableIfNotExists(connectionSource, LocalFile.class);
 
         artistDao                = DaoManager.createDao(connectionSource, Artist.class);
         musicWorkDao             = DaoManager.createDao(connectionSource, MusicWork.class);
@@ -58,6 +60,7 @@ public class DatabaseManager {
         trackDao                 = DaoManager.createDao(connectionSource, Track.class);
         recordingArtistCreditDao = DaoManager.createDao(connectionSource, RecordingArtistCredit.class);
         releaseArtistCreditDao   = DaoManager.createDao(connectionSource, ReleaseArtistCredit.class);
+        localFileDao             = DaoManager.createDao(connectionSource, LocalFile.class);
     }
 
     public void close() {
@@ -76,4 +79,5 @@ public class DatabaseManager {
     public Dao<Track,                 Integer> trackDao()                 { return trackDao; }
     public Dao<RecordingArtistCredit, Integer> recordingArtistCreditDao() { return recordingArtistCreditDao; }
     public Dao<ReleaseArtistCredit,   Integer> releaseArtistCreditDao()   { return releaseArtistCreditDao; }
+    public Dao<LocalFile,             Integer> localFileDao()             { return localFileDao; }
 }

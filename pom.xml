@@ -21,6 +21,11 @@
       <artifactId>ormlite-jdbc</artifactId>
       <version>6.1</version>
     </dependency>
+    <dependency>
+      <groupId>net.jthink</groupId>
+      <artifactId>jaudiotagger</artifactId>
+      <version>3.0.1</version>
+    </dependency>
   </dependencies>
 
   <build>

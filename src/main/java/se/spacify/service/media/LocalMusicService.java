@@ -1,6 +1,7 @@
 package se.spacify.service.media;
 
 import se.spacify.db.DatabaseManager;
+import se.spacify.db.entity.LocalFile;
 import se.spacify.db.entity.Recording;
 import se.spacify.db.entity.RecordingArtistCredit;
 
@@ -108,6 +109,11 @@ public class LocalMusicService extends MusicService {
     @Override
     public void loadByIsrc(String isrc) {
         try {
+            // Prefer a dedicated local file row — it carries its own metadata.
+            List<LocalFile> files = DatabaseManager.getInstance().localFileDao()
+                .queryForEq("isrc", isrc);
+            if (!files.isEmpty()) { loadLocalFile(files.get(0)); return; }
+
             List<Recording> results = DatabaseManager.getInstance().recordingDao()
                 .queryForEq("isrc", isrc);
             if (results.isEmpty()) { fireError(new Exception("No recording found for ISRC: " + isrc)); return; }
@@ -117,6 +123,15 @@ public class LocalMusicService extends MusicService {
         } catch (Exception e) {
             fireError(e);
         }
+    }
+
+    /** Load a local file row for playback, using its denormalised metadata. */
+    public void loadLocalFile(LocalFile f) {
+        if (f == null || f.getFilePath() == null) {
+            fireError(new Exception("Local file has no path"));
+            return;
+        }
+        loadFile(new File(f.getFilePath()), f.getName(), f.getArtistName(), f.getReleaseName());
     }
 
     @Override
@@ -136,8 +151,21 @@ public class LocalMusicService extends MusicService {
     @Override
     public Recording lookup(String isrc) {
         try {
-            return DatabaseManager.getInstance().recordingDao()
+            Recording rec = DatabaseManager.getInstance().recordingDao()
                 .queryForEq("isrc", isrc).stream().findFirst().orElse(null);
+            if (rec != null) return rec;
+
+            // A local file with this ISRC is also playable here — return a
+            // lightweight, unpersisted Recording as a "can play" token.
+            LocalFile f = DatabaseManager.getInstance().localFileDao()
+                .queryForEq("isrc", isrc).stream().findFirst().orElse(null);
+            if (f != null) {
+                Recording token = new Recording(f.getName());
+                token.setIsrc(f.getIsrc());
+                token.setFilePath(f.getFilePath());
+                return token;
+            }
+            return null;
         } catch (Exception e) { return null; }
     }
 
