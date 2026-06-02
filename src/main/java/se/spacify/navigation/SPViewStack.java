@@ -1,6 +1,9 @@
 package se.spacify.navigation;
 
 import javax.swing.*;
+
+import se.spacify.ui.MainWindow;
+
 import java.awt.*;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -16,6 +19,17 @@ public class SPViewStack extends JPanel {
 
     private String currentUri = null;
     private SPView currentView = null;
+    
+    public MainWindow getMainWindow() {
+    	Container parent = getParent();
+    	while (parent != null && parent != this) {
+    		if (parent instanceof MainWindow) {
+    			return (MainWindow)parent;
+    		}
+    		parent = parent.getParent();
+    	}
+    	return null;
+    }
 
     public SPViewStack() {
         setLayout(new BorderLayout());

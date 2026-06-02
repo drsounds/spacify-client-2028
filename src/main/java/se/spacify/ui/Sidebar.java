@@ -26,19 +26,12 @@ public class Sidebar extends JPanel implements NavigationListener {
         setOpaque(true);
 
         root = new DefaultMutableTreeNode("root");
-        root.add(nodeFor(new SidebarNode("Now Playing", "spacify:now-playing")));
 
         DefaultMutableTreeNode library = nodeFor(new SidebarNode("Your Library", "spacify:library"));
         library.add(nodeFor(new SidebarNode("Liked Songs",   "spacify:library:liked")));
         library.add(nodeFor(new SidebarNode("Albums",        "spacify:library:albums")));
         library.add(nodeFor(new SidebarNode("Artists",       "spacify:library:artists")));
         root.add(library);
-
-        DefaultMutableTreeNode playlists = nodeFor(new SidebarNode("Playlists", "spacify:library:playlists"));
-        playlists.add(nodeFor(new SidebarNode("Chill Mix",  "spacify:playlist:chill-mix")));
-        playlists.add(nodeFor(new SidebarNode("Workout",    "spacify:playlist:workout")));
-        playlists.add(nodeFor(new SidebarNode("Late Night", "spacify:playlist:late-night")));
-        root.add(playlists);
 
         tree = new JTree(root);
         tree.setRootVisible(false);

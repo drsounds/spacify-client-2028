@@ -15,8 +15,6 @@ public class PlayerBar extends JPanel {
     private final JLabel  trackNameLabel;
     private final JLabel  artistLabel;
     private final JButton playPauseBtn;
-    private final JSlider progress;
-    private boolean updatingProgress = false;
 
     public PlayerBar() {
         setLayout(new BorderLayout(12, 0));
@@ -52,15 +50,9 @@ public class PlayerBar extends JPanel {
         buttons.add(makeControlButton("⏩"));
         buttons.add(makeControlButton("⏭"));
 
-        progress = new JSlider(0, 1000, 0);
-        progress.setOpaque(false);
-        progress.setMaximumSize(new Dimension(400, 20));
-        progress.setAlignmentX(CENTER_ALIGNMENT);
-
         controls.add(buttons);
         controls.add(Box.createVerticalStrut(4));
-        controls.add(progress);
-
+       
         // Right: volume
         JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         rightPanel.setOpaque(false);
@@ -90,13 +82,6 @@ public class PlayerBar extends JPanel {
             else ms.play();
         });
 
-        progress.addChangeListener(e -> {
-            if (!updatingProgress && !progress.getValueIsAdjusting()) {
-                long dur = ms.getDurationMs();
-                if (dur > 0) ms.seek((long)(progress.getValue() / 1000.0 * dur));
-            }
-        });
-
         ms.addPlaybackListener(new MediaService.PlaybackListener() {
             @Override
             public void onStateChanged(PlaybackState state) {
@@ -108,9 +93,7 @@ public class PlayerBar extends JPanel {
             public void onPositionChanged(long posMs, long durMs) {
                 if (durMs <= 0) return;
                 SwingUtilities.invokeLater(() -> {
-                    updatingProgress = true;
-                    progress.setValue((int)(posMs * 1000.0 / durMs));
-                    updatingProgress = false;
+                   
                 });
             }
 

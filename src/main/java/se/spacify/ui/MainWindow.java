@@ -3,6 +3,7 @@ package se.spacify.ui;
 import se.spacify.navigation.SPViewStack;
 import se.spacify.service.ServiceManager;
 import se.spacify.service.media.MediaService;
+import se.spacify.service.media.MediaService.PlaybackState;
 import se.spacify.ui.theme.ThemeManager;
 import se.spacify.views.*;
 
@@ -16,6 +17,10 @@ public class MainWindow extends JFrame {
     private final PlayerBar      playerBar;
     private final NowPlayingView nowPlayingView;
     private final Sidebar        sidebar;
+    private final JSlider progress;
+    private boolean updatingProgress = false;
+	private JSplitPane leftSplit;
+	private JSplitPane mainSplit;
 
     public MainWindow() {
         super("Spacify");
@@ -44,19 +49,24 @@ public class MainWindow extends JFrame {
         JPanel centerPanel = new JPanel(new BorderLayout());
         centerPanel.add(viewStack, BorderLayout.CENTER);
 
-        JSplitPane leftSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, sidebar, centerPanel);
+        leftSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, sidebar, centerPanel);
         leftSplit.setDividerLocation(220);
         leftSplit.setDividerSize(1);
         leftSplit.setBorder(null);
         leftSplit.setContinuousLayout(true);
 
-        JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftSplit, new NowPlayingPanel(viewStack));
+        mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftSplit, new NowPlayingPanel(viewStack));
         mainSplit.setDividerLocation(880);
         mainSplit.setDividerSize(1);
         mainSplit.setBorder(null);
         mainSplit.setContinuousLayout(true);
 
         add(mainSplit, BorderLayout.CENTER);
+
+        progress = new JSlider(0, 1000, 0);
+        progress.setOpaque(false); 
+        progress.setAlignmentX(CENTER_ALIGNMENT);
+        add(progress, BorderLayout.SOUTH);
 
         playerBar = new PlayerBar();
         add(playerBar, BorderLayout.SOUTH);
@@ -77,7 +87,59 @@ public class MainWindow extends JFrame {
         // Glass-pane resize handler — intercepts edge events, redispatches others
         WindowResizer.install(this);
 
-        viewStack.navigate("spacify:now-playing");
+        navigate("spacify:now-playing");
+    }
+
+    public void navigate(String uri) {
+    	viewStack.navigate(uri);
+    	if (uri.startsWith("spacify:now-playing")) {
+    		sidebar.setVisible(false);
+    	} else {
+    		sidebar.setVisible(true);
+    		leftSplit.setDividerLocation(100);
+    	}
+    }
+
+    /**
+     * Wire this bar to a MediaService.
+     * Playback events update labels and progress; controls drive the service.
+     */
+    public void setMediaService(MediaService ms) {
+ 
+        progress.addChangeListener(e -> {
+            if (!updatingProgress && !progress.getValueIsAdjusting()) {
+                long dur = ms.getDurationMs();
+                if (dur > 0) ms.seek((long)(progress.getValue() / 1000.0 * dur));
+            }
+        });
+
+        ms.addPlaybackListener(new MediaService.PlaybackListener() {
+            @Override
+            public void onStateChanged(PlaybackState state) {
+            }
+
+            @Override
+            public void onPositionChanged(long posMs, long durMs) {
+                if (durMs <= 0) return;
+                SwingUtilities.invokeLater(() -> {
+                    updatingProgress = true;
+                    progress.setValue((int)(posMs * 1000.0 / durMs));
+                    updatingProgress = false;
+                });
+            }
+
+            @Override
+            public void onTrackChanged(String title, String artist, String album) {
+                SwingUtilities.invokeLater(() -> {
+            
+                });
+            }
+
+            @Override
+            public void onError(Exception e) {
+              
+            }
+        });
     }
 
     private void rebuildTheme() {
