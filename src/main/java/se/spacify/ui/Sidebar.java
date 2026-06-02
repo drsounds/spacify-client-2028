@@ -1,5 +1,9 @@
 package se.spacify.ui;
 
+import se.spacify.db.DatabaseManager;
+import se.spacify.db.entity.Artist;
+import se.spacify.db.entity.Release;
+import se.spacify.library.LibraryEvents;
 import se.spacify.navigation.NavigationListener;
 import se.spacify.navigation.SPViewStack;
 import se.spacify.navigation.SidebarNode;
@@ -17,6 +21,8 @@ public class Sidebar extends JPanel implements NavigationListener {
     private final JTree       tree;
     private final JScrollPane scroll;
     private final DefaultMutableTreeNode root;
+    private final DefaultMutableTreeNode releasesNode;
+    private final DefaultMutableTreeNode artistsNode;
     private boolean suppressSelection = false;
 
     public Sidebar(SPViewStack viewStack) {
@@ -30,10 +36,15 @@ public class Sidebar extends JPanel implements NavigationListener {
         DefaultMutableTreeNode library = nodeFor(new SidebarNode("Your Library", "spacify:library"));
         library.add(nodeFor(new SidebarNode("Tracks",     "spacify:library:tracks")));
         library.add(nodeFor(new SidebarNode("Recordings", "spacify:library:recordings")));
-        library.add(nodeFor(new SidebarNode("Releases",   "spacify:library:releases")));
-        library.add(nodeFor(new SidebarNode("Artists",    "spacify:library:artists")));
+        releasesNode = nodeFor(new SidebarNode("Releases", "spacify:library:releases"));
+        artistsNode  = nodeFor(new SidebarNode("Artists",  "spacify:library:artists"));
+        library.add(releasesNode);
+        library.add(artistsNode);
         library.add(nodeFor(new SidebarNode("Local Files", "spacify:library:local")));
         root.add(library);
+
+        populateReleases();
+        populateArtists();
 
         tree = new JTree(root);
         tree.setRootVisible(false);
@@ -43,7 +54,9 @@ public class Sidebar extends JPanel implements NavigationListener {
         tree.setOpaque(true);
         tree.setCellRenderer(new ThemedTreeCellRenderer());
 
-        for (int i = 0; i < tree.getRowCount(); i++) tree.expandRow(i);
+        // Expand the top-level library node, but leave the (potentially long)
+        // Releases/Artists lists collapsed until the user opens them.
+        tree.expandPath(new TreePath(library.getPath()));
 
         tree.addMouseListener(new MouseAdapter() {
             @Override
@@ -72,6 +85,38 @@ public class Sidebar extends JPanel implements NavigationListener {
 
         updateColors();
         ThemeManager.addChangeListener(this::updateColors);
+        LibraryEvents.addListener(this::refreshLibrary);
+    }
+
+    // ── Dynamic library subtrees (albums & artists) ───────────────────────────
+
+    /** Repopulate the Releases and Artists subtrees from the database. */
+    private void refreshLibrary() {
+        populateReleases();
+        populateArtists();
+        DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+        model.nodeStructureChanged(releasesNode);
+        model.nodeStructureChanged(artistsNode);
+    }
+
+    private void populateReleases() {
+        releasesNode.removeAllChildren();
+        try {
+            for (Release r : DatabaseManager.getInstance().releaseDao().queryForAll()) {
+                releasesNode.add(nodeFor(new SidebarNode(
+                    r.getTitle(), "spacify:library:release:" + r.getId())));
+            }
+        } catch (Exception ignored) {}
+    }
+
+    private void populateArtists() {
+        artistsNode.removeAllChildren();
+        try {
+            for (Artist a : DatabaseManager.getInstance().artistDao().queryForAll()) {
+                artistsNode.add(nodeFor(new SidebarNode(
+                    a.getName(), "spacify:library:artist:" + a.getId())));
+            }
+        } catch (Exception ignored) {}
     }
 
     // ── Theme-aware colour sync ───────────────────────────────────────────────

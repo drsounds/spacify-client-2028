@@ -102,10 +102,8 @@ public class LocalFileLibraryView extends AbstractLibraryView {
 
     @Override
     protected void onActivate(int row) {
-        LocalFile f = rows.get(row);
-        if (!PlaybackCoordinator.playByIsrc(f.getIsrc())) {
-            PlaybackCoordinator.playLocalFile(f);
-        }
+        // A local file is its own playable — resolve straight to the file.
+        PlaybackCoordinator.playLocalFile(rows.get(row));
     }
 
     private JButton makeBrowseButton(JTextField path, JTextField name) {

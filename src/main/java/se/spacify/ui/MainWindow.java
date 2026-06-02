@@ -41,6 +41,8 @@ public class MainWindow extends JFrame {
         viewStack.registerView(new RecordingsLibraryView());
         viewStack.registerView(new ReleasesLibraryView());
         viewStack.registerView(new LocalFileLibraryView());
+        viewStack.registerView(new ReleaseDetailView());
+        viewStack.registerView(new ArtistDetailView());
         viewStack.registerView(new TracksLibraryView());
         viewStack.registerView(new PlaylistView());
 

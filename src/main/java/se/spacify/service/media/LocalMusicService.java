@@ -136,15 +136,27 @@ public class LocalMusicService extends MusicService {
 
     @Override
     public void loadByTitleArtist(String title, String artist) {
-        try {
-            List<Recording> all = DatabaseManager.getInstance().recordingDao().queryForAll();
-            Recording match = all.stream()
-                .filter(r -> r.getTitle().equalsIgnoreCase(title))
-                .findFirst().orElse(null);
-            if (match == null) { fireError(new Exception("Not found: " + title)); return; }
+        Recording match = lookupByTitleArtist(title, artist);
+        if (match == null) { fireError(new Exception("Not found: " + title)); return; }
+        if (match.getFilePath() != null) {
+            loadFile(new File(match.getFilePath()), match.getTitle(), primaryArtist(match), null);
+        } else {
             loadUri(match.getPlayUri());
+        }
+    }
+
+    @Override
+    public Recording lookupByTitleArtist(String title, String artist) {
+        if (title == null || title.isBlank()) return null;
+        try {
+            for (Recording r : DatabaseManager.getInstance().recordingDao().queryForAll()) {
+                if (r.getTitle() == null || !r.getTitle().equalsIgnoreCase(title)) continue;
+                if (artist == null || artist.isBlank()) return r;
+                if (primaryArtist(r).equalsIgnoreCase(artist)) return r;
+            }
+            return null;
         } catch (Exception e) {
-            fireError(e);
+            return null;
         }
     }
 

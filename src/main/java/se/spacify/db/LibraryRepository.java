@@ -55,6 +55,20 @@ public final class LibraryRepository {
         }
     }
 
+    /** The first primary artist name for a recording, or "" if none. */
+    public static String primaryArtistForRecording(Recording r) {
+        try {
+            return db().recordingArtistCreditDao().queryForEq("recording_id", r.getId()).stream()
+                .filter(RecordingArtistCredit::isPrimary)
+                .map(c -> c.getArtist() != null ? c.getArtist().getName() : "")
+                .filter(n -> !n.isBlank())
+                .findFirst()
+                .orElse("");
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
     /** Comma-joined titles of releases this recording appears on (via tracks). */
     public static String albumForRecording(Recording r) {
         try {

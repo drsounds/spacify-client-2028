@@ -1,5 +1,6 @@
 package se.spacify.views.library;
 
+import se.spacify.library.LibraryEvents;
 import se.spacify.navigation.SPView;
 import se.spacify.ui.theme.ThemeManager;
 
@@ -11,13 +12,15 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 /**
- * Base for the data-backed library views. Provides a themed, read-only
- * {@link JTable} with a CRUD toolbar (Add / Edit / Delete / Refresh) and
- * wires the buttons to abstract hooks the concrete views implement.
+ * Base for the data-backed library views. Provides a themed {@link JTable} with
+ * an optional header and a CRUD toolbar (Add / Edit / Delete / Scan / Refresh).
+ * Read-only views (see {@link #isEditable()}) keep just Refresh; mutating
+ * actions broadcast via {@link LibraryEvents} so the sidebar stays in sync.
  */
 public abstract class AbstractLibraryView extends SPView {
 
     protected final JPanel           panel;
+    protected final JLabel           headerLabel;
     protected final JTable           table;
     protected final JScrollPane      scroll;
     protected final DefaultTableModel model;
@@ -25,6 +28,11 @@ public abstract class AbstractLibraryView extends SPView {
     protected AbstractLibraryView() {
         panel = new JPanel(new BorderLayout(0, 8));
         panel.setOpaque(false);
+
+        headerLabel = new JLabel();
+        headerLabel.setFont(headerLabel.getFont().deriveFont(Font.BOLD, 18f));
+        headerLabel.setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6));
+        headerLabel.setVisible(false);
 
         // ── Table ────────────────────────────────────────────────────────────────
         model = new DefaultTableModel(getColumns(), 0) {
@@ -59,37 +67,55 @@ public abstract class AbstractLibraryView extends SPView {
         toolbar.setFloatable(false);
         toolbar.setOpaque(false);
 
-        JButton addBtn     = new JButton("Add");
-        JButton editBtn    = new JButton("Edit");
-        JButton deleteBtn  = new JButton("Delete");
         JButton refreshBtn = new JButton("Refresh");
-        JButton scanBtn    = new JButton("Scan…");
-
-        scanBtn.addActionListener(e -> LibraryScanAction.run(panel, this::reload));
-        addBtn.addActionListener(e -> { onAdd(); reload(); });
-        editBtn.addActionListener(e -> {
-            int row = table.getSelectedRow();
-            if (row >= 0) { onEdit(row); reload(); }
-        });
-        deleteBtn.addActionListener(e -> {
-            int row = table.getSelectedRow();
-            if (row >= 0) { onDelete(row); reload(); }
-        });
         refreshBtn.addActionListener(e -> reload());
 
-        toolbar.add(addBtn);
-        toolbar.add(editBtn);
-        toolbar.add(deleteBtn);
-        toolbar.addSeparator();
-        toolbar.add(scanBtn);
+        if (isEditable()) {
+            JButton addBtn    = new JButton("Add");
+            JButton editBtn   = new JButton("Edit");
+            JButton deleteBtn = new JButton("Delete");
+            JButton scanBtn   = new JButton("Scan…");
+
+            scanBtn.addActionListener(e -> LibraryScanAction.run(panel,
+                () -> { reload(); LibraryEvents.fireChanged(); }));
+            addBtn.addActionListener(e -> { onAdd(); reload(); LibraryEvents.fireChanged(); });
+            editBtn.addActionListener(e -> {
+                int row = table.getSelectedRow();
+                if (row >= 0) { onEdit(row); reload(); LibraryEvents.fireChanged(); }
+            });
+            deleteBtn.addActionListener(e -> {
+                int row = table.getSelectedRow();
+                if (row >= 0) { onDelete(row); reload(); LibraryEvents.fireChanged(); }
+            });
+
+            toolbar.add(addBtn);
+            toolbar.add(editBtn);
+            toolbar.add(deleteBtn);
+            toolbar.addSeparator();
+            toolbar.add(scanBtn);
+        }
         toolbar.add(refreshBtn);
 
-        panel.add(toolbar, BorderLayout.NORTH);
-        panel.add(scroll,  BorderLayout.CENTER);
+        JPanel north = new JPanel(new BorderLayout());
+        north.setOpaque(false);
+        north.add(headerLabel, BorderLayout.NORTH);
+        north.add(toolbar, BorderLayout.CENTER);
+
+        panel.add(north, BorderLayout.NORTH);
+        panel.add(scroll, BorderLayout.CENTER);
 
         updateColors();
         ThemeManager.addChangeListener(this::updateColors);
     }
+
+    /** Sets the page header text; pass null/blank to hide it. */
+    protected void setHeader(String text) {
+        headerLabel.setText(text == null ? "" : text);
+        headerLabel.setVisible(text != null && !text.isBlank());
+    }
+
+    /** Whether this view shows Add/Edit/Delete/Scan; read-only views return false. */
+    protected boolean isEditable() { return true; }
 
     // ── Hooks for subclasses ────────────────────────────────────────────────────
 
@@ -99,9 +125,9 @@ public abstract class AbstractLibraryView extends SPView {
     /** Clear and refill {@link #model} from the database. */
     protected abstract void reload();
 
-    protected abstract void onAdd();
-    protected abstract void onEdit(int row);
-    protected abstract void onDelete(int row);
+    protected void onAdd() {}
+    protected void onEdit(int row) {}
+    protected void onDelete(int row) {}
 
     /** Invoked when a row is double-clicked; default does nothing. */
     protected void onActivate(int row) {}
@@ -145,6 +171,7 @@ public abstract class AbstractLibraryView extends SPView {
         Color fg   = ThemeManager.getForeground();
         Color grid = ThemeManager.getGridColor();
 
+        headerLabel.setForeground(fg);
         table.setBackground(bg);
         table.setForeground(fg);
         table.setGridColor(grid);

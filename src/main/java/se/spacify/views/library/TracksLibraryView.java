@@ -119,8 +119,11 @@ public class TracksLibraryView extends AbstractLibraryView {
     protected void onActivate(int row) {
         Track t = rows.get(row);
         Recording rec = t.getRecording();
-        String isrc = rec != null ? rec.getIsrc() : null;
-        if (!PlaybackCoordinator.playByIsrc(isrc)) {
+        // Resolve across services by ISRC, then by title/artist metadata.
+        String isrc   = rec != null ? rec.getIsrc()  : null;
+        String title  = rec != null ? rec.getTitle() : null;
+        String artist = rec != null ? LibraryRepository.primaryArtistForRecording(rec) : null;
+        if (!PlaybackCoordinator.play(isrc, title, artist)) {
             PlaybackCoordinator.playUri(t.getPlayUri());
         }
     }

@@ -100,7 +100,9 @@ public class RecordingsLibraryView extends AbstractLibraryView {
     @Override
     protected void onActivate(int row) {
         Recording r = rows.get(row);
-        if (!PlaybackCoordinator.playByIsrc(r.getIsrc())) {
+        // Resolve across services by ISRC, then by title/artist metadata.
+        if (!PlaybackCoordinator.play(r.getIsrc(), r.getTitle(),
+                LibraryRepository.primaryArtistForRecording(r))) {
             PlaybackCoordinator.playUri(r.getPlayUri());
         }
     }

@@ -19,4 +19,11 @@ public abstract class MusicService extends MediaService {
      * Returns null if not found.
      */
     public abstract Recording lookup(String isrc);
+
+    /**
+     * Best-effort lookup by title + artist without loading it for playback.
+     * Returns null if not found. Default implementation finds nothing;
+     * services that can resolve metadata should override.
+     */
+    public Recording lookupByTitleArtist(String title, String artist) { return null; }
 }
