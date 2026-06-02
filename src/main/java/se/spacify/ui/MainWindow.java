@@ -7,7 +7,7 @@ import se.spacify.service.media.MediaService.PlaybackState;
 import se.spacify.ui.theme.ThemeManager;
 import se.spacify.views.*;
 import se.spacify.views.library.*;
-import se.spacify.views.web.SPWebView;
+import se.spacify.views.web.*;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -23,6 +23,8 @@ public class MainWindow extends JFrame {
     private boolean updatingProgress = false;
 	private JSplitPane leftSplit;
 	private JSplitPane mainSplit;
+    private boolean userWantsSidebar = true;  // user's manual show/hide preference
+    private boolean immersive = false;        // full-width store browsing
 
     public MainWindow() {
         super("Spacify");
@@ -46,6 +48,7 @@ public class MainWindow extends JFrame {
         viewStack.registerView(new ArtistDetailView());
         viewStack.registerView(new TracksLibraryView());
         viewStack.registerView(new SPWebView(viewStack));
+        viewStack.registerView(new SPServiceWebView(viewStack));
         viewStack.registerView(new PlaylistView());
 
         getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.PAGE_AXIS));
@@ -107,7 +110,39 @@ public class MainWindow extends JFrame {
         // Glass-pane resize handler — intercepts edge events, redispatches others
         WindowResizer.install(this);
 
+        // Store pages browse full-width with the side panels collapsed.
+        viewStack.addNavigationListener((uri, b, f) ->
+            applyImmersive(uri != null && uri.startsWith("spacify:store:")));
+
         navigate("spacify:now-playing");
+    }
+
+    /** Toggle the left sidebar; remembers the user's preference. */
+    public void toggleSidebar() {
+        userWantsSidebar = !userWantsSidebar;
+        if (!immersive) applySidebar(userWantsSidebar);
+    }
+
+    private void applySidebar(boolean visible) {
+        sidebar.setVisible(visible);
+        leftSplit.setDividerLocation(visible ? 220 : 0);
+        leftSplit.revalidate();
+        leftSplit.repaint();
+    }
+
+    /** Full-width browsing: collapse both side panels for store views. */
+    private void applyImmersive(boolean on) {
+        if (on == immersive) return;
+        immersive = on;
+        if (on) {
+            applySidebar(false);
+            mainSplit.setDividerLocation(1.0);   // collapse the right Now Playing panel
+        } else {
+            applySidebar(userWantsSidebar);
+            mainSplit.setDividerLocation(880);
+        }
+        mainSplit.revalidate();
+        mainSplit.repaint();
     }
 
     public void navigate(String uri) {

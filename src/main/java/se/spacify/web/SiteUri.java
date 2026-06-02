@@ -17,12 +17,18 @@ import java.net.URI;
  */
 public final class SiteUri {
 
-    public static final String PREFIX = "spacify:site:";
+    public static final String PREFIX       = "spacify:site:";
+    /** Same grammar, used by the service/store browser (SPServiceWebView). */
+    public static final String STORE_PREFIX = "spacify:store:";
 
     private SiteUri() {}
 
     public static boolean isSiteUri(String uri) {
-        return uri != null && uri.startsWith(PREFIX);
+        return hasPrefix(uri, PREFIX);
+    }
+
+    public static boolean hasPrefix(String uri, String prefix) {
+        return uri != null && uri.startsWith(prefix);
     }
 
     /** The host of a site URI (first segment after the prefix), or null. */
@@ -58,8 +64,13 @@ public final class SiteUri {
 
     /** {@code spacify:site:…} → {@code https://…}, or null if not a site URI. */
     public static String toUrl(String spacifyUri) {
-        if (!isSiteUri(spacifyUri)) return null;
-        String rest = spacifyUri.substring(PREFIX.length());
+        return toUrl(spacifyUri, PREFIX);
+    }
+
+    /** Prefix-aware {@code spacify:<scheme>:…} → {@code https://…}. */
+    public static String toUrl(String spacifyUri, String prefix) {
+        if (!hasPrefix(spacifyUri, prefix)) return null;
+        String rest = spacifyUri.substring(prefix.length());
         if (rest.isEmpty()) return null;
 
         // Split off the ?query / #fragment suffix (whichever comes first).
@@ -84,13 +95,18 @@ public final class SiteUri {
 
     /** {@code http(s)://…} → {@code spacify:site:…}, or null if it has no host. */
     public static String toSpacifyUri(String url) {
+        return toSpacifyUri(url, PREFIX);
+    }
+
+    /** Prefix-aware {@code http(s)://…} → {@code spacify:<scheme>:…}. */
+    public static String toSpacifyUri(String url, String prefix) {
         if (url == null) return null;
         try {
             URI u = URI.create(url.trim());
             String host = u.getHost();
             if (host == null) return null;
 
-            StringBuilder sb = new StringBuilder(PREFIX).append(host);
+            StringBuilder sb = new StringBuilder(prefix).append(host);
             String path = u.getRawPath();
             if (path != null && !path.isEmpty()) {
                 for (String seg : path.split("/")) {

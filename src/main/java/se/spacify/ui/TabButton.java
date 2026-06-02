@@ -1,5 +1,12 @@
 package se.spacify.ui;
 
-public class TabButton {
+import javax.swing.JButton;
+import javax.swing.JToggleButton;
 
+public class TabButton extends JToggleButton {
+
+	private static final long serialVersionUID = 1L;
+	public TabButton() {
+		
+	}
 }

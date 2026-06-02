@@ -3,12 +3,16 @@ package se.spacify.ui;
 import se.spacify.navigation.NavigationListener;
 import se.spacify.navigation.SPViewStack;
 import se.spacify.ui.theme.ThemeManager;
+import se.spacify.web.FaviconFetcher;
+import se.spacify.web.StoreCatalog;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 
 public class NavigationBar extends JPanel implements NavigationListener {
 
@@ -22,13 +26,21 @@ public class NavigationBar extends JPanel implements NavigationListener {
     private final JTextField searchField;
 	private JButton nowPlayingTabButton;
 	private JButton libraryTabButton;
+    /** Cached store favicons, fetched off the EDT. */
+    private final Map<String, Icon> faviconCache = new HashMap<>();
 
     public NavigationBar(SPViewStack viewStack) {
         this.viewStack = viewStack;
         setLayout(new BorderLayout(8, 0));
         setPreferredSize(new Dimension(0, 56));
         setOpaque(true);
-        
+
+        JButton sidebarToggle = makeNavButton("☰");
+        sidebarToggle.setToolTipText("Show/hide the sidebar");
+        sidebarToggle.addActionListener(e -> {
+            if (viewStack.getMainWindow() != null) viewStack.getMainWindow().toggleSidebar();
+        });
+
         backBtn = makeNavButton("◄");
         forwardBtn = makeNavButton("►");
         backBtn.setEnabled(false);
@@ -39,6 +51,7 @@ public class NavigationBar extends JPanel implements NavigationListener {
 
         JPanel navButtons = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
         navButtons.setOpaque(false);
+        navButtons.add(sidebarToggle);
         navButtons.add(backBtn);
         navButtons.add(forwardBtn);
         navButtons.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
@@ -80,17 +93,54 @@ public class NavigationBar extends JPanel implements NavigationListener {
         //right.add(searchField);
         GlassPanel storePanel = new GlassPanel();
         storePanel.setPreferredSize(new Dimension(200, 56));
-        
+        storePanel.setLayout(new FlowLayout(FlowLayout.CENTER, 0, 0));
+
+        JButton storesBtn = makeNavButton("Stores ▾");
+        storesBtn.setPreferredSize(new Dimension(120, 32));
+        storesBtn.setToolTipText("Open a music service");
+        storesBtn.addActionListener(e -> buildStoresMenu().show(storesBtn, 0, storesBtn.getHeight()));
+        storePanel.add(storesBtn);
+
         add(navButtons, BorderLayout.WEST);
         add(center, BorderLayout.CENTER);
         add(right, BorderLayout.EAST);
 
         right.add(storePanel, BorderLayout.CENTER);
-        
-        
-        
+
+        loadFavicons();
+
         viewStack.addNavigationListener(this);
         ThemeManager.addChangeListener(this::repaint);
+    }
+
+    /** Build the stores popup from the catalogue, using cached favicons. */
+    private JPopupMenu buildStoresMenu() {
+        JPopupMenu menu = new JPopupMenu();
+        for (StoreCatalog.Store store : StoreCatalog.STORES) {
+            JMenuItem item = new JMenuItem(store.name(), faviconCache.get(store.host()));
+            item.addActionListener(e -> {
+                if (viewStack.getMainWindow() != null) viewStack.getMainWindow().navigate(store.uri());
+                else viewStack.navigate(store.uri());
+            });
+            menu.add(item);
+        }
+        return menu;
+    }
+
+    /** Fetch each store's favicon off the EDT and cache it for the popup. */
+    private void loadFavicons() {
+        new SwingWorker<Void, Void>() {
+            @Override protected Void doInBackground() {
+                for (StoreCatalog.Store store : StoreCatalog.STORES) {
+                    byte[] png = FaviconFetcher.fetch(store.host());
+                    if (png != null) {
+                        Icon icon = new ImageIcon(png);
+                        SwingUtilities.invokeLater(() -> faviconCache.put(store.host(), icon));
+                    }
+                }
+                return null;
+            }
+        }.execute();
     }
     @Override
     protected void paintComponent(Graphics g) {

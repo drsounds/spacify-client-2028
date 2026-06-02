@@ -54,13 +54,21 @@ public class SPWebView extends SPView {
         ThemeManager.addChangeListener(this::updateColors);
     }
 
+    // ── Overridable scheme hooks (SPServiceWebView uses spacify:store:) ──────────
+
+    /** The spacify URI prefix this view handles. */
+    protected String prefix() { return SiteUri.PREFIX; }
+
+    /** Whether the toolbar shows the bookmark toggle. */
+    protected boolean supportsBookmarks() { return true; }
+
     // ── SPView ──────────────────────────────────────────────────────────────────
 
-    @Override public boolean acceptsUri(String uri) { return SiteUri.isSiteUri(uri); }
+    @Override public boolean acceptsUri(String uri) { return SiteUri.hasPrefix(uri, prefix()); }
 
     @Override
     public void navigate(String uri) {
-        String url = SiteUri.toUrl(uri);
+        String url = SiteUri.toUrl(uri, prefix());
         if (url == null) return;
         currentUri = uri;
         if (uriField != null) uriField.setText(uri);
@@ -112,7 +120,7 @@ public class SPWebView extends SPView {
             @Override
             public void onAddressChange(CefBrowser b, CefFrame frame, String newUrl) {
                 if (frame == null || !frame.isMain()) return;
-                String sp = SiteUri.toSpacifyUri(newUrl);
+                String sp = SiteUri.toSpacifyUri(newUrl, prefix());
                 if (sp == null) return;
                 SwingUtilities.invokeLater(() -> {
                     currentUri = sp;
@@ -135,10 +143,12 @@ public class SPWebView extends SPView {
         toolbar.setOpaque(true);
         toolbar.setBackground(ThemeManager.getTintColor());
 
-        bookmarkBtn = new JButton("☆");
-        bookmarkBtn.setToolTipText("Bookmark this site");
-        bookmarkBtn.addActionListener(e -> toggleBookmark());
-        toolbar.add(bookmarkBtn);
+        if (supportsBookmarks()) {
+            bookmarkBtn = new JButton("☆");
+            bookmarkBtn.setToolTipText("Bookmark this site");
+            bookmarkBtn.addActionListener(e -> toggleBookmark());
+            toolbar.add(bookmarkBtn);
+        }
 
         uriField = new JTextField(currentUri != null ? currentUri : "");
         uriField.addActionListener(e -> viewStack.navigate(uriField.getText().trim()));
