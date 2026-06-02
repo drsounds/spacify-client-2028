@@ -19,10 +19,13 @@ public class MainWindow extends JFrame {
 
     public MainWindow() {
         super("Spacify");
+        setUndecorated(true);  // remove native title bar + border on all platforms
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1100, 700);
         setMinimumSize(new Dimension(800, 500));
         setLocationRelativeTo(null);
+        // 1px border so the window edge is visible against the desktop
+        getRootPane().setBorder(BorderFactory.createLineBorder(new Color(40, 40, 40), 1));
 
         viewStack      = new SPViewStack();
         nowPlayingView = new NowPlayingView();
@@ -70,6 +73,9 @@ public class MainWindow extends JFrame {
         if (ms != null) wireMediaService(ms);
 
         ServiceManager.getInstance().activateFeatures(viewStack, sidebar.getRootNode());
+
+        // Glass-pane resize handler — intercepts edge events, redispatches others
+        WindowResizer.install(this);
 
         viewStack.navigate("spacify:now-playing");
     }
