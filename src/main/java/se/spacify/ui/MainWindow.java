@@ -7,6 +7,7 @@ import se.spacify.service.media.MediaService.PlaybackState;
 import se.spacify.ui.theme.ThemeManager;
 import se.spacify.views.*;
 import se.spacify.views.library.*;
+import se.spacify.views.web.SPWebView;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -44,6 +45,7 @@ public class MainWindow extends JFrame {
         viewStack.registerView(new ReleaseDetailView());
         viewStack.registerView(new ArtistDetailView());
         viewStack.registerView(new TracksLibraryView());
+        viewStack.registerView(new SPWebView(viewStack));
         viewStack.registerView(new PlaylistView());
 
         getContentPane().setLayout(new BorderLayout());
@@ -99,12 +101,12 @@ public class MainWindow extends JFrame {
 
     public void navigate(String uri) {
     	viewStack.navigate(uri);
-    	if (uri.startsWith("spacify:now-playing")) {
+    	/*if (uri.startsWith("spacify:now-playing")) {
     		sidebar.setVisible(false);
     	} else {
     		sidebar.setVisible(true);
     		leftSplit.setDividerLocation(100);
-    	}
+    	}*/
     }
 
     /**

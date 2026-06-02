@@ -43,6 +43,7 @@ public class SpacifyApp {
         // ── Register shutdown hook ────────────────────────────────────────────
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             sm.shutdownAll();
+            se.spacify.web.CefRuntime.dispose();
             DatabaseManager.getInstance().close();
         }));
 

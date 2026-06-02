@@ -26,6 +26,11 @@
       <artifactId>jaudiotagger</artifactId>
       <version>3.0.1</version>
     </dependency>
+    <dependency>
+      <groupId>me.friwi</groupId>
+      <artifactId>jcefmaven</artifactId>
+      <version>146.0.10</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -48,6 +53,16 @@
               <mainClass>se.spacify.app.SpacifyApp</mainClass>
             </manifest>
           </archive>
+        </configuration>
+      </plugin>
+      <!-- Convenience: `mvn exec:java` runs the app with the full dependency
+           classpath (java-cef downloads its native bundle on first launch). -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.5.0</version>
+        <configuration>
+          <mainClass>se.spacify.app.SpacifyApp</mainClass>
         </configuration>
       </plugin>
     </plugins>

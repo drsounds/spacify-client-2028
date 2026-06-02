@@ -17,4 +17,16 @@ public abstract class SPView {
     public void onShow() {}
 
     public void onHide() {}
+
+    /**
+     * Whether this view manages its own internal navigation history (e.g. an
+     * embedded browser). When true, {@link SPViewStack}'s back/forward delegate
+     * to {@link #goBack()}/{@link #goForward()} before touching the view stack.
+     */
+    public boolean handlesHistory() { return false; }
+
+    public boolean canGoBack()    { return false; }
+    public boolean canGoForward() { return false; }
+    public void    goBack()       {}
+    public void    goForward()    {}
 }
