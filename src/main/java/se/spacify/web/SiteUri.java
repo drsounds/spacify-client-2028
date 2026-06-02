@@ -25,6 +25,37 @@ public final class SiteUri {
         return uri != null && uri.startsWith(PREFIX);
     }
 
+    /** The host of a site URI (first segment after the prefix), or null. */
+    public static String host(String spacifyUri) {
+        if (!isSiteUri(spacifyUri)) return null;
+        String rest = spacifyUri.substring(PREFIX.length());
+        int end = rest.length();
+        for (int i = 0; i < rest.length(); i++) {
+            char c = rest.charAt(i);
+            if (c == ':' || c == '?' || c == '#') { end = i; break; }
+        }
+        String host = rest.substring(0, end);
+        return host.isEmpty() ? null : host;
+    }
+
+    /** True if the URI points at a host root (no path segments). */
+    public static boolean isRoot(String spacifyUri) {
+        if (!isSiteUri(spacifyUri)) return false;
+        String rest = spacifyUri.substring(PREFIX.length());
+        for (int i = 0; i < rest.length(); i++) {
+            char c = rest.charAt(i);
+            if (c == ':') return false;            // has a path segment
+            if (c == '?' || c == '#') return true; // query/fragment only
+        }
+        return true;
+    }
+
+    /** The {@code spacify:site:<host>} root URI for any site URI, or null. */
+    public static String rootUri(String spacifyUri) {
+        String host = host(spacifyUri);
+        return host == null ? null : PREFIX + host;
+    }
+
     /** {@code spacify:site:…} → {@code https://…}, or null if not a site URI. */
     public static String toUrl(String spacifyUri) {
         if (!isSiteUri(spacifyUri)) return null;

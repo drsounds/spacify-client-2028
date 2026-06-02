@@ -2,12 +2,15 @@ package se.spacify.ui;
 
 import se.spacify.db.DatabaseManager;
 import se.spacify.db.entity.Artist;
+import se.spacify.db.entity.Bookmark;
 import se.spacify.db.entity.Release;
 import se.spacify.library.LibraryEvents;
 import se.spacify.navigation.NavigationListener;
 import se.spacify.navigation.SPViewStack;
 import se.spacify.navigation.SidebarNode;
 import se.spacify.ui.theme.ThemeManager;
+import se.spacify.web.BookmarkEvents;
+import se.spacify.web.BookmarkManager;
 
 import javax.swing.*;
 import javax.swing.tree.*;
@@ -25,6 +28,7 @@ public class Sidebar extends JPanel implements NavigationListener {
     private final DefaultMutableTreeNode root;
     private final DefaultMutableTreeNode releasesNode;
     private final DefaultMutableTreeNode artistsNode;
+    private final DefaultMutableTreeNode sitesNode;
     private boolean suppressSelection = false;
 	private JToolBar toolbar;
 	private JTextField searchField;
@@ -50,10 +54,11 @@ public class Sidebar extends JPanel implements NavigationListener {
         root.add(library);
         DefaultMutableTreeNode downloads = nodeFor(new SidebarNode("Downloads", "spacify:downloads"));
         root.add(downloads);
-         DefaultMutableTreeNode sites = nodeFor(new SidebarNode("Sites", "spacify:"));
-        root.add(sites);
+        sitesNode = nodeFor(new SidebarNode("Sites", null));
+        root.add(sitesNode);
         populateReleases();
         populateArtists();
+        populateSites();
 
         toolbar = new JToolBar();
         toolbar.setFloatable(false);
@@ -115,6 +120,31 @@ public class Sidebar extends JPanel implements NavigationListener {
         updateColors();
         ThemeManager.addChangeListener(this::updateColors);
         LibraryEvents.addListener(this::refreshLibrary);
+        BookmarkEvents.addListener(this::refreshSites);
+    }
+
+    // ── Bookmarks (Sites) subtree ──────────────────────────────────────────────
+
+    private void refreshSites() {
+        populateSites();
+        ((DefaultTreeModel) tree.getModel()).nodeStructureChanged(sitesNode);
+    }
+
+    private void populateSites() {
+        sitesNode.removeAllChildren();
+        for (Bookmark root : BookmarkManager.roots()) {
+            DefaultMutableTreeNode rootNode = nodeFor(siteNode(root));
+            for (Bookmark child : BookmarkManager.childrenOf(root)) {
+                rootNode.add(nodeFor(siteNode(child)));
+            }
+            sitesNode.add(rootNode);
+        }
+    }
+
+    private static SidebarNode siteNode(Bookmark b) {
+        SidebarNode sn = new SidebarNode(b.toString(), b.getSpacifyUri());
+        if (b.getFavicon() != null) sn.setIcon(new ImageIcon(b.getFavicon()));
+        return sn;
     }
 
     // ── Dynamic library subtrees (albums & artists) ───────────────────────────
@@ -175,6 +205,11 @@ public class Sidebar extends JPanel implements NavigationListener {
                 setForeground(ThemeManager.getForeground());
             }
             setBorderSelectionColor(ThemeManager.getAccentColor());
+            // Per-node favicon (bookmarks); falls back to the default tree icon.
+            if (value instanceof DefaultMutableTreeNode n
+                    && n.getUserObject() instanceof SidebarNode sn && sn.getIcon() != null) {
+                setIcon(sn.getIcon());
+            }
             return this;
         }
     }

@@ -7,6 +7,8 @@ import org.cef.handler.CefDisplayHandlerAdapter;
 import se.spacify.navigation.SPView;
 import se.spacify.navigation.SPViewStack;
 import se.spacify.ui.theme.ThemeManager;
+import se.spacify.web.BookmarkEvents;
+import se.spacify.web.BookmarkManager;
 import se.spacify.web.CefRuntime;
 import se.spacify.web.SiteUri;
 
@@ -37,6 +39,10 @@ public class SPWebView extends SPView {
     private String     pendingUrl;
 	private JToolBar toolbar;
 	private JButton btnRefresh;
+    private JButton    bookmarkBtn;
+    private JTextField uriField;
+    private String     currentUri;
+    private String     currentTitle;
 
     public SPWebView(SPViewStack viewStack) {
         this.viewStack = viewStack;
@@ -56,6 +62,9 @@ public class SPWebView extends SPView {
     public void navigate(String uri) {
         String url = SiteUri.toUrl(uri);
         if (url == null) return;
+        currentUri = uri;
+        if (uriField != null) uriField.setText(uri);
+        updateStar();
         if (browser == null) {
             pendingUrl = url;
             ensureBrowser();
@@ -105,26 +114,71 @@ public class SPWebView extends SPView {
                 if (frame == null || !frame.isMain()) return;
                 String sp = SiteUri.toSpacifyUri(newUrl);
                 if (sp == null) return;
-                SwingUtilities.invokeLater(() -> viewStack.updateCurrentUri(sp));
+                SwingUtilities.invokeLater(() -> {
+                    currentUri = sp;
+                    if (uriField != null) uriField.setText(sp);
+                    updateStar();
+                    viewStack.updateCurrentUri(sp);
+                });
+            }
+            @Override
+            public void onTitleChange(CefBrowser b, String title) {
+                SwingUtilities.invokeLater(() -> currentTitle = title);
             }
         });
 
         browser = client.createBrowser(url, false, false);
         panel.remove(status);
+
         toolbar = new JToolBar();
         toolbar.setFloatable(false);
         toolbar.setOpaque(true);
         toolbar.setBackground(ThemeManager.getTintColor());
-        
-        JTextField uriField = new JTextField();
-        toolbar.add(uriField, BorderLayout.CENTER);
-        btnRefresh = new JButton();
-        toolbar.add(btnRefresh, BorderLayout.EAST);
+
+        bookmarkBtn = new JButton("☆");
+        bookmarkBtn.setToolTipText("Bookmark this site");
+        bookmarkBtn.addActionListener(e -> toggleBookmark());
+        toolbar.add(bookmarkBtn);
+
+        uriField = new JTextField(currentUri != null ? currentUri : "");
+        uriField.addActionListener(e -> viewStack.navigate(uriField.getText().trim()));
+        toolbar.add(uriField);
+
+        btnRefresh = new JButton("⟳");
+        btnRefresh.setToolTipText("Reload");
+        btnRefresh.addActionListener(e -> { if (browser != null) browser.reload(); });
+        toolbar.add(btnRefresh);
+
         panel.add(toolbar, BorderLayout.NORTH);
         panel.add(browser.getUIComponent(), BorderLayout.CENTER);
         panel.revalidate();
         panel.repaint();
+        updateStar();
         viewStack.refreshNavState();
+    }
+
+    // ── Bookmarking ───────────────────────────────────────────────────────────────
+
+    private void toggleBookmark() {
+        if (currentUri == null) return;
+        String uri = currentUri, title = currentTitle;
+        bookmarkBtn.setEnabled(false);
+        new SwingWorker<Void, Void>() {
+            @Override protected Void doInBackground() {   // DB + favicon network I/O
+                BookmarkManager.toggle(uri, title);
+                return null;
+            }
+            @Override protected void done() {
+                bookmarkBtn.setEnabled(true);
+                updateStar();
+                BookmarkEvents.fireChanged();
+            }
+        }.execute();
+    }
+
+    private void updateStar() {
+        if (bookmarkBtn == null) return;
+        bookmarkBtn.setText(currentUri != null && BookmarkManager.isBookmarked(currentUri) ? "★" : "☆");
     }
 
     private void updateColors() {
