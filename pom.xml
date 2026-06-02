@@ -55,14 +55,21 @@
           </archive>
         </configuration>
       </plugin>
-      <!-- Convenience: `mvn exec:java` runs the app with the full dependency
-           classpath (java-cef downloads its native bundle on first launch). -->
+      <!-- Convenience: `mvn exec:exec` launches the app in a forked JVM so the
+           Swing window stays open until closed (java-cef downloads its native
+           bundle on first launch). Use exec:exec rather than exec:java because
+           the latter runs inside Maven's JVM and exits when main() returns. -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
         <version>3.5.0</version>
         <configuration>
-          <mainClass>se.spacify.app.SpacifyApp</mainClass>
+          <executable>java</executable>
+          <arguments>
+            <argument>-classpath</argument>
+            <classpath/>
+            <argument>se.spacify.app.SpacifyApp</argument>
+          </arguments>
         </configuration>
       </plugin>
     </plugins>
