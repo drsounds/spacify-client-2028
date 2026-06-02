@@ -41,7 +41,8 @@ public abstract class AbstractLibraryView extends SPView {
         table = new JTable(model);
         table.setFillsViewportHeight(true);
         table.setRowHeight(28);
-        table.setShowGrid(true);
+        table.setShowGrid(false);
+        table.setIntercellSpacing(new Dimension(0, 0));
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.addMouseListener(new MouseAdapter() {
             @Override public void mouseClicked(MouseEvent e) {

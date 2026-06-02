@@ -27,7 +27,8 @@ public class LibraryView extends SPView {
         table.setFillsViewportHeight(true);
         table.setRowHeight(28);
         table.setOpaque(true);
-        table.setShowGrid(true);
+        table.setShowGrid(false);
+        table.setIntercellSpacing(new Dimension(0, 0));
 
         ThemedTableCellRenderer renderer = new ThemedTableCellRenderer();
         for (int i = 0; i < table.getColumnCount(); i++)
