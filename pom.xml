@@ -31,6 +31,14 @@
       <artifactId>jcefmaven</artifactId>
       <version>146.0.10</version>
     </dependency>
+    <!-- JavaSound MP3 service provider (MpegAudioFileReader +
+         MpegFormatConversionProvider); pulls jlayer + tritonus-share.
+         Lets AudioSystem read/decode MP3 so LocalMusicService can play it. -->
+    <dependency>
+      <groupId>com.googlecode.soundlibs</groupId>
+      <artifactId>mp3spi</artifactId>
+      <version>1.9.5.4</version>
+    </dependency>
   </dependencies>
 
   <build>
