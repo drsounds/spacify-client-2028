@@ -119,8 +119,13 @@ public class MainWindow extends JFrame {
 
     /** Toggle the left sidebar; remembers the user's preference. */
     public void toggleSidebar() {
-        userWantsSidebar = !userWantsSidebar;
-        if (!immersive) applySidebar(userWantsSidebar);
+        setSidebarVisible(!userWantsSidebar);
+    }
+
+    /** Explicitly show/hide the left sidebar; remembers the user's preference. */
+    public void setSidebarVisible(boolean visible) {
+        userWantsSidebar = visible;
+        if (!immersive) applySidebar(visible);
     }
 
     private void applySidebar(boolean visible) {

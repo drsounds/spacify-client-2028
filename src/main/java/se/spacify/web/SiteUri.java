@@ -33,8 +33,13 @@ public final class SiteUri {
 
     /** The host of a site URI (first segment after the prefix), or null. */
     public static String host(String spacifyUri) {
-        if (!isSiteUri(spacifyUri)) return null;
-        String rest = spacifyUri.substring(PREFIX.length());
+        return host(spacifyUri, PREFIX);
+    }
+
+    /** Prefix-aware host extraction. */
+    public static String host(String uri, String prefix) {
+        if (!hasPrefix(uri, prefix)) return null;
+        String rest = uri.substring(prefix.length());
         int end = rest.length();
         for (int i = 0; i < rest.length(); i++) {
             char c = rest.charAt(i);

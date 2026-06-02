@@ -4,6 +4,7 @@ import se.spacify.navigation.NavigationListener;
 import se.spacify.navigation.SPViewStack;
 import se.spacify.ui.theme.ThemeManager;
 import se.spacify.web.FaviconFetcher;
+import se.spacify.web.SiteUri;
 import se.spacify.web.StoreCatalog;
 
 import javax.swing.*;
@@ -24,8 +25,9 @@ public class NavigationBar extends JPanel implements NavigationListener {
     private final JButton forwardBtn;
     private final JTextField uriField;
     private final JTextField searchField;
-	private JButton nowPlayingTabButton;
-	private JButton libraryTabButton;
+	private TabButton nowPlayingTab;
+	private TabButton libraryTab;
+    private JButton storesBtn;
     /** Cached store favicons, fetched off the EDT. */
     private final Map<String, Icon> faviconCache = new HashMap<>();
 
@@ -72,21 +74,26 @@ public class NavigationBar extends JPanel implements NavigationListener {
             }
         });
 
-        JPanel center = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        JPanel center = new JPanel(new BorderLayout());
         center.setOpaque(false);
         navButtons.add(uriField);
-        
-        /*nowPlayingTabButton = makeNavButton("Now Playing");
-        center.add(nowPlayingTabButton);
-        nowPlayingTabButton.addActionListener(e -> {
-        	viewStack.getMainWindow().navigate("spacify:now-playing");
+
+        // WMP-style tab strip, flush with the bottom edge of the nav bar.
+        nowPlayingTab = new TabButton("Now Playing");
+        nowPlayingTab.addActionListener(e -> {
+            MainWindow mw = viewStack.getMainWindow();
+            if (mw != null) { mw.setSidebarVisible(false); mw.navigate("spacify:now-playing"); }
         });
-        libraryTabButton = makeNavButton("Library");
-        libraryTabButton.addActionListener(e -> {
-        	viewStack.getMainWindow().navigate("spacify:library");
+        libraryTab = new TabButton("Library");
+        libraryTab.addActionListener(e -> {
+            MainWindow mw = viewStack.getMainWindow();
+            if (mw != null) { mw.setSidebarVisible(true); mw.navigate("spacify:library"); }
         });
-        center.add(libraryTabButton);
-        */
+        JPanel tabBar = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 0));
+        tabBar.setOpaque(false);
+        tabBar.add(nowPlayingTab);
+        tabBar.add(libraryTab);
+        center.add(tabBar, BorderLayout.SOUTH);
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 5));
         right.setOpaque(false);
      
@@ -95,9 +102,15 @@ public class NavigationBar extends JPanel implements NavigationListener {
         storePanel.setPreferredSize(new Dimension(200, 56));
         storePanel.setLayout(new FlowLayout(FlowLayout.CENTER, 0, 0));
 
-        JButton storesBtn = makeNavButton("Stores ▾");
-        storesBtn.setPreferredSize(new Dimension(120, 32));
+        storesBtn = makeNavButton("Stores ▾");
+        storesBtn.setPreferredSize(new Dimension(160, 32));
         storesBtn.setToolTipText("Open a music service");
+        // Transparent & borderless so it floats on the glass field.
+        storesBtn.setOpaque(false);
+        storesBtn.setContentAreaFilled(false);
+        storesBtn.setBorderPainted(false);
+        storesBtn.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
+        storesBtn.setHorizontalAlignment(SwingConstants.LEFT);
         storesBtn.addActionListener(e -> buildStoresMenu().show(storesBtn, 0, storesBtn.getHeight()));
         storePanel.add(storesBtn);
 
@@ -135,12 +148,30 @@ public class NavigationBar extends JPanel implements NavigationListener {
                     byte[] png = FaviconFetcher.fetch(store.host());
                     if (png != null) {
                         Icon icon = new ImageIcon(png);
-                        SwingUtilities.invokeLater(() -> faviconCache.put(store.host(), icon));
+                        SwingUtilities.invokeLater(() -> {
+                            faviconCache.put(store.host(), icon);
+                            updateStoresButton(viewStack.getCurrentUri());
+                        });
                     }
                 }
                 return null;
             }
         }.execute();
+    }
+
+    /** While on a store, show its favicon + name in the dropdown; else "Stores ▾". */
+    private void updateStoresButton(String uri) {
+        if (storesBtn == null) return;
+        if (uri != null && uri.startsWith(SiteUri.STORE_PREFIX)) {
+            String host = SiteUri.host(uri, SiteUri.STORE_PREFIX);
+            StoreCatalog.Store store = StoreCatalog.STORES.stream()
+                .filter(s -> s.host().equals(host)).findFirst().orElse(null);
+            storesBtn.setText((store != null ? store.name() : host) + " ▾");
+            storesBtn.setIcon(host != null ? faviconCache.get(host) : null);
+        } else {
+            storesBtn.setText("Stores ▾");
+            storesBtn.setIcon(null);
+        }
     }
     @Override
     protected void paintComponent(Graphics g) {
@@ -172,5 +203,8 @@ public class NavigationBar extends JPanel implements NavigationListener {
         backBtn.setEnabled(canGoBack);
         forwardBtn.setEnabled(canGoForward);
         if (uri != null) uriField.setText(uri);
+        updateStoresButton(uri);
+        nowPlayingTab.setSelected(uri != null && uri.startsWith("spacify:now-playing"));
+        libraryTab.setSelected(uri != null && uri.startsWith("spacify:library"));
     }
 }
