@@ -17,22 +17,24 @@ public class WMP10Skin extends Skin {
 	@Override
 	public void paintTopBar(JPanel control, Graphics2D g2) {
         int w = control.getWidth(), h = control.getHeight();
-		g2.setPaint(new GradientPaint(0, 0, ThemeManager.accentLight(2f), 0, h, Color.WHITE));
+		g2.setPaint(new GradientPaint(0, 0, ThemeManager.getTintColor(), 0, h, Color.WHITE));
 		g2.fillRect(0, 0, w, h);
 	}
 	@Override
 	public void paintHeader(JPanel control, Graphics2D g2) {
         int w = control.getWidth(), h = control.getHeight();
-		g2.setPaint(new GradientPaint(0, 0, Color.WHITE, 0, h, ThemeManager.accentLight(2f)));
+		g2.setPaint(new GradientPaint(0, 0, Color.WHITE, 0, h, ThemeManager.getTintColor()));
 		g2.fillRect(0, 0, w, h);
+        g2.setPaint(new GradientPaint(0, 0, new Color(255, 255, 255, 127), 0, h, new Color(255, 255, 255, 0)));
+        g2.fillRect(0, 1, w, (h / 2));
 	}
 	@Override
 	public void paintFooter(JPanel control, Graphics2D g2) {
         int w = control.getWidth(), h = control.getHeight();
        
-		g2.setPaint(new GradientPaint(0, 0, Color.WHITE, 0, h, ThemeManager.accentLight(2f)));
+		g2.setPaint(new GradientPaint(0, 0, Color.WHITE, 0, h, ThemeManager.getTintColor()));
         g2.fillRect(0, 0, w, h);
-        g2.setPaint(new GradientPaint(0, 0, ThemeManager.accentLight(2f), 0, 18, Color.WHITE));
+        g2.setPaint(new GradientPaint(0, 0, ThemeManager.getTintColor(), 0, 18, Color.WHITE));
         g2.fillRect(0, 0, w, 18);
         
         g2.setPaint(new GradientPaint(0, 0, new Color(255, 255, 255, 127), 0, h, new Color(255, 255, 255, 0)));

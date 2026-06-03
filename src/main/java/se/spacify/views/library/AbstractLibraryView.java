@@ -24,6 +24,7 @@ public abstract class AbstractLibraryView extends SPView {
     protected final JTable           table;
     protected final JScrollPane      scroll;
     protected final DefaultTableModel model;
+	private JToolBar bottomToolbar;
 
     protected AbstractLibraryView() {
         panel = new JPanel(new BorderLayout(0, 8));
@@ -108,6 +109,13 @@ public abstract class AbstractLibraryView extends SPView {
 
         panel.add(north, BorderLayout.NORTH);
         panel.add(scroll, BorderLayout.CENTER);
+
+        bottomToolbar = new JToolBar();
+        bottomToolbar.setFloatable(false);
+        bottomToolbar.setOpaque(true);
+        bottomToolbar.setBackground(ThemeManager.getTintColor());
+        bottomToolbar.add(new JButton("Test"));
+        panel.add(bottomToolbar, BorderLayout.SOUTH);
 
         updateColors();
         ThemeManager.addChangeListener(this::updateColors);

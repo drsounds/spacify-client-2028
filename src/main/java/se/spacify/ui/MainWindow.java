@@ -5,7 +5,10 @@ import se.spacify.service.ServiceManager;
 import se.spacify.service.media.MediaService;
 import se.spacify.service.media.MediaService.PlaybackState;
 import se.spacify.skinning.Skin;
+import se.spacify.skinning.WMP8Skin;
+import se.spacify.skinning.WMP9Skin;
 import se.spacify.skinning.WMP10Skin;
+import se.spacify.skinning.WMP11BetaSkin;
 import se.spacify.skinning.WMP11Skin;
 import se.spacify.ui.theme.ThemeManager;
 import se.spacify.views.*;
@@ -32,9 +35,22 @@ public class MainWindow extends JFrame {
     
     private String layoutMode = LAYOUT_WMP10;
     
-    private Skin skin = new WMP11Skin();
+    private Skin skin = skinForStyle(ThemeManager.getDesignStyle());
     public Skin getSkin() {
     	return skin;
+    }
+
+    /** Maps a {@link ThemeManager} design-style constant to its Skin implementation. */
+    private static Skin skinForStyle(String style) {
+        if (style == null) return new WMP11Skin();
+        switch (style) {
+            case ThemeManager.DESIGN_STYLE_WMP8:       return new WMP8Skin();
+            case ThemeManager.DESIGN_STYLE_WMP9:       return new WMP9Skin();
+            case ThemeManager.DESIGN_STYLE_WMP10:      return new WMP10Skin();
+            case ThemeManager.DESIGN_STYLE_WMP11_BETA: return new WMP11BetaSkin();
+            case ThemeManager.DESIGN_STYLE_WMP11:      return new WMP11Skin();
+            default:                                   return new WMP11Skin();
+        }
     }
     
     
@@ -117,6 +133,15 @@ public class MainWindow extends JFrame {
         Timer themeRebuildTimer = new Timer(250, e -> rebuildTheme());
         themeRebuildTimer.setRepeats(false);
         ThemeManager.addChangeListener(themeRebuildTimer::restart);
+
+        // Swap the active Skin when the selected design style changes.
+        ThemeManager.addChangeListener(() -> {
+            Skin desired = skinForStyle(ThemeManager.getDesignStyle());
+            if (desired.getClass() != skin.getClass()) {
+                skin = desired;
+                repaint();
+            }
+        });
 
         // Wire any already-registered MediaService
         MediaService ms = ServiceManager.getInstance().getService(MediaService.class);

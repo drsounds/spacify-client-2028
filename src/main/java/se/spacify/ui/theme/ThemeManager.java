@@ -15,19 +15,26 @@ public class ThemeManager {
 	public static final String DESIGN_STYLE_ITUNES = "DESIGN_STYLE_ITUNES";
 
     private static String designStyle = ThemeManager.DESIGN_STYLE_WMP11;
-    public void setDesignStyle(String value) {
+    public static void setDesignStyle(String value) {
     	designStyle = value;
+    	notify_();   // lets MainWindow swap its Skin and ConfigManager persist
     }
-   
+
     public static String getDesignStyle() {
     	return designStyle;
     }
-    
+
     private static float hue        = 0.0f;  // 0-1  (background tint)
     private static float saturation = 0.0f;  // 0-1  (background tint)
     private static float lightness  = 0.5f;  // 0-1  (background tint)
     private static boolean darkMode = true;
     private static Color accentColor = new Color(30, 215, 96);  // Spotify green default
+
+    // ── Display toggles (saved alongside the HSL / dark-light / accent settings) ──
+    private static boolean stripedRows          = true;   // alternate row shading
+    private static boolean highContrast         = false;  // plain B/W background (WMP-style)
+    private static boolean highContrastInverted = false;  // white-on-black vs black-on-white
+    private static boolean tintText             = true;   // tint text in light mode (else black)
 
     private static final Color CHROME_DARK = new Color(14, 14, 14);
     private static final List<Runnable> listeners = new ArrayList<>();
@@ -49,20 +56,35 @@ public class ThemeManager {
     public static void setDarkMode(boolean d)    { darkMode = d;      applyToDefaults(); notify_(); }
     public static void setAccentColor(Color c)   { accentColor = c;   applyToDefaults(); notify_(); }
 
+    public static void setStripedRows(boolean v)          { stripedRows = v;          applyToDefaults(); notify_(); }
+    public static void setHighContrast(boolean v)         { highContrast = v;         applyToDefaults(); notify_(); }
+    public static void setHighContrastInverted(boolean v) { highContrastInverted = v; applyToDefaults(); notify_(); }
+    public static void setTintText(boolean v)             { tintText = v;             applyToDefaults(); notify_(); }
+
     public static float   getHue()          { return hue; }
     public static float   getSaturation()   { return saturation; }
     public static float   getLightness()    { return lightness; }
     public static boolean isDarkMode()      { return darkMode; }
     public static Color   getAccentColor()  { return accentColor; }
 
+    public static boolean isStripedRows()          { return stripedRows; }
+    public static boolean isHighContrast()         { return highContrast; }
+    public static boolean isHighContrastInverted() { return highContrastInverted; }
+    public static boolean isTintText()             { return tintText; }
+
     public static void addChangeListener(Runnable r) { listeners.add(r); }
 
     /** Call once at startup and on every theme change to seed UIManager. */
     public static void applyToDefaults() {
         UIDefaults d = UIManager.getLookAndFeelDefaults();
-        if (darkMode) {
+        if (highContrast) {
+            // Plain black-and-white scheme, à la the classic WMP display option.
+            currentBg    = highContrastInverted ? Color.BLACK : Color.WHITE;
+            currentFg    = highContrastInverted ? Color.WHITE : Color.BLACK;
+            currentAltBg = highContrastInverted ? new Color(28, 28, 28) : new Color(228, 228, 228);
+            currentGrid  = highContrastInverted ? new Color(60, 60, 60) : new Color(200, 200, 200);
+        } else if (darkMode) {
             float bg  = 0.07f + lightness * 0.50f;
-            float mid = bg + 0.05f;
 
             currentBg    = hsl(hue, saturation * 0.75f, bg);
             currentAltBg = hsl(hue, saturation * 0.75f, Math.min(1f, bg + 0.04f));
@@ -73,9 +95,13 @@ public class ThemeManager {
 
             currentBg    = hsl(hue, saturation * 0.48f, bg);
             currentAltBg = hsl(hue, saturation * 0.08f, Math.max(0f, bg - 0.04f));
-            currentFg    = hsl(hue, saturation, 0.45f);
+            // Light mode: tint the text with the chosen hue, or fall back to black.
+            currentFg    = tintText ? hsl(hue, saturation, 0.45f) : Color.BLACK;
             currentGrid  = hsl(hue, saturation * 0.08f, Math.max(0f, bg - 0.06f));
         }
+
+        // Striped-rows toggle: collapse the alternate row colour onto the base when off.
+        if (!stripedRows) currentAltBg = currentBg;
 
         // Shared keys
         float acc = darkMode ? (0.28f + lightness * 0.10f) : (0.42f + lightness * 0.10f);

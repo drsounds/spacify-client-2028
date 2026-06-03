@@ -18,7 +18,7 @@ public class SettingsPanel extends JPanel {
             BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(50, 50, 50)),
             BorderFactory.createEmptyBorder(8, 16, 8, 16)
         ));
-        setPreferredSize(new Dimension(0, 112));
+        setPreferredSize(new Dimension(0, 150));
 
         // ── Background tint sliders ──────────────────────────────────────────
         JPanel tintSection = new JPanel(new GridBagLayout()) {
@@ -37,6 +37,59 @@ public class SettingsPanel extends JPanel {
         addRow(tintSection, c, 0, "Hue",        hueSlider);
         addRow(tintSection, c, 1, "Saturation", satSlider);
         addRow(tintSection, c, 2, "Lightness",  lightSlider);
+
+        // ── Skin selector ─────────────────────────────────────────────────────
+        JPanel skinSection = new JPanel() {
+            @Override public void updateUI() { super.updateUI(); setOpaque(false); }
+        };
+        skinSection.setLayout(new BoxLayout(skinSection, BoxLayout.Y_AXIS));
+        skinSection.setOpaque(false);
+        skinSection.setBorder(titledBorder("Skin"));
+
+        JComboBox<SkinItem> skinCombo = new JComboBox<>(SKINS);
+        skinCombo.setMaximumSize(new Dimension(200, 24));
+        skinCombo.setAlignmentX(Component.LEFT_ALIGNMENT);
+        for (SkinItem item : SKINS) {
+            if (item.style.equals(ThemeManager.getDesignStyle())) {
+                skinCombo.setSelectedItem(item);
+                break;
+            }
+        }
+        skinCombo.addActionListener(e -> {
+            SkinItem sel = (SkinItem) skinCombo.getSelectedItem();
+            if (sel != null) ThemeManager.setDesignStyle(sel.style);
+        });
+        skinSection.add(Box.createVerticalGlue());
+        skinSection.add(skinCombo);
+        skinSection.add(Box.createVerticalGlue());
+
+        // ── Display options (toggles) ─────────────────────────────────────────
+        JPanel optionsSection = new JPanel() {
+            @Override public void updateUI() { super.updateUI(); setOpaque(false); }
+        };
+        optionsSection.setLayout(new BoxLayout(optionsSection, BoxLayout.Y_AXIS));
+        optionsSection.setOpaque(false);
+        optionsSection.setBorder(titledBorder("Display"));
+
+        JCheckBox stripedBox   = whiteCheck("Striped rows",        ThemeManager.isStripedRows());
+        JCheckBox contrastBox  = whiteCheck("B/W background",       ThemeManager.isHighContrast());
+        JCheckBox invertedBox  = whiteCheck("Inverted (dark)",      ThemeManager.isHighContrastInverted());
+        JCheckBox tintTextBox  = whiteCheck("Tint text (light)",    ThemeManager.isTintText());
+
+        invertedBox.setEnabled(ThemeManager.isHighContrast());
+
+        stripedBox.addActionListener(e  -> ThemeManager.setStripedRows(stripedBox.isSelected()));
+        contrastBox.addActionListener(e -> {
+            ThemeManager.setHighContrast(contrastBox.isSelected());
+            invertedBox.setEnabled(contrastBox.isSelected());
+        });
+        invertedBox.addActionListener(e -> ThemeManager.setHighContrastInverted(invertedBox.isSelected()));
+        tintTextBox.addActionListener(e -> ThemeManager.setTintText(tintTextBox.isSelected()));
+
+        optionsSection.add(stripedBox);
+        optionsSection.add(contrastBox);
+        optionsSection.add(invertedBox);
+        optionsSection.add(tintTextBox);
 
         // ── Mode (dark / light) ──────────────────────────────────────────────
         JPanel modeSection = new JPanel() {
@@ -90,12 +143,18 @@ public class SettingsPanel extends JPanel {
         darkBtn.addActionListener(e     -> ThemeManager.setDarkMode(true));
         lightBtn.addActionListener(e    -> ThemeManager.setDarkMode(false));
 
-        JPanel right = new JPanel(new BorderLayout(8, 0)) {
+        JPanel right = new JPanel() {
             @Override public void updateUI() { super.updateUI(); setOpaque(false); }
         };
+        right.setLayout(new BoxLayout(right, BoxLayout.X_AXIS));
         right.setOpaque(false);
-        right.add(modeSection,   BorderLayout.WEST);
-        right.add(accentSection, BorderLayout.EAST);
+        right.add(skinSection);
+        right.add(Box.createHorizontalStrut(8));
+        right.add(optionsSection);
+        right.add(Box.createHorizontalStrut(8));
+        right.add(modeSection);
+        right.add(Box.createHorizontalStrut(8));
+        right.add(accentSection);
 
         add(tintSection, BorderLayout.CENTER);
         add(right,       BorderLayout.EAST);
@@ -154,6 +213,34 @@ public class SettingsPanel extends JPanel {
             }
         };
     }
+
+    private static JCheckBox whiteCheck(String text, boolean selected) {
+        JCheckBox cb = new JCheckBox(text, selected) {
+            @Override public void updateUI() {
+                super.updateUI();
+                setForeground(FG);
+                setOpaque(false);
+            }
+        };
+        cb.setFont(cb.getFont().deriveFont(11f));
+        cb.setAlignmentX(Component.LEFT_ALIGNMENT);
+        return cb;
+    }
+
+    // ── Skin catalogue ─────────────────────────────────────────────────────────
+
+    /** Pairs a human-readable label with its {@link ThemeManager} design-style id. */
+    private record SkinItem(String label, String style) {
+        @Override public String toString() { return label; }
+    }
+
+    private static final SkinItem[] SKINS = {
+        new SkinItem("Windows Media Player 8",      ThemeManager.DESIGN_STYLE_WMP8),
+        new SkinItem("Windows Media Player 9",      ThemeManager.DESIGN_STYLE_WMP9),
+        new SkinItem("Windows Media Player 10",     ThemeManager.DESIGN_STYLE_WMP10),
+        new SkinItem("Windows Media Player 11 Beta", ThemeManager.DESIGN_STYLE_WMP11_BETA),
+        new SkinItem("Windows Media Player 11",     ThemeManager.DESIGN_STYLE_WMP11),
+    };
 
     private static TitledBorder titledBorder(String title) {
         TitledBorder b = BorderFactory.createTitledBorder(

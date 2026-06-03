@@ -28,6 +28,11 @@ public class ConfigManager {
             ThemeManager.setAccentColor(new Color(
                 Integer.parseInt(p.getProperty("theme.accentColor",
                     String.valueOf(new Color(30, 215, 96).getRGB()))), true));
+            ThemeManager.setStripedRows(         Boolean.parseBoolean(p.getProperty("theme.stripedRows",          "true")));
+            ThemeManager.setHighContrast(        Boolean.parseBoolean(p.getProperty("theme.highContrast",         "false")));
+            ThemeManager.setHighContrastInverted(Boolean.parseBoolean(p.getProperty("theme.highContrastInverted", "false")));
+            ThemeManager.setTintText(            Boolean.parseBoolean(p.getProperty("theme.tintText",            "true")));
+            ThemeManager.setDesignStyle(p.getProperty("theme.designStyle", ThemeManager.getDesignStyle()));
         } catch (NumberFormatException ignored) {
             // corrupted config — keep defaults
         }
@@ -40,6 +45,11 @@ public class ConfigManager {
         p.setProperty("theme.lightness",   String.valueOf(ThemeManager.getLightness()));
         p.setProperty("theme.darkMode",    String.valueOf(ThemeManager.isDarkMode()));
         p.setProperty("theme.accentColor", String.valueOf(ThemeManager.getAccentColor().getRGB()));
+        p.setProperty("theme.stripedRows",          String.valueOf(ThemeManager.isStripedRows()));
+        p.setProperty("theme.highContrast",         String.valueOf(ThemeManager.isHighContrast()));
+        p.setProperty("theme.highContrastInverted", String.valueOf(ThemeManager.isHighContrastInverted()));
+        p.setProperty("theme.tintText",             String.valueOf(ThemeManager.isTintText()));
+        p.setProperty("theme.designStyle",          ThemeManager.getDesignStyle());
         try {
             Files.createDirectories(CONFIG_FILE.getParent());
             try (OutputStream out = Files.newOutputStream(CONFIG_FILE)) {
