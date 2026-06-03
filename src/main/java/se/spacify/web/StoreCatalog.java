@@ -15,10 +15,10 @@ public final class StoreCatalog {
     }
 
     public static final List<Store> STORES = List.of(
-        new Store("Subvert",  "subvert.fm"),
-        new Store("Jamendo",  "jamendo.com"),
-        new Store("Bandcamp", "bandcamp.com"),
-        new Store("Last.fm",  "last.fm")
+        new Store("Subvert",  "www.subvert.fm"),
+        new Store("Jamendo",  "www.jamendo.com"),
+        new Store("Bandcamp", "www.bandcamp.com"),
+        new Store("Last.fm",  "www.last.fm")
     );
 
     private StoreCatalog() {}

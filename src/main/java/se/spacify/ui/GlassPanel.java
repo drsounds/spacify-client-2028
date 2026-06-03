@@ -4,33 +4,101 @@ import java.awt.Color;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.geom.Path2D;
 
 import javax.swing.JPanel;
 
 import se.spacify.ui.theme.ThemeManager;
 
+/**
+ * Windows-Media-Player-style glossy panel with rounded corners. Either vertical
+ * edge can optionally be rendered as a sharp diagonal instead of a rounded
+ * corner — see {@link #setLeadingDiagonal(boolean)} /
+ * {@link #setTrailingDiagonal(boolean)}. A diagonal edge slants so its bottom is
+ * longer than its top by {@link #setDiagonalInset(int)} pixels.
+ */
 public class GlassPanel extends JPanel {
 
 	private static final long serialVersionUID = -6838852001495396343L;
 
-    public GlassPanel() {
-   
-    }
-    @Override
-    protected void paintComponent(Graphics g) {
-        Graphics2D g2 = (Graphics2D) g.create();
-        int w = getWidth(), h = getHeight();
-        
-        Color tintColor = ThemeManager.getTintColor();
-        g2.setPaint(new GradientPaint(0, 0, ThemeManager.accentLight(2f), 0, h, tintColor));
-        g2.fillRect(0, 0, w, h);
-        g2.setPaint(new GradientPaint(0, 0, new Color(255, 255, 255, 0), 0, h, new Color(255, 255, 255, 255)));
-        g2.fillRect(0, (h / 2), w, (h / 2));
+	private int arc = 8;
+	private int diagonalInset = 18;
+	private boolean leadingDiagonal = false;   // left edge
+	private boolean trailingDiagonal = false;  // right edge
 
-        g2.setPaint(new GradientPaint(0, 0, new Color(255, 255, 255, 127), 0, h, new Color(255, 255, 255, 0)));
-        g2.fillRect(0, 1, w, (h / 2));
+	public GlassPanel() {
+		setOpaque(false);
+	}
 
-        g2.dispose();
-    }
+	public void setArc(int arc)                  { this.arc = arc; repaint(); }
+	public void setDiagonalInset(int inset)      { this.diagonalInset = inset; repaint(); }
+	public void setLeadingDiagonal(boolean on)   { this.leadingDiagonal = on; repaint(); }
+	public void setTrailingDiagonal(boolean on)  { this.trailingDiagonal = on; repaint(); }
 
+	/** The panel outline: rounded corners, with optional diagonal side edges. */
+	private Path2D shape(int w, int h) {
+		int a = Math.min(arc, Math.min(w, h) / 2);
+		int s = Math.min(diagonalInset, w / 2);
+		Path2D p = new Path2D.Float();
+
+		// top-left start
+		p.moveTo(leadingDiagonal ? s : a, 0);
+
+		// top edge → top-right
+		if (trailingDiagonal) {
+			p.lineTo(w - s, 0);
+		} else {
+			p.lineTo(w - a, 0);
+			p.quadTo(w, 0, w, a);
+		}
+
+		// right edge → bottom-right
+		if (trailingDiagonal) {
+			p.lineTo(w, h);                 // diagonal: bottom longer than top
+		} else {
+			p.lineTo(w, h - a);
+			p.quadTo(w, h, w - a, h);
+		}
+
+		// bottom edge → bottom-left
+		if (leadingDiagonal) {
+			p.lineTo(0, h);                 // diagonal: bottom longer than top
+		} else {
+			p.lineTo(a, h);
+			p.quadTo(0, h, 0, h - a);
+		}
+
+		// left edge → back to start
+		if (leadingDiagonal) {
+			p.lineTo(s, 0);
+		} else {
+			p.lineTo(0, a);
+			p.quadTo(0, 0, a, 0);
+		}
+
+		p.closePath();
+		return p;
+	}
+
+	@Override
+	protected void paintComponent(Graphics g) {
+		Graphics2D g2 = (Graphics2D) g.create();
+		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		int w = getWidth(), h = getHeight();
+		Path2D shape = shape(w, h);
+
+		// Base accent gradient, antialiased to the rounded/diagonal outline.
+		g2.setPaint(new GradientPaint(0, 0, ThemeManager.accentLight(2f), 0, h, ThemeManager.getTintColor()));
+		g2.fill(shape);
+
+		// Glossy white overlays, confined to the shape.
+		g2.setClip(shape);
+		g2.setPaint(new GradientPaint(0, 0, new Color(255, 255, 255, 0), 0, h, new Color(255, 255, 255, 255)));
+		g2.fillRect(0, h / 2, w, h - (h / 2));
+		g2.setPaint(new GradientPaint(0, 0, new Color(255, 255, 255, 127), 0, h, new Color(255, 255, 255, 0)));
+		g2.fillRect(0, 1, w, h / 2);
+
+		g2.dispose();
+	}
 }

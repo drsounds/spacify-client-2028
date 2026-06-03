@@ -31,11 +31,15 @@ public class TabButton extends JToggleButton {
 		setFocusPainted(false);
 		setOpaque(false);
 		setRolloverEnabled(true);
-		setBorder(BorderFactory.createEmptyBorder(6, 18, 4, 18));
-		setFont(getFont().deriveFont(12f));
+		setBorder(BorderFactory.createEmptyBorder(10, 32, 8, 32));
+		setFont(getFont().deriveFont(14f));
 		setForeground(ThemeManager.getForeground());
 		ThemeManager.addChangeListener(() -> {
-			setForeground(ThemeManager.getForeground());
+			if (isSelected()) {
+				setForeground(Color.WHITE);	
+			} else {
+				setForeground(ThemeManager.accentDark(0.2f));
+			}
 			repaint();
 		});
 	}
@@ -43,13 +47,18 @@ public class TabButton extends JToggleButton {
 	@Override
 	public Dimension getPreferredSize() {
 		Dimension d = super.getPreferredSize();
-		return new Dimension(d.width, 30);
+		return new Dimension(d.width, 50);
 	}
 
 	@Override
 	public void setSelected(boolean b) {
 		super.setSelected(b);
-		setFont(getFont().deriveFont(b ? Font.BOLD : Font.PLAIN));
+		if (b) {
+			setForeground(Color.WHITE);	
+		} else {
+			setForeground(ThemeManager.accentDark(0.2f));
+		}
+		//setFont(getFont().deriveFont(b ? Font.BOLD : Font.PLAIN));
 	}
 
 	@Override
@@ -69,7 +78,7 @@ public class TabButton extends JToggleButton {
 		tab.closePath();
 
 		if (isSelected()) {
-			g2.setColor(ThemeManager.getBackground());
+			g2.setColor(ThemeManager.getTintColor());
 			g2.fill(tab);
 			g2.setPaint(new GradientPaint(0, 0, new Color(255, 255, 255, 60),
 					0, h / 2f, new Color(255, 255, 255, 0)));
@@ -77,6 +86,7 @@ public class TabButton extends JToggleButton {
 		} else if (getModel().isRollover()) {
 			g2.setColor(new Color(255, 255, 255, 45));
 			g2.fill(tab);
+		} else {
 		}
 		g2.dispose();
 

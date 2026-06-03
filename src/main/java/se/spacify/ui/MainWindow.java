@@ -15,12 +15,12 @@ import java.awt.*;
 
 public class MainWindow extends JFrame {
 
-    private final SPViewStack    viewStack;
+    private static final long serialVersionUID = 2144395787232553079L;
+	private final SPViewStack    viewStack;
     private final PlayerBar      playerBar;
     private final NowPlayingView nowPlayingView;
     private final Sidebar        sidebar;
-    private final JSlider progress;
-    private boolean updatingProgress = false;
+
 	private JSplitPane leftSplit;
 	private JSplitPane mainSplit;
     private boolean userWantsSidebar = true;  // user's manual show/hide preference
@@ -83,11 +83,6 @@ public class MainWindow extends JFrame {
         mainSplit.setContinuousLayout(true);
 
         add(mainSplit, BorderLayout.CENTER);
-
-        progress = new JSlider(0, 1000, 0);
-        progress.setOpaque(false); 
-        progress.setAlignmentX(CENTER_ALIGNMENT);
-        add(progress, BorderLayout.SOUTH);
 
         playerBar = new PlayerBar();
         add(playerBar);
@@ -158,48 +153,6 @@ public class MainWindow extends JFrame {
     		sidebar.setVisible(true);
     		leftSplit.setDividerLocation(100);
     	}*/
-    }
-
-    /**
-     * Wire this bar to a MediaService.
-     * Playback events update labels and progress; controls drive the service.
-     */
-    public void setMediaService(MediaService ms) {
- 
-        progress.addChangeListener(e -> {
-            if (!updatingProgress && !progress.getValueIsAdjusting()) {
-                long dur = ms.getDurationMs();
-                if (dur > 0) ms.seek((long)(progress.getValue() / 1000.0 * dur));
-            }
-        });
-
-        ms.addPlaybackListener(new MediaService.PlaybackListener() {
-            @Override
-            public void onStateChanged(PlaybackState state) {
-            }
-
-            @Override
-            public void onPositionChanged(long posMs, long durMs) {
-                if (durMs <= 0) return;
-                SwingUtilities.invokeLater(() -> {
-                    updatingProgress = true;
-                    progress.setValue((int)(posMs * 1000.0 / durMs));
-                    updatingProgress = false;
-                });
-            }
-
-            @Override
-            public void onTrackChanged(String title, String artist, String album) {
-                SwingUtilities.invokeLater(() -> {
-            
-                });
-            }
-
-            @Override
-            public void onError(Exception e) {
-              
-            }
-        });
     }
 
     private void rebuildTheme() {

@@ -19,8 +19,9 @@ public class TopBar extends JPanel {
         Graphics2D g2 = (Graphics2D) g.create();
         int w = getWidth(), h = getHeight();
         
-        Color tintColor = ThemeManager.getTintColor();
-        g2.setPaint(new GradientPaint(0, 0, tintColor, 0, h, ThemeManager.accentLight(2f)));
+        //Color tintColor = ThemeManager.getTintColor();
+        //g2.setPaint(new GradientPaint(0, 0, tintColor, 0, h, ThemeManager.accentLight(2f)));
+        g2.setPaint(new GradientPaint(0, 0, ThemeManager.accentLight(2f), 0, h, Color.WHITE));
         g2.fillRect(0, 0, w, h);
 
         g2.dispose();

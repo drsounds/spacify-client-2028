@@ -53,9 +53,9 @@ public class ThemeManager {
             currentFg    = new Color(210, 210, 210);
             currentGrid  = hsl(hue, saturation * 0.75f, Math.min(1f, bg + 0.06f));
         } else {
-            float bg  = 0.84f + lightness * 0.08f;
+            float bg  = 0.84f + lightness * 0.28f;
 
-            currentBg    = hsl(hue, saturation * 0.28f, bg);
+            currentBg    = hsl(hue, saturation * 0.48f, bg);
             currentAltBg = hsl(hue, saturation * 0.08f, Math.max(0f, bg - 0.04f));
             currentFg    = hsl(hue, saturation, 0.45f);
             currentGrid  = hsl(hue, saturation * 0.08f, Math.max(0f, bg - 0.06f));

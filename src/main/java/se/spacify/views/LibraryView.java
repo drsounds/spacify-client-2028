@@ -20,7 +20,7 @@ public class LibraryView extends SPView {
 
         String[] columns = {"Title", "Artist", "Album"};
         Object[][] data = {
-      
+        		
         };
 
         table = new JTable(data, columns);

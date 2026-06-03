@@ -13,7 +13,6 @@ import java.awt.event.MouseEvent;
 
 public class NowPlayingPanel extends JPanel implements NavigationListener {
 
-
     public NowPlayingPanel(SPViewStack viewStack) {
     	setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setPreferredSize(new Dimension(220, 0));
