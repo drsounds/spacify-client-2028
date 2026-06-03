@@ -63,7 +63,7 @@ public class WMP11Skin extends Skin {
 
 
 	 	if (control.isSelected()) {
-			g2.setPaint(new RadialGradientPaint((float)(w / 2), (float)h, 20f, new float[] {}, new Color[] { ThemeManager.getTintColor(), ThemeManager.accentDark(0.5f)}));
+			g2.setPaint(new RadialGradientPaint((float)(w / 2), (float)h, 120f, new float[] { 0, 1 }, new Color[] { ThemeManager.getTintColor(), ThemeManager.accentDark(0.5f)}));
 			g2.fill(tab);
 			g2.setPaint(new GradientPaint(0f, 0f, ThemeManager.getAccentColor(), (float)(w), h / 2f, new Color(255, 255 ,255, 0)));
 	

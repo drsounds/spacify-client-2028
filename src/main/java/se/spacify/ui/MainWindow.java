@@ -6,6 +6,7 @@ import se.spacify.service.media.MediaService;
 import se.spacify.service.media.MediaService.PlaybackState;
 import se.spacify.skinning.Skin;
 import se.spacify.skinning.WMP10Skin;
+import se.spacify.skinning.WMP11Skin;
 import se.spacify.ui.theme.ThemeManager;
 import se.spacify.views.*;
 import se.spacify.views.library.*;
@@ -31,7 +32,7 @@ public class MainWindow extends JFrame {
     
     private String layoutMode = LAYOUT_WMP10;
     
-    private Skin skin = new WMP10Skin();
+    private Skin skin = new WMP11Skin();
     public Skin getSkin() {
     	return skin;
     }
