@@ -6,6 +6,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import se.spacify.ui.theme.ThemeManager;
 
@@ -18,12 +19,9 @@ public class TopBar extends JPanel {
     protected void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D) g.create();
         int w = getWidth(), h = getHeight();
-        
-        //Color tintColor = ThemeManager.getTintColor();
-        //g2.setPaint(new GradientPaint(0, 0, tintColor, 0, h, ThemeManager.accentLight(2f)));
-        g2.setPaint(new GradientPaint(0, 0, ThemeManager.accentLight(2f), 0, h, Color.WHITE));
-        g2.fillRect(0, 0, w, h);
 
+        ((MainWindow)(SwingUtilities.getWindowAncestor(this))).getSkin().paintTopBar(this, g2);
+		
         g2.dispose();
     }
 

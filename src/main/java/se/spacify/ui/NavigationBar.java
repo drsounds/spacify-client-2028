@@ -204,12 +204,7 @@ public class NavigationBar extends JPanel implements NavigationListener {
 		Graphics2D g2 = (Graphics2D) g.create();
 		int w = getWidth(), h = getHeight();
 
-		//Color tintColor = ThemeManager.getTintColor();
-		//g2.setPaint(new GradientPaint(0, 0, ThemeManager.accentLight(2f), 0, h, tintColor));
-		g2.setPaint(new GradientPaint(0, 0, Color.WHITE, 0, h, ThemeManager.accentLight(2f)));
-		g2.fillRect(0, 0, w, h);
-		g2.setPaint(new GradientPaint(0, 0, new Color(255, 255, 255, 10), 0, h, new Color(255, 255, 255, 0)));
-		g2.fillRect(0, 1, w, (h / 2));
+        ((MainWindow)(SwingUtilities.getWindowAncestor(this))).getSkin().paintHeader(this, g2);
 		// 1 px white sheen along the very bottom edge
 		g2.setColor(HIGHLIGHT);
 		g2.drawLine(0, h - 1, w, h - 1);

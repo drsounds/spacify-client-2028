@@ -3,6 +3,7 @@ package se.spacify.ui;
 import se.spacify.ui.theme.ThemeManager;
 
 import javax.swing.JToggleButton;
+import javax.swing.SwingUtilities;
 import javax.swing.BorderFactory;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -10,8 +11,11 @@ import java.awt.Font;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.LinearGradientPaint;
+import java.awt.RadialGradientPaint;
 import java.awt.RenderingHints;
 import java.awt.geom.Path2D;
+import java.awt.geom.Point2D;
 
 /**
  * A WMP-style tab: rounded top corners, sharp bottom, meant to sit flush on the
@@ -65,29 +69,10 @@ public class TabButton extends JToggleButton {
 	protected void paintComponent(Graphics g) {
 		Graphics2D g2 = (Graphics2D) g.create();
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		int w = getWidth(), h = getHeight();
+		
 
-		// Top-rounded, bottom-sharp shape flush with the panel's bottom edge.
-		Path2D tab = new Path2D.Float();
-		tab.moveTo(0, h);
-		tab.lineTo(0, ARC);
-		tab.quadTo(0, 0, ARC, 0);
-		tab.lineTo(w - ARC, 0);
-		tab.quadTo(w, 0, w, ARC);
-		tab.lineTo(w, h);
-		tab.closePath();
-
-		if (isSelected()) {
-			g2.setColor(ThemeManager.getTintColor());
-			g2.fill(tab);
-			g2.setPaint(new GradientPaint(0, 0, new Color(255, 255, 255, 60),
-					0, h / 2f, new Color(255, 255, 255, 0)));
-			g2.fill(tab);
-		} else if (getModel().isRollover()) {
-			g2.setColor(new Color(255, 255, 255, 45));
-			g2.fill(tab);
-		} else {
-		}
+		((MainWindow)(SwingUtilities.getWindowAncestor(this))).getSkin().paintTabButton(this, g2);
+			
 		g2.dispose();
 
 		super.paintComponent(g);   // draws text/icon (content area is disabled)

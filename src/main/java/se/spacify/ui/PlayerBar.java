@@ -158,15 +158,9 @@ public class PlayerBar extends JPanel {
     protected void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D) g.create();
         int w = getWidth(), h = getHeight();
-        //Color tintColor = ThemeManager.getTintColor();        
-        //g2.setPaint(new GradientPaint(0, 0, ThemeManager.accentLight(2f), 0, h, tintColor));
-        g2.setPaint(new GradientPaint(0, 0, Color.WHITE, 0, h, ThemeManager.accentLight(2f)));
-        g2.fillRect(0, 0, w, h);
-        g2.setPaint(new GradientPaint(0, 0, ThemeManager.accentLight(2f), 0, 18, Color.WHITE));
-        g2.fillRect(0, 0, w, 18);
+
+        ((MainWindow)(SwingUtilities.getWindowAncestor(this))).getSkin().paintFooter(this, g2);
         
-        g2.setPaint(new GradientPaint(0, 0, new Color(255, 255, 255, 127), 0, h, new Color(255, 255, 255, 0)));
-        g2.fillRect(0, 1, w, (h / 2));
         g2.setColor(HIGHLIGHT);
         g2.drawLine(0, h - 1, w, h - 1);
         g2.dispose();

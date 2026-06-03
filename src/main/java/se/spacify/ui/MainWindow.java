@@ -4,6 +4,8 @@ import se.spacify.navigation.SPViewStack;
 import se.spacify.service.ServiceManager;
 import se.spacify.service.media.MediaService;
 import se.spacify.service.media.MediaService.PlaybackState;
+import se.spacify.skinning.Skin;
+import se.spacify.skinning.WMP10Skin;
 import se.spacify.ui.theme.ThemeManager;
 import se.spacify.views.*;
 import se.spacify.views.library.*;
@@ -14,12 +16,31 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import java.awt.*;
 
 public class MainWindow extends JFrame {
-
     private static final long serialVersionUID = 2144395787232553079L;
+
+	private static final String LAYOUT_WMP10 = "LAYOUT_WMP10";
+	private static final String LAYOUT_WMP11 = "LAYOUT_WMP11";
+	private static final String LAYOUT_WMP9 = "LAYOUT_WMP9";
+	private static final String LAYOUT_MODE_SPOTIFY = "LAYOUT_SPOTIFY";
+	private static final String LAYOUT_MODE_ITUNES = "LAYOUT_ITUNES";
+
 	private final SPViewStack    viewStack;
     private final PlayerBar      playerBar;
     private final NowPlayingView nowPlayingView;
     private final Sidebar        sidebar;
+    
+    private String layoutMode = LAYOUT_WMP10;
+    
+    private Skin skin = new WMP10Skin();
+    public Skin getSkin() {
+    	return skin;
+    }
+    
+    
+    public String getLayoutMode() {
+    	return layoutMode;
+    }
+    
 
 	private JSplitPane leftSplit;
 	private JSplitPane mainSplit;

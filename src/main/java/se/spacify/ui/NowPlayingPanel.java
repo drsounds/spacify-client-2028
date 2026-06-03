@@ -37,7 +37,7 @@ public class NowPlayingPanel extends JPanel implements NavigationListener {
 
         ThemeManager.addChangeListener(this::repaint);
     }
-    @Override
+    @Override 
     protected void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D) g.create();
         int w = getWidth(), h = getHeight();
