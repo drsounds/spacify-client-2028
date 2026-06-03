@@ -20,7 +20,8 @@ public class NowPlayingView extends SPView {
 
     public NowPlayingView() {
         panel = new JPanel(new BorderLayout());
-        panel.setOpaque(false);
+        panel.setOpaque(true);
+        panel.setBackground(Color.BLACK);
 
         // ── Player area ──────────────────────────────────────────────────────
         playerContainer = new JPanel(new BorderLayout());
