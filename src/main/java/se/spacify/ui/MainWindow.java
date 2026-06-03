@@ -101,7 +101,7 @@ public class MainWindow extends JFrame {
         if (ms != null) wireMediaService(ms);
 
         ServiceManager.getInstance().activateFeatures(viewStack, sidebar.getRootNode());
-
+        applySidebar(false);
         // Glass-pane resize handler — intercepts edge events, redispatches others
         WindowResizer.install(this);
 
