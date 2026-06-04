@@ -20,6 +20,9 @@ public final class WindowResizer extends JComponent {
     private int          activeDir  = 0;
     private Point        dragOrigin;
     private Rectangle    startBounds;
+    // Component that received the current press; drags/release are captured to it
+    // so e.g. a JSplitPane divider keeps tracking even when the cursor leaves it.
+    private Component    pressTarget;
 
     public static void install(JFrame frame) {
         WindowResizer r = new WindowResizer(frame);
@@ -34,13 +37,21 @@ public final class WindowResizer extends JComponent {
         addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
-                setCursor(Cursor.getPredefinedCursor(cursorId(dirAt(e.getPoint()))));
+                int dir = dirAt(e.getPoint());
+                if (dir != 0) {
+                    setCursor(Cursor.getPredefinedCursor(cursorId(dir)));
+                } else {
+                    // Mirror the cursor of the component below (e.g. the split
+                    // divider's resize cursor) so the grip is discoverable.
+                    Component c = componentAt(e);
+                    setCursor(c != null ? c.getCursor() : Cursor.getDefaultCursor());
+                }
             }
 
             @Override
             public void mouseDragged(MouseEvent e) {
                 if (activeDir != 0) doResize(e.getLocationOnScreen());
-                else                redispatch(e);
+                else                dispatchTo(pressTarget, e);
             }
         });
 
@@ -52,11 +63,15 @@ public final class WindowResizer extends JComponent {
                     dragOrigin  = e.getLocationOnScreen();
                     startBounds = frame.getBounds();
                 } else {
-                    redispatch(e);
+                    pressTarget = componentAt(e);
+                    dispatchTo(pressTarget, e);
                 }
             }
 
-            @Override public void mouseReleased(MouseEvent e) { if (activeDir == 0) redispatch(e); activeDir = 0; }
+            @Override public void mouseReleased(MouseEvent e) {
+                if (activeDir == 0) { dispatchTo(pressTarget, e); pressTarget = null; }
+                activeDir = 0;
+            }
             @Override public void mouseClicked(MouseEvent e)  { if (activeDir == 0) redispatch(e); }
             @Override public void mouseEntered(MouseEvent e)  { redispatch(e); }
             @Override public void mouseExited(MouseEvent e)   { redispatch(e); }
@@ -80,15 +95,25 @@ public final class WindowResizer extends JComponent {
         frame.setBounds(b);
     }
 
-    /** Forward a mouse event to the deepest Swing component under the cursor. */
-    private void redispatch(MouseEvent e) {
+    /** Deepest Swing component under the cursor, or null if none (or this glass pane). */
+    private Component componentAt(MouseEvent e) {
         Point p = e.getPoint();
         Component target = SwingUtilities.getDeepestComponentAt(frame.getContentPane(), p.x, p.y);
-        if (target == null || target == this) return;
-        Point tp = SwingUtilities.convertPoint(this, p, target);
+        return (target == null || target == this) ? null : target;
+    }
+
+    /** Forward a mouse event to a specific component, translating coordinates. */
+    private void dispatchTo(Component target, MouseEvent e) {
+        if (target == null) return;
+        Point tp = SwingUtilities.convertPoint(this, e.getPoint(), target);
         target.dispatchEvent(new MouseEvent(target, e.getID(), e.getWhen(),
                 e.getModifiersEx(), tp.x, tp.y, e.getClickCount(),
                 e.isPopupTrigger(), e.getButton()));
+    }
+
+    /** Forward a mouse event to the deepest Swing component under the cursor. */
+    private void redispatch(MouseEvent e) {
+        dispatchTo(componentAt(e), e);
     }
 
     private int dirAt(Point p) {

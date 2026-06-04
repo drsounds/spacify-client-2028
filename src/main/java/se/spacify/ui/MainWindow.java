@@ -101,7 +101,9 @@ public class MainWindow extends JFrame {
 
         leftSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, sidebar, centerPanel);
         leftSplit.setDividerLocation(220);
-        leftSplit.setDividerSize(1);
+        leftSplit.setDividerSize(6);
+        // Keep the sidebar at its width and let the centre view absorb resizes.
+        leftSplit.setResizeWeight(0.0);
         // Empty (non-UIResource) border survives the Nimbus reinstall in
         // rebuildTheme(); a null border would get a default border re-installed.
         leftSplit.setBorder(BorderFactory.createEmptyBorder());
@@ -109,7 +111,10 @@ public class MainWindow extends JFrame {
 
         mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftSplit, new NowPlayingPanel(viewStack));
         mainSplit.setDividerLocation(880);
-        mainSplit.setDividerSize(1);
+        mainSplit.setDividerSize(6);
+        // Give all extra width to the left (sidebar + centre); the right
+        // Now Playing / queue panel keeps its width as the window resizes.
+        mainSplit.setResizeWeight(1.0);
         mainSplit.setBorder(BorderFactory.createEmptyBorder());
         mainSplit.setContinuousLayout(true);
 
