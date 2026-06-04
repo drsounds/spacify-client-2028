@@ -3,7 +3,6 @@ package se.spacify.app;
 import se.spacify.config.ConfigManager;
 import se.spacify.db.DatabaseManager;
 import se.spacify.service.ServiceManager;
-import se.spacify.service.media.LocalMusicService;
 import se.spacify.ui.MainWindow;
 import se.spacify.ui.theme.ThemeManager;
 
@@ -36,8 +35,9 @@ public class SpacifyApp {
         }
 
         // ── Services ──────────────────────────────────────────────────────────
+        // Services are now contributed by plugins (see the Local Music plugin),
+        // discovered and started by PluginManager during MainWindow startup.
         ServiceManager sm = ServiceManager.getInstance();
-        sm.register(new LocalMusicService());
         sm.startAll();
 
         // ── Register shutdown hook ────────────────────────────────────────────

@@ -39,6 +39,24 @@ public class SPViewStack extends JPanel {
         registeredViews.add(view);
     }
 
+    /**
+     * Remove a previously-registered view (e.g. when a plugin is disabled). If it
+     * is currently showing, navigate away to a safe default first so the stack
+     * isn't left displaying an orphaned component.
+     */
+    public void unregisterView(SPView view) {
+        registeredViews.remove(view);
+        if (view == currentView) {
+            currentView.onHide();
+            remove(currentView.getComponent());
+            currentView = null;
+            currentUri = null;
+            revalidate();
+            repaint();
+            navigate("spacify:now-playing");
+        }
+    }
+
     public void navigate(String uri) {
         navigate(uri, true);
     }

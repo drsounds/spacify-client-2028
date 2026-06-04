@@ -1,16 +1,9 @@
 package se.spacify.ui;
 
-import se.spacify.db.DatabaseManager;
-import se.spacify.db.entity.Artist;
-import se.spacify.db.entity.Bookmark;
-import se.spacify.db.entity.Release;
-import se.spacify.library.LibraryEvents;
 import se.spacify.navigation.NavigationListener;
 import se.spacify.navigation.SPViewStack;
 import se.spacify.navigation.SidebarNode;
 import se.spacify.ui.theme.ThemeManager;
-import se.spacify.web.BookmarkEvents;
-import se.spacify.web.BookmarkManager;
 
 import javax.swing.*;
 import javax.swing.tree.*;
@@ -19,6 +12,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 public class Sidebar extends JPanel implements NavigationListener {
 
@@ -26,9 +20,6 @@ public class Sidebar extends JPanel implements NavigationListener {
     private final JTree       tree;
     private final JScrollPane scroll;
     private final DefaultMutableTreeNode root;
-    private final DefaultMutableTreeNode releasesNode;
-    private final DefaultMutableTreeNode artistsNode;
-    private final DefaultMutableTreeNode sitesNode;
     private boolean suppressSelection = false;
 	private JToolBar toolbar;
 	private JTextField searchField;
@@ -39,26 +30,12 @@ public class Sidebar extends JPanel implements NavigationListener {
         setPreferredSize(new Dimension(220, 0));
         setOpaque(true);
 
+        // Core shell nodes only; content subtrees (Your Library, Sites) are
+        // contributed by built-in plugins via addSidebarNode() at activation.
         root = new DefaultMutableTreeNode("root");
-
-        DefaultMutableTreeNode library = nodeFor(new SidebarNode("Your Library", "spacify:library"));
-        root.add(nodeFor(new SidebarNode("Player",     "spacify:now-playing")));
-        
-        library.add(nodeFor(new SidebarNode("Tracks",     "spacify:library:tracks")));
-        library.add(nodeFor(new SidebarNode("Recordings", "spacify:library:recordings")));
-        releasesNode = nodeFor(new SidebarNode("Releases", "spacify:library:releases"));
-        artistsNode  = nodeFor(new SidebarNode("Artists",  "spacify:library:artists"));
-        library.add(releasesNode);
-        library.add(artistsNode);
-        library.add(nodeFor(new SidebarNode("Local Files", "spacify:library:local")));
-        root.add(library);
-        DefaultMutableTreeNode downloads = nodeFor(new SidebarNode("Downloads", "spacify:downloads"));
-        root.add(downloads);
-        sitesNode = nodeFor(new SidebarNode("Sites", null));
-        root.add(sitesNode);
-        populateReleases();
-        populateArtists();
-        populateSites();
+        root.add(nodeFor(new SidebarNode("Player",    "spacify:now-playing")));
+        root.add(nodeFor(new SidebarNode("Downloads", "spacify:downloads")));
+        root.add(nodeFor(new SidebarNode("Plugins",   "spacify:plugins")));
 
         toolbar = new JToolBar();
         toolbar.setFloatable(false);
@@ -88,10 +65,6 @@ public class Sidebar extends JPanel implements NavigationListener {
         tree.setOpaque(true);
         tree.setCellRenderer(new ThemedTreeCellRenderer());
 
-        // Expand the top-level library node, but leave the (potentially long)
-        // Releases/Artists lists collapsed until the user opens them.
-        tree.expandPath(new TreePath(library.getPath()));
-
         tree.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -119,63 +92,6 @@ public class Sidebar extends JPanel implements NavigationListener {
 
         updateColors();
         ThemeManager.addChangeListener(this::updateColors);
-        LibraryEvents.addListener(this::refreshLibrary);
-        BookmarkEvents.addListener(this::refreshSites);
-    }
-
-    // ── Bookmarks (Sites) subtree ──────────────────────────────────────────────
-
-    private void refreshSites() {
-        populateSites();
-        ((DefaultTreeModel) tree.getModel()).nodeStructureChanged(sitesNode);
-    }
-
-    private void populateSites() {
-        sitesNode.removeAllChildren();
-        for (Bookmark root : BookmarkManager.roots()) {
-            DefaultMutableTreeNode rootNode = nodeFor(siteNode(root));
-            for (Bookmark child : BookmarkManager.childrenOf(root)) {
-                rootNode.add(nodeFor(siteNode(child)));
-            }
-            sitesNode.add(rootNode);
-        }
-    }
-
-    private static SidebarNode siteNode(Bookmark b) {
-        SidebarNode sn = new SidebarNode(b.toString(), b.getSpacifyUri());
-        if (b.getFavicon() != null) sn.setIcon(new ImageIcon(b.getFavicon()));
-        return sn;
-    }
-
-    // ── Dynamic library subtrees (albums & artists) ───────────────────────────
-
-    /** Repopulate the Releases and Artists subtrees from the database. */
-    private void refreshLibrary() {
-        populateReleases();
-        populateArtists();
-        DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
-        model.nodeStructureChanged(releasesNode);
-        model.nodeStructureChanged(artistsNode);
-    }
-
-    private void populateReleases() {
-        releasesNode.removeAllChildren();
-        try {
-            for (Release r : DatabaseManager.getInstance().releaseDao().queryForAll()) {
-                releasesNode.add(nodeFor(new SidebarNode(
-                    r.getTitle(), "spacify:library:release:" + r.getId())));
-            }
-        } catch (Exception ignored) {}
-    }
-
-    private void populateArtists() {
-        artistsNode.removeAllChildren();
-        try {
-            for (Artist a : DatabaseManager.getInstance().artistDao().queryForAll()) {
-                artistsNode.add(nodeFor(new SidebarNode(
-                    a.getName(), "spacify:library:artist:" + a.getId())));
-            }
-        } catch (Exception ignored) {}
     }
 
     // ── Theme-aware colour sync ───────────────────────────────────────────────
@@ -223,6 +139,34 @@ public class Sidebar extends JPanel implements NavigationListener {
     }
 
     public DefaultMutableTreeNode getRootNode() { return root; }
+
+    /** Append a plugin-contributed node (subtree) to the sidebar root, live. */
+    public DefaultMutableTreeNode addSidebarNode(SidebarNode sn) {
+        DefaultMutableTreeNode node = nodeFor(sn);
+        root.add(node);
+        ((DefaultTreeModel) tree.getModel()).nodeStructureChanged(root);
+        return node;
+    }
+
+    /** Remove a node previously added via {@link #addSidebarNode}. */
+    public void removeSidebarNode(DefaultMutableTreeNode node) {
+        if (node.getParent() != null) {
+            root.remove(node);
+            ((DefaultTreeModel) tree.getModel()).nodeStructureChanged(root);
+        }
+    }
+
+    /** Replace a node's children (used for dynamic plugin subtrees). */
+    public void setNodeChildren(DefaultMutableTreeNode node, List<SidebarNode> children) {
+        node.removeAllChildren();
+        for (SidebarNode sn : children) node.add(nodeFor(sn));
+        ((DefaultTreeModel) tree.getModel()).nodeStructureChanged(node);
+    }
+
+    /** Expand a node in the tree. */
+    public void expandNode(DefaultMutableTreeNode node) {
+        tree.expandPath(new TreePath(node.getPath()));
+    }
 
     // ── NavigationListener ────────────────────────────────────────────────────
 

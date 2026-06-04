@@ -1,0 +1,286 @@
+package se.spacify.plugin;
+
+import se.spacify.navigation.SPView;
+import se.spacify.navigation.SidebarNode;
+import se.spacify.service.Feature;
+import se.spacify.service.Service;
+import se.spacify.service.ServiceManager;
+import se.spacify.ui.Sidebar;
+import se.spacify.navigation.SPViewStack;
+
+import javax.swing.Icon;
+import javax.swing.tree.DefaultMutableTreeNode;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URLClassLoader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+/**
+ * Singleton registry that discovers plugins, instantiates their main classes,
+ * and activates/deactivates them on demand. Activation wires a plugin's
+ * contributions (services, features, views, sidebar nodes) into the running app
+ * through a recording {@link PluginContext}; deactivation replays those records
+ * in reverse so a disabled or removed plugin leaves no trace.
+ *
+ * <p>Enabled/disabled flags persist to {@code ~/.spacify/plugins/state.properties};
+ * per-plugin setting values persist via {@link PluginSettings}.
+ */
+public final class PluginManager {
+
+    private static PluginManager instance;
+
+    public static PluginManager getInstance() {
+        if (instance == null) instance = new PluginManager();
+        return instance;
+    }
+
+    private PluginManager() {}
+
+    private final PluginLoader loader = new PluginLoader();
+    private final Map<String, ManagedPlugin> plugins = new LinkedHashMap<>();
+    private final Properties state = new Properties();
+    private final List<Runnable> listeners = new ArrayList<>();
+
+    private SPViewStack viewStack;
+    private Sidebar     sidebar;
+
+    // ── Lifecycle ─────────────────────────────────────────────────────────────
+
+    /** Wire the manager to the live UI; call once before {@link #start()}. */
+    public void init(SPViewStack viewStack, Sidebar sidebar) {
+        this.viewStack = viewStack;
+        this.sidebar = sidebar;
+        loadState();
+    }
+
+    /** Discover all plugins and activate the enabled ones. */
+    public void start() {
+        discoverAll();
+        for (ManagedPlugin m : plugins.values()) {
+            if (m.enabled && !m.isActive()) activate(m);
+        }
+        notifyListeners();
+    }
+
+    /** (Re)scan the three sources; new descriptors are instantiated but not yet activated. */
+    public void discoverAll() {
+        for (PluginDescriptor d : loader.discover()) {
+            if (plugins.containsKey(d.getId())) continue;
+            ManagedPlugin m = instantiate(d);
+            if (m != null) plugins.put(d.getId(), m);
+        }
+    }
+
+    // ── Enable / disable ───────────────────────────────────────────────────────
+
+    public void setEnabled(String id, boolean enable) {
+        ManagedPlugin m = plugins.get(id);
+        if (m == null || m.enabled == enable) return;
+        if (enable && !m.isActive())      activate(m);
+        else if (!enable && m.isActive()) deactivate(m);
+        m.enabled = enable;
+        state.setProperty(id, String.valueOf(enable));
+        saveState();
+        notifyListeners();
+    }
+
+    // ── Install / uninstall ─────────────────────────────────────────────────────
+
+    /** Copy an external jar into {@code ~/Bungalow}, then load, enable, and activate it. */
+    public boolean install(File jar) {
+        try {
+            Files.createDirectories(PluginPaths.bungalow());
+            Path dest = PluginPaths.bungalow().resolve(jar.getName());
+            Files.copy(jar.toPath(), dest, StandardCopyOption.REPLACE_EXISTING);
+
+            PluginDescriptor d = loader.fromJar(dest.toFile(), PluginDescriptor.Source.EXTERNAL);
+            if (d == null) { Files.deleteIfExists(dest); return false; }
+
+            // Replace any existing plugin with the same id (upgrade).
+            ManagedPlugin existing = plugins.remove(d.getId());
+            if (existing != null) { if (existing.isActive()) deactivate(existing); closeLoader(existing.descriptor); }
+
+            ManagedPlugin m = instantiate(d);
+            if (m == null) { Files.deleteIfExists(dest); return false; }
+            plugins.put(d.getId(), m);
+            m.enabled = true;
+            state.setProperty(d.getId(), "true");
+            activate(m);
+            saveState();
+            notifyListeners();
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    /** Deactivate and delete an external plugin. Built-ins can only be disabled. */
+    public boolean uninstall(String id) {
+        ManagedPlugin m = plugins.get(id);
+        if (m == null || !m.descriptor.isRemovable()) return false;
+        if (m.isActive()) deactivate(m);
+        closeLoader(m.descriptor);
+        plugins.remove(id);
+        state.remove(id);
+        try { if (m.descriptor.getJar() != null) Files.deleteIfExists(m.descriptor.getJar().toPath()); }
+        catch (IOException ignored) {}
+        saveState();
+        notifyListeners();
+        return true;
+    }
+
+    // ── Queries / listeners ─────────────────────────────────────────────────────
+
+    public List<ManagedPlugin> getPlugins() {
+        return Collections.unmodifiableList(new ArrayList<>(plugins.values()));
+    }
+
+    public void addChangeListener(Runnable r) { listeners.add(r); }
+
+    private void notifyListeners() { for (Runnable r : List.copyOf(listeners)) r.run(); }
+
+    // ── Activation internals ────────────────────────────────────────────────────
+
+    private ManagedPlugin instantiate(PluginDescriptor d) {
+        try {
+            Class<?> c = Class.forName(d.getMainClass(), true, d.getClassLoader());
+            Plugin p = (Plugin) c.getDeclaredConstructor().newInstance();
+            return new ManagedPlugin(d, p);
+        } catch (Throwable e) {
+            System.err.println("Failed to load plugin " + d.getId() + ": " + e);
+            return null;
+        }
+    }
+
+    private void activate(ManagedPlugin m) {
+        Recorder rec = new Recorder(m);
+        try {
+            m.plugin.onActivate(rec);
+            m.recorder = rec;
+        } catch (Throwable e) {
+            System.err.println("Failed to activate plugin " + m.descriptor.getId() + ": " + e);
+            rec.undo();
+        }
+    }
+
+    private void deactivate(ManagedPlugin m) {
+        try { m.plugin.onDeactivate(); }
+        catch (Throwable e) { System.err.println("Error deactivating " + m.descriptor.getId() + ": " + e); }
+        if (m.recorder != null) { m.recorder.undo(); m.recorder = null; }
+    }
+
+    private static void closeLoader(PluginDescriptor d) {
+        if (d.getClassLoader() instanceof URLClassLoader u) {
+            try { u.close(); } catch (IOException ignored) {}
+        }
+    }
+
+    // ── State persistence ───────────────────────────────────────────────────────
+
+    private void loadState() {
+        if (!Files.exists(PluginPaths.stateFile())) return;
+        try (InputStream in = Files.newInputStream(PluginPaths.stateFile())) {
+            state.load(in);
+        } catch (IOException ignored) {}
+    }
+
+    private void saveState() {
+        try {
+            Files.createDirectories(PluginPaths.stateDir());
+            try (OutputStream out = Files.newOutputStream(PluginPaths.stateFile())) {
+                state.store(out, "Spacify plugin enabled-state");
+            }
+        } catch (IOException ignored) {}
+    }
+
+    private boolean enabledByDefault(String id) {
+        return Boolean.parseBoolean(state.getProperty(id, "true"));
+    }
+
+    // ── Managed plugin record ───────────────────────────────────────────────────
+
+    /** Public view over a discovered plugin, used by the manager UI. */
+    public final class ManagedPlugin {
+        private final PluginDescriptor descriptor;
+        private final Plugin           plugin;
+        private final PluginSettings   settings;
+        private boolean                enabled;
+        private Recorder               recorder;   // non-null while active
+
+        ManagedPlugin(PluginDescriptor descriptor, Plugin plugin) {
+            this.descriptor = descriptor;
+            this.plugin = plugin;
+            this.settings = new PluginSettings(descriptor.getId(), plugin.getSettingsSchema());
+            this.enabled = enabledByDefault(descriptor.getId());
+        }
+
+        public PluginDescriptor    getDescriptor() { return descriptor; }
+        public boolean             isEnabled()     { return enabled; }
+        public boolean             isActive()      { return recorder != null; }
+        public Icon                getIcon()       { return plugin.getIcon(); }
+        public List<PluginSetting> getSchema()     { return plugin.getSettingsSchema(); }
+        public PluginSettings      getSettings()   { return settings; }
+    }
+
+    // ── Recording context: wires contributions and can undo them ────────────────
+
+    private final class Recorder implements PluginContext {
+        private final ManagedPlugin owner;
+        private final List<Service>                services = new ArrayList<>();
+        private final List<Feature>                features = new ArrayList<>();
+        private final List<SPView>                 views    = new ArrayList<>();
+        private final List<DefaultMutableTreeNode> nodes    = new ArrayList<>();
+
+        Recorder(ManagedPlugin owner) { this.owner = owner; }
+
+        @Override public String pluginId() { return owner.descriptor.getId(); }
+
+        @Override public PluginSettings settings() { return owner.settings; }
+
+        @Override public SPViewStack viewStack() { return viewStack; }
+
+        @Override public void registerService(Service s) {
+            ServiceManager.getInstance().register(s);
+            s.onStart();
+            services.add(s);
+        }
+
+        @Override public void registerView(SPView v) {
+            if (viewStack != null) viewStack.registerView(v);
+            views.add(v);
+        }
+
+        @Override public SidebarHandle addSidebarNode(SidebarNode n) {
+            if (sidebar == null) return NoopSidebarHandle.INSTANCE;
+            DefaultMutableTreeNode node = sidebar.addSidebarNode(n);
+            nodes.add(node);
+            return new SidebarHandleImpl(sidebar, node);
+        }
+
+        @Override public void registerFeature(Feature f) {
+            ServiceManager.getInstance().register(f);
+            features.add(f);
+            f.getViews().forEach(this::registerView);
+            f.getSidebarNodes().forEach(this::addSidebarNode);
+        }
+
+        /** Replay registrations in reverse, removing every contribution. */
+        void undo() {
+            for (DefaultMutableTreeNode n : nodes) if (sidebar != null) sidebar.removeSidebarNode(n);
+            for (SPView v : views) if (viewStack != null) viewStack.unregisterView(v);
+            for (Service s : services) ServiceManager.getInstance().unregister(s);
+            for (Feature f : features) ServiceManager.getInstance().unregisterFeature(f);
+            nodes.clear(); views.clear(); services.clear(); features.clear();
+        }
+    }
+}

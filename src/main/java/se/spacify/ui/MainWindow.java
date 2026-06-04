@@ -77,18 +77,10 @@ public class MainWindow extends JFrame {
 
         viewStack      = new SPViewStack();
         nowPlayingView = new NowPlayingView();
+        // Core shell views only; content views (library, web, search, playlist)
+        // are contributed by built-in plugins during PluginManager.start().
         viewStack.registerView(nowPlayingView);
-        viewStack.registerView(new SearchView());
-        viewStack.registerView(new ArtistsLibraryView());
-        viewStack.registerView(new RecordingsLibraryView());
-        viewStack.registerView(new ReleasesLibraryView());
-        viewStack.registerView(new LocalFileLibraryView());
-        viewStack.registerView(new ReleaseDetailView());
-        viewStack.registerView(new ArtistDetailView());
-        viewStack.registerView(new TracksLibraryView());
-        viewStack.registerView(new SPWebView(viewStack));
-        viewStack.registerView(new SPServiceWebView(viewStack));
-        viewStack.registerView(new PlaylistView());
+        viewStack.registerView(new se.spacify.plugin.ui.PluginManagerView());
 
         getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.PAGE_AXIS));
         
@@ -144,11 +136,16 @@ public class MainWindow extends JFrame {
             }
         });
 
-        // Wire any already-registered MediaService
+        ServiceManager.getInstance().activateFeatures(viewStack, sidebar.getRootNode());
+
+        // Discover and activate plugins (built-in bundle, <app>/plugins, ~/Bungalow).
+        // The Local Music plugin registers the media service, so wire it afterwards.
+        se.spacify.plugin.PluginManager.getInstance().init(viewStack, sidebar);
+        se.spacify.plugin.PluginManager.getInstance().start();
+
         MediaService ms = ServiceManager.getInstance().getService(MediaService.class);
         if (ms != null) wireMediaService(ms);
 
-        ServiceManager.getInstance().activateFeatures(viewStack, sidebar.getRootNode());
         applySidebar(false);
         // Glass-pane resize handler — intercepts edge events, redispatches others
         WindowResizer.install(this);

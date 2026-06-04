@@ -36,6 +36,11 @@ public class ServiceManager {
         if (s != null) { s.onStop(); s.onDestroy(); }
     }
 
+    /** Unregister a specific service instance (e.g. when a plugin is disabled). */
+    public void unregister(Service service) {
+        if (service != null) unregister(service.getServiceId());
+    }
+
     public void startAll() {
         for (Service s : services.values()) s.onStart();
     }
@@ -78,6 +83,11 @@ public class ServiceManager {
     public void register(Feature feature) {
         features.add(feature);
         feature.onRegister(this);
+    }
+
+    /** Drop a feature from the registry (its views/nodes are removed by the caller). */
+    public void unregisterFeature(Feature feature) {
+        features.remove(feature);
     }
 
     /**

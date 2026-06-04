@@ -16,6 +16,8 @@ public final class LibraryEvents {
 
     public static void addListener(Runnable r) { listeners.add(r); }
 
+    public static void removeListener(Runnable r) { listeners.remove(r); }
+
     public static void fireChanged() {
         for (Runnable r : List.copyOf(listeners)) r.run();
     }

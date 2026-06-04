@@ -1,0 +1,32 @@
+package se.spacify.plugin;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Plugins compiled into the main bundle (no separate jar). They load with the
+ * application class loader and provide the app's core content: local playback,
+ * the music library, and in-app web browsing.
+ */
+final class BuiltinPluginRegistry {
+
+    private BuiltinPluginRegistry() {}
+
+    static List<PluginDescriptor> descriptors() {
+        ClassLoader cl = BuiltinPluginRegistry.class.getClassLoader();
+        List<PluginDescriptor> list = new ArrayList<>();
+        list.add(builtin("se.spacify.plugin.localmusic", "Local Music", "1.0.0",
+            "se.spacify.plugin.localmusic.LocalMusicPlugin", cl));
+        list.add(builtin("se.spacify.plugin.library", "Music Library", "1.0.0",
+            "se.spacify.plugin.library.LibraryPlugin", cl));
+        list.add(builtin("se.spacify.plugin.web", "Web & Sites", "1.0.0",
+            "se.spacify.plugin.web.WebPlugin", cl));
+        return list;
+    }
+
+    private static PluginDescriptor builtin(String id, String name, String version,
+                                            String mainClass, ClassLoader cl) {
+        return new PluginDescriptor(id, name, version, mainClass,
+            PluginDescriptor.Source.BUILTIN_BUNDLE, null, cl);
+    }
+}
