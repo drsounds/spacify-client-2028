@@ -7,35 +7,33 @@ import se.spacify.db.entity.RecordingArtistCredit;
 
 import javax.sound.sampled.*;
 import javax.swing.*;
-import java.awt.Component;
 import java.io.File;
 import java.util.List;
-import java.util.function.Consumer;
 
 /**
- * JavaSound-based implementation of MusicService for local audio files.
- * Supports WAV, AIFF, and AU formats natively; other formats require a SPI codec on the classpath.
+ * JavaSound-based implementation of the music-streaming aspect for local audio
+ * files. Supports WAV, AIFF, and AU formats natively; other formats require a
+ * SPI codec on the classpath. Local playback needs no sign-in, so this service
+ * implements only {@link MusicService} (no {@link se.spacify.service.AuthAspect}).
  */
-public class LocalMusicService extends MusicService {
+public class LocalMusicService implements MusicService {
+
+    private final PlaybackSupport playback = new PlaybackSupport();
 
     private Clip          clip;
     private PlaybackState state        = PlaybackState.IDLE;
     private long          durationMs   = 0;
     private Timer         positionTimer;
 
-    // ── Service identity & auth (local — always authenticated) ───────────────
+    // ── Service identity ──────────────────────────────────────────────────────
 
-    @Override public String  getServiceId()   { return "spacify.local.music"; }
-    @Override public String  getServiceName() { return "Local Music"; }
-    @Override public boolean isAuthenticated() { return true; }
+    @Override public String getServiceId()   { return "spacify.local.music"; }
+    @Override public String getServiceName() { return "Local Music"; }
 
-    @Override
-    public void login(Component parent, Runnable onSuccess, Consumer<Exception> onError) {
-        onSuccess.run();
-    }
+    // ── Listener registration (delegated to PlaybackSupport) ──────────────────
 
-    @Override public void   logout()     {}
-    @Override public Object getAccount() { return null; }
+    @Override public void addPlaybackListener(PlaybackListener l)    { playback.addPlaybackListener(l); }
+    @Override public void removePlaybackListener(PlaybackListener l) { playback.removePlaybackListener(l); }
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
@@ -44,7 +42,7 @@ public class LocalMusicService extends MusicService {
         // Fire position updates every 500 ms while playing
         positionTimer = new Timer(500, e -> {
             if (clip != null && clip.isRunning())
-                firePositionChanged(clip.getMicrosecondPosition() / 1000L, durationMs);
+                playback.firePositionChanged(clip.getMicrosecondPosition() / 1000L, durationMs);
         });
     }
 
@@ -86,14 +84,14 @@ public class LocalMusicService extends MusicService {
         clip.setMicrosecondPosition(0);
         positionTimer.stop();
         setState(PlaybackState.STOPPED);
-        firePositionChanged(0, durationMs);
+        playback.firePositionChanged(0, durationMs);
     }
 
     @Override
     public void seek(long positionMs) {
         if (clip == null) return;
         clip.setMicrosecondPosition(positionMs * 1000L);
-        firePositionChanged(positionMs, durationMs);
+        playback.firePositionChanged(positionMs, durationMs);
     }
 
     @Override
@@ -116,19 +114,19 @@ public class LocalMusicService extends MusicService {
 
             List<Recording> results = DatabaseManager.getInstance().recordingDao()
                 .queryForEq("isrc", isrc);
-            if (results.isEmpty()) { fireError(new Exception("No recording found for ISRC: " + isrc)); return; }
+            if (results.isEmpty()) { playback.fireError(new Exception("No recording found for ISRC: " + isrc)); return; }
             Recording rec = results.get(0);
-            if (rec.getFilePath() == null) { fireError(new Exception("No local file for ISRC: " + isrc)); return; }
+            if (rec.getFilePath() == null) { playback.fireError(new Exception("No local file for ISRC: " + isrc)); return; }
             loadFile(new File(rec.getFilePath()), rec.getTitle(), primaryArtist(rec), null);
         } catch (Exception e) {
-            fireError(e);
+            playback.fireError(e);
         }
     }
 
     /** Load a local file row for playback, using its denormalised metadata. */
     public void loadLocalFile(LocalFile f) {
         if (f == null || f.getFilePath() == null) {
-            fireError(new Exception("Local file has no path"));
+            playback.fireError(new Exception("Local file has no path"));
             return;
         }
         loadFile(new File(f.getFilePath()), f.getName(), f.getArtistName(), f.getReleaseName());
@@ -137,7 +135,7 @@ public class LocalMusicService extends MusicService {
     @Override
     public void loadByTitleArtist(String title, String artist) {
         Recording match = lookupByTitleArtist(title, artist);
-        if (match == null) { fireError(new Exception("Not found: " + title)); return; }
+        if (match == null) { playback.fireError(new Exception("Not found: " + title)); return; }
         if (match.getFilePath() != null) {
             loadFile(new File(match.getFilePath()), match.getTitle(), primaryArtist(match), null);
         } else {
@@ -200,25 +198,45 @@ public class LocalMusicService extends MusicService {
                 AudioFormat pcm = new AudioFormat(fmt.getSampleRate(), 16, fmt.getChannels(), true, false);
                 raw = AudioSystem.getAudioInputStream(pcm, raw);
             }
-            clip = AudioSystem.getClip();
-            clip.open(raw);
-            durationMs = clip.getMicrosecondLength() / 1000L;
+            final Clip c = AudioSystem.getClip();
+            clip = c;
+            c.open(raw);
+            durationMs = c.getMicrosecondLength() / 1000L;
+            // Detect natural end-of-media: a STOP on the *current* clip while we
+            // still believe we're playing and the playhead has reached the end.
+            // The c == clip guard ignores STOPs from a clip we've since replaced.
+            c.addLineListener(ev -> {
+                if (ev.getType() == LineEvent.Type.STOP
+                        && c == clip
+                        && state == PlaybackState.PLAYING
+                        && c.getMicrosecondPosition() >= c.getMicrosecondLength()) {
+                    SwingUtilities.invokeLater(this::handleCompletion);
+                }
+            });
             setState(PlaybackState.PAUSED);
 
             String t = title  != null ? title  : file.getName();
             String a = artist != null ? artist : "";
             String al = album != null ? album  : "";
-            fireTrackChanged(t, a, al);
-            firePositionChanged(0, durationMs);
+            playback.fireTrackChanged(t, a, al);
+            playback.firePositionChanged(0, durationMs);
         } catch (Exception e) {
             setState(PlaybackState.ERROR);
-            fireError(e);
+            playback.fireError(e);
         }
+    }
+
+    /** Natural end-of-track: stop the timer, mark stopped, and notify listeners. */
+    private void handleCompletion() {
+        if (positionTimer != null) positionTimer.stop();
+        setState(PlaybackState.STOPPED);
+        playback.firePositionChanged(durationMs, durationMs);
+        playback.fireCompleted();
     }
 
     private void setState(PlaybackState s) {
         state = s;
-        fireStateChanged(s);
+        playback.fireStateChanged(s);
     }
 
     private String primaryArtist(Recording rec) {

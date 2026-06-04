@@ -8,16 +8,18 @@ import se.spacify.service.Service;
 import java.util.List;
 
 /**
- * Abstract catalogue-browsing service.
- * Implementations can connect to Discogs, MusicBrainz, etc.
+ * Discovery aspect: catalogue browsing and search. Implementations can connect
+ * to Discogs, MusicBrainz, etc. A service may combine this aspect with the
+ * streaming aspect ({@link se.spacify.service.media.MediaService}) to both find
+ * and play music.
  */
-public abstract class MusicCatalogueService extends Service {
+public interface MusicCatalogueService extends Service {
 
-    public abstract List<Release>   searchReleases(String query);
-    public abstract List<Recording> searchRecordings(String query);
-    public abstract List<Artist>    searchArtists(String query);
+    List<Release>   searchReleases(String query);
+    List<Recording> searchRecordings(String query);
+    List<Artist>    searchArtists(String query);
 
-    public abstract Release   getReleaseByMbid(String mbid);
-    public abstract Recording getRecordingByIsrc(String isrc);
-    public abstract Artist    getArtistByIsni(String isni);
+    Release   getReleaseByMbid(String mbid);
+    Recording getRecordingByIsrc(String isrc);
+    Artist    getArtistByIsni(String isni);
 }

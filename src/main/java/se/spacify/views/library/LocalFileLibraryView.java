@@ -3,6 +3,7 @@ package se.spacify.views.library;
 import se.spacify.db.DatabaseManager;
 import se.spacify.db.entity.LocalFile;
 import se.spacify.service.media.PlaybackCoordinator;
+import se.spacify.service.media.PlayQueueItem;
 
 import javax.swing.*;
 import java.io.File;
@@ -101,9 +102,11 @@ public class LocalFileLibraryView extends AbstractLibraryView {
     }
 
     @Override
-    protected void onActivate(int row) {
+    protected PlayQueueItem queueItemAt(int row) {
+        LocalFile f = rows.get(row);
         // A local file is its own playable — resolve straight to the file.
-        PlaybackCoordinator.playLocalFile(rows.get(row));
+        return new PlayQueueItem(f.getName(), f.getArtistName(), f.getDurationMs(),
+            () -> PlaybackCoordinator.playLocalFile(f));
     }
 
     private JButton makeBrowseButton(JTextField path, JTextField name) {

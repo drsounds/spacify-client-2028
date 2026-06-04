@@ -2,60 +2,44 @@ package se.spacify.service.media;
 
 import se.spacify.service.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * Abstract media-playback service.
- * Manages a PlaybackListener list and fires events to all subscribers.
+ * Streaming / playback aspect. A {@link Service} that can play media implements
+ * this interface; the concrete class typically composes a {@link PlaybackSupport}
+ * to manage its listener list and fire events. Decoupling playback into an
+ * aspect lets one service combine streaming with other aspects (discovery,
+ * purchases, …).
  */
-public abstract class MediaService extends Service {
+public interface MediaService extends Service {
 
     // ── State enum ────────────────────────────────────────────────────────────
 
-    public enum PlaybackState { IDLE, LOADING, PLAYING, PAUSED, STOPPED, ERROR }
+    enum PlaybackState { IDLE, LOADING, PLAYING, PAUSED, STOPPED, ERROR }
 
     // ── Listener interface ────────────────────────────────────────────────────
 
-    public interface PlaybackListener {
-        void onStateChanged(PlaybackState state);
-        void onPositionChanged(long positionMs, long durationMs);
-        void onTrackChanged(String title, String artist, String album);
-        void onError(Exception e);
+    interface PlaybackListener {
+        default void onStateChanged(PlaybackState state) {}
+        default void onPositionChanged(long positionMs, long durationMs) {}
+        default void onTrackChanged(String title, String artist, String album) {}
+        default void onError(Exception e) {}
+        /** Fired when the current track reaches its natural end. */
+        default void onCompleted() {}
     }
 
-    private final List<PlaybackListener> listeners = new ArrayList<>();
+    // ── Listener registration ─────────────────────────────────────────────────
 
-    public void addPlaybackListener(PlaybackListener l)    { listeners.add(l); }
-    public void removePlaybackListener(PlaybackListener l) { listeners.remove(l); }
+    void addPlaybackListener(PlaybackListener l);
+    void removePlaybackListener(PlaybackListener l);
 
-    // ── Abstract playback API ─────────────────────────────────────────────────
+    // ── Playback API ──────────────────────────────────────────────────────────
 
-    public abstract void play();
-    public abstract void pause();
-    public abstract void stop();
-    public abstract void seek(long positionMs);
-    public abstract void loadUri(String uri);
+    void play();
+    void pause();
+    void stop();
+    void seek(long positionMs);
+    void loadUri(String uri);
 
-    public abstract PlaybackState getPlaybackState();
-    public abstract long getPositionMs();
-    public abstract long getDurationMs();
-
-    // ── Protected fire helpers ────────────────────────────────────────────────
-
-    protected void fireStateChanged(PlaybackState state) {
-        for (PlaybackListener l : List.copyOf(listeners)) l.onStateChanged(state);
-    }
-
-    protected void firePositionChanged(long posMs, long durMs) {
-        for (PlaybackListener l : List.copyOf(listeners)) l.onPositionChanged(posMs, durMs);
-    }
-
-    protected void fireTrackChanged(String title, String artist, String album) {
-        for (PlaybackListener l : List.copyOf(listeners)) l.onTrackChanged(title, artist, album);
-    }
-
-    protected void fireError(Exception e) {
-        for (PlaybackListener l : List.copyOf(listeners)) l.onError(e);
-    }
+    PlaybackState getPlaybackState();
+    long getPositionMs();
+    long getDurationMs();
 }

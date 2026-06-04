@@ -4,6 +4,7 @@ import se.spacify.navigation.SPViewStack;
 import se.spacify.service.ServiceManager;
 import se.spacify.service.media.MediaService;
 import se.spacify.service.media.MediaService.PlaybackState;
+import se.spacify.service.media.PlayQueue;
 import se.spacify.skinning.Skin;
 import se.spacify.skinning.WMP8Skin;
 import se.spacify.skinning.WMP9Skin;
@@ -222,6 +223,12 @@ public class MainWindow extends JFrame {
     public void wireMediaService(MediaService ms) {
         playerBar.setMediaService(ms);
         nowPlayingView.setMediaService(ms);
+        // Auto-advance the play queue when a track reaches its natural end.
+        ms.addPlaybackListener(new MediaService.PlaybackListener() {
+            @Override public void onCompleted() {
+                SwingUtilities.invokeLater(() -> PlayQueue.getInstance().next());
+            }
+        });
     }
 
     public SPViewStack    getViewStack()     { return viewStack; }

@@ -6,6 +6,7 @@ import se.spacify.db.entity.Recording;
 import se.spacify.db.entity.Release;
 import se.spacify.db.entity.Track;
 import se.spacify.service.media.PlaybackCoordinator;
+import se.spacify.service.media.PlayQueueItem;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -65,15 +66,19 @@ public class ReleaseDetailView extends AbstractLibraryView {
     }
 
     @Override
-    protected void onActivate(int row) {
+    protected PlayQueueItem queueItemAt(int row) {
         Track t = rows.get(row);
         Recording rec = t.getRecording();
-        String isrc   = rec != null ? rec.getIsrc()  : null;
-        String title  = rec != null ? rec.getTitle() : null;
-        String artist = rec != null ? LibraryRepository.primaryArtistForRecording(rec) : null;
-        if (!PlaybackCoordinator.play(isrc, title, artist)) {
-            PlaybackCoordinator.playUri(t.getPlayUri());
-        }
+        String name    = rec != null ? rec.getTitle() : "";
+        String artists = rec != null ? LibraryRepository.artistNamesForRecording(rec) : "";
+        return new PlayQueueItem(name, artists, t.getDurationMs(), () -> {
+            String isrc   = rec != null ? rec.getIsrc()  : null;
+            String title  = rec != null ? rec.getTitle() : null;
+            String artist = rec != null ? LibraryRepository.primaryArtistForRecording(rec) : null;
+            if (!PlaybackCoordinator.play(isrc, title, artist)) {
+                PlaybackCoordinator.playUri(t.getPlayUri());
+            }
+        });
     }
 
     @Override public boolean acceptsUri(String uri) { return uri != null && URI.matcher(uri).matches(); }

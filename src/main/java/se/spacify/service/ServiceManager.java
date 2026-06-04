@@ -49,20 +49,25 @@ public class ServiceManager {
         services.clear();
     }
 
-    /** Returns the first registered service of the given type, or null. */
+    /**
+     * Returns the first registered service exposing the given aspect, or null.
+     * {@code aspect} may be {@link Service} itself, a concrete service class, or
+     * any capability interface (e.g. {@link se.spacify.service.media.MediaService},
+     * {@link AuthAspect}); only the services implementing it are considered.
+     */
     @SuppressWarnings("unchecked")
-    public <T extends Service> T getService(Class<T> type) {
+    public <T> T getService(Class<T> aspect) {
         for (Service s : services.values())
-            if (type.isInstance(s)) return (T) s;
+            if (aspect.isInstance(s)) return (T) s;
         return null;
     }
 
-    /** Returns all registered services of the given type. */
+    /** Returns all registered services exposing the given aspect. */
     @SuppressWarnings("unchecked")
-    public <T extends Service> List<T> getServices(Class<T> type) {
+    public <T> List<T> getServices(Class<T> aspect) {
         List<T> result = new ArrayList<>();
         for (Service s : services.values())
-            if (type.isInstance(s)) result.add((T) s);
+            if (aspect.isInstance(s)) result.add((T) s);
         return result;
     }
 

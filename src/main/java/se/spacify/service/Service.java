@@ -1,53 +1,39 @@
 package se.spacify.service;
 
 import javax.swing.*;
-import java.awt.Component;
-import java.util.function.Consumer;
 
 /**
- * Base class for all Spacify services, modelled on Android's Service lifecycle.
- * Subclasses implement identity, authentication, and lifecycle hooks.
+ * Core contract for every Spacify service: stable identity plus an
+ * Android-style lifecycle. Capabilities a service may additionally take on
+ * (streaming, discovery, purchases, authentication, …) are modelled as separate
+ * <em>aspect</em> interfaces ({@link se.spacify.service.media.MediaService},
+ * {@link se.spacify.service.catalogue.MusicCatalogueService},
+ * {@link AuthAspect}, …). Because these are interfaces, a single service object
+ * can implement any combination of them, and callers select services by aspect
+ * via {@link ServiceManager#getServices(Class)}.
  */
-public abstract class Service {
+public interface Service {
+
+    // ── Identity ──────────────────────────────────────────────────────────────
+
+    String getServiceId();
+
+    String getServiceName();
+
+    /** Optional icon shown in service-selection UI. */
+    default ImageIcon getServiceIcon() { return null; }
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
     /** Called once when the service is registered with ServiceManager. */
-    public void onCreate() {}
+    default void onCreate() {}
 
     /** Called when ServiceManager.startAll() is invoked. */
-    public void onStart() {}
+    default void onStart() {}
 
     /** Called when ServiceManager.stopAll() is invoked. */
-    public void onStop() {}
+    default void onStop() {}
 
     /** Called once when the service is permanently removed from ServiceManager. */
-    public void onDestroy() {}
-
-    // ── Identity ──────────────────────────────────────────────────────────────
-
-    public abstract String getServiceId();
-
-    public abstract String getServiceName();
-
-    /** Optional icon shown in service-selection UI. */
-    public ImageIcon getServiceIcon() { return null; }
-
-    // ── Authentication ────────────────────────────────────────────────────────
-
-    public abstract boolean isAuthenticated();
-
-    /**
-     * Present whatever authentication UI the service requires.
-     * Called on the EDT; the service is responsible for any background work.
-     */
-    public abstract void login(Component parent, Runnable onSuccess, Consumer<Exception> onError);
-
-    public abstract void logout();
-
-    /**
-     * Returns the currently logged-in account object, or null.
-     * Subclasses should narrow the return type.
-     */
-    public abstract Object getAccount();
+    default void onDestroy() {}
 }

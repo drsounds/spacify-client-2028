@@ -2,6 +2,7 @@ package se.spacify.ui;
 
 import se.spacify.service.media.MediaService;
 import se.spacify.service.media.MediaService.PlaybackState;
+import se.spacify.service.media.PlayQueue;
 import se.spacify.ui.theme.ThemeManager;
 
 import javax.swing.*;
@@ -82,11 +83,15 @@ public class PlayerBar extends JPanel {
 
         buttons = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 0));
         buttons.setOpaque(false);
-        buttons.add(makeControlButton("⏮"));
+        JButton prevBtn = makeControlButton("⏮");
+        prevBtn.addActionListener(e -> PlayQueue.getInstance().previous());
+        buttons.add(prevBtn);
         playPauseBtn = makeControlButton("▶");
         playPauseBtn.setFont(playPauseBtn.getFont().deriveFont(16f));
         buttons.add(playPauseBtn);
-        buttons.add(makeControlButton("⏭"));
+        JButton nextBtn = makeControlButton("⏭");
+        nextBtn.addActionListener(e -> PlayQueue.getInstance().next());
+        buttons.add(nextBtn);
 
         controls.add(buttons);
         controls.add(Box.createVerticalStrut(4));

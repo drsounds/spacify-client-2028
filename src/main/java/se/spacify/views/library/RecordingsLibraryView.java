@@ -4,6 +4,7 @@ import se.spacify.db.DatabaseManager;
 import se.spacify.db.LibraryRepository;
 import se.spacify.db.entity.Recording;
 import se.spacify.service.media.PlaybackCoordinator;
+import se.spacify.service.media.PlayQueueItem;
 
 import javax.swing.*;
 import java.util.ArrayList;
@@ -98,13 +99,16 @@ public class RecordingsLibraryView extends AbstractLibraryView {
     }
 
     @Override
-    protected void onActivate(int row) {
+    protected PlayQueueItem queueItemAt(int row) {
         Recording r = rows.get(row);
-        // Resolve across services by ISRC, then by title/artist metadata.
-        if (!PlaybackCoordinator.play(r.getIsrc(), r.getTitle(),
-                LibraryRepository.primaryArtistForRecording(r))) {
-            PlaybackCoordinator.playUri(r.getPlayUri());
-        }
+        return new PlayQueueItem(r.getTitle(),
+                LibraryRepository.artistNamesForRecording(r), r.getDurationMs(), () -> {
+            // Resolve across services by ISRC, then by title/artist metadata.
+            if (!PlaybackCoordinator.play(r.getIsrc(), r.getTitle(),
+                    LibraryRepository.primaryArtistForRecording(r))) {
+                PlaybackCoordinator.playUri(r.getPlayUri());
+            }
+        });
     }
 
     private static String blankToNull(String s) {

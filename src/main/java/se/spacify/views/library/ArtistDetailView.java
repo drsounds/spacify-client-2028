@@ -6,6 +6,7 @@ import se.spacify.db.entity.Artist;
 import se.spacify.db.entity.Recording;
 import se.spacify.db.entity.RecordingArtistCredit;
 import se.spacify.service.media.PlaybackCoordinator;
+import se.spacify.service.media.PlayQueueItem;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,12 +64,15 @@ public class ArtistDetailView extends AbstractLibraryView {
     }
 
     @Override
-    protected void onActivate(int row) {
+    protected PlayQueueItem queueItemAt(int row) {
         Recording rec = rows.get(row);
-        if (!PlaybackCoordinator.play(rec.getIsrc(), rec.getTitle(),
-                LibraryRepository.primaryArtistForRecording(rec))) {
-            PlaybackCoordinator.playUri(rec.getPlayUri());
-        }
+        return new PlayQueueItem(rec.getTitle(),
+                LibraryRepository.artistNamesForRecording(rec), rec.getDurationMs(), () -> {
+            if (!PlaybackCoordinator.play(rec.getIsrc(), rec.getTitle(),
+                    LibraryRepository.primaryArtistForRecording(rec))) {
+                PlaybackCoordinator.playUri(rec.getPlayUri());
+            }
+        });
     }
 
     @Override public boolean acceptsUri(String uri) { return uri != null && URI.matcher(uri).matches(); }

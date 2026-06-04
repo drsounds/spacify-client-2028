@@ -2,6 +2,8 @@ package se.spacify.views.library;
 
 import se.spacify.library.LibraryEvents;
 import se.spacify.navigation.SPView;
+import se.spacify.service.media.PlayQueue;
+import se.spacify.service.media.PlayQueueItem;
 import se.spacify.ui.theme.ThemeManager;
 
 import javax.swing.*;
@@ -10,6 +12,8 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Base for the data-backed library views. Provides a themed {@link JTable} with
@@ -49,7 +53,7 @@ public abstract class AbstractLibraryView extends SPView {
             @Override public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2) {
                     int row = table.rowAtPoint(e.getPoint());
-                    if (row >= 0) onActivate(row);
+                    if (row >= 0) activate(row);
                 }
             }
         });
@@ -144,6 +148,35 @@ public abstract class AbstractLibraryView extends SPView {
 
     /** Invoked when a row is double-clicked; default does nothing. */
     protected void onActivate(int row) {}
+
+    /**
+     * Supply a {@link PlayQueueItem} for the given model row, or {@code null} if
+     * the row isn't playable. Playable views override this so a double-click can
+     * turn the whole view into the play context. Views that don't override it
+     * fall back to {@link #onActivate(int)}.
+     */
+    protected PlayQueueItem queueItemAt(int row) { return null; }
+
+    /**
+     * Turn the visible rows into the play queue and start at {@code row}. Every
+     * playable row (per {@link #queueItemAt}) becomes a queue entry; if the view
+     * doesn't produce queue items, falls back to {@link #onActivate(int)}.
+     */
+    private void activate(int row) {
+        List<PlayQueueItem> queue = new ArrayList<>();
+        int startIndex = -1;
+        for (int i = 0; i < model.getRowCount(); i++) {
+            PlayQueueItem item = queueItemAt(i);
+            if (item == null) continue;
+            if (i == row) startIndex = queue.size();
+            queue.add(item);
+        }
+        if (startIndex >= 0) {
+            PlayQueue.getInstance().setQueueAndPlay(queue, startIndex);
+        } else {
+            onActivate(row);
+        }
+    }
 
     // ── Shared helpers ──────────────────────────────────────────────────────────
 

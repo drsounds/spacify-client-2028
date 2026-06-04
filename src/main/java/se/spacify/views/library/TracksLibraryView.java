@@ -6,6 +6,7 @@ import se.spacify.db.entity.Recording;
 import se.spacify.db.entity.Release;
 import se.spacify.db.entity.Track;
 import se.spacify.service.media.PlaybackCoordinator;
+import se.spacify.service.media.PlayQueueItem;
 
 import javax.swing.*;
 import java.util.ArrayList;
@@ -116,16 +117,20 @@ public class TracksLibraryView extends AbstractLibraryView {
     }
 
     @Override
-    protected void onActivate(int row) {
+    protected PlayQueueItem queueItemAt(int row) {
         Track t = rows.get(row);
         Recording rec = t.getRecording();
-        // Resolve across services by ISRC, then by title/artist metadata.
-        String isrc   = rec != null ? rec.getIsrc()  : null;
-        String title  = rec != null ? rec.getTitle() : null;
-        String artist = rec != null ? LibraryRepository.primaryArtistForRecording(rec) : null;
-        if (!PlaybackCoordinator.play(isrc, title, artist)) {
-            PlaybackCoordinator.playUri(t.getPlayUri());
-        }
+        String name    = rec != null ? rec.getTitle() : "";
+        String artists = rec != null ? LibraryRepository.artistNamesForRecording(rec) : "";
+        return new PlayQueueItem(name, artists, t.getDurationMs(), () -> {
+            // Resolve across services by ISRC, then by title/artist metadata.
+            String isrc   = rec != null ? rec.getIsrc()  : null;
+            String title  = rec != null ? rec.getTitle() : null;
+            String artist = rec != null ? LibraryRepository.primaryArtistForRecording(rec) : null;
+            if (!PlaybackCoordinator.play(isrc, title, artist)) {
+                PlaybackCoordinator.playUri(t.getPlayUri());
+            }
+        });
     }
 
     private static void selectById(JComboBox<Recording> combo, int id) {
