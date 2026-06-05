@@ -10,7 +10,10 @@ import java.awt.geom.Path2D;
 
 import javax.swing.JPanel;
 
+import se.spacify.ui.GlassPanel;
+import se.spacify.ui.GlossyButton;
 import se.spacify.ui.TabButton;
+import se.spacify.ui.ToolBar;
 import se.spacify.ui.theme.ThemeManager;
 
 public class WMP11Skin extends Skin {
@@ -73,5 +76,42 @@ public class WMP11Skin extends Skin {
 		} else {
 		}
 	 	
+	}
+	@Override
+	public void paintGlossyButton(GlossyButton control, Graphics2D g2, int x, int y, int d) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void paintGlassPanel(GlassPanel control, Graphics2D g2) {
+		int w = control.getWidth(), h = control.getHeight();
+		Path2D shape = control.shape(w, h);
+
+		// Base accent gradient, antialiased to the rounded/diagonal outline.
+		g2.setPaint(new GradientPaint(0, 0, ThemeManager.accentLight(2f), 0, h, ThemeManager.getTintColor()));
+		g2.fill(shape);
+
+		// Glossy white overlays, confined to the shape.
+		g2.setClip(shape);
+		g2.setPaint(new GradientPaint(0, 0, new Color(255, 255, 255, 0), 0, h, new Color(255, 255, 255, 255)));
+		g2.fillRect(0, h / 2, w, h - (h / 2));
+		g2.setPaint(new GradientPaint(0, 0, new Color(255, 255, 255, 127), 0, h, new Color(255, 255, 255, 0)));
+		g2.fillRect(0, 1, w, h / 2);
+	}
+
+	@Override
+	public void paintToolBar(ToolBar control, Graphics2D g2) {
+		int w = control.getWidth(), h = control.getHeight();
+		g2.setPaint(ThemeManager.getTintColor());
+		g2.fillRect(0, 0, w, h);
+	}
+	@Override
+	public void paintPlaylist(JPanel control, Graphics2D g2) {
+		// TODO Auto-generated method stub
+		int w = control.getWidth(), h = control.getHeight();
+        Color tintColor = ThemeManager.getTintColor();
+        g2.setPaint(new GradientPaint(0, 0, tintColor, 0, h, ThemeManager.accentLight(2f)));
+        g2.fillRect(0, 0, w, h);
 	}
 }

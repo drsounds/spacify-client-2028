@@ -8,6 +8,7 @@ import java.awt.RenderingHints;
 import java.awt.geom.Path2D;
 
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import se.spacify.ui.theme.ThemeManager;
 
@@ -37,7 +38,7 @@ public class GlassPanel extends JPanel {
 	public void setTrailingDiagonal(boolean on)  { this.trailingDiagonal = on; repaint(); }
 
 	/** The panel outline: rounded corners, with optional diagonal side edges. */
-	private Path2D shape(int w, int h) {
+	public Path2D shape(int w, int h) {
 		int a = Math.min(arc, Math.min(w, h) / 2);
 		int s = Math.min(diagonalInset, w / 2);
 		Path2D p = new Path2D.Float();
@@ -85,19 +86,8 @@ public class GlassPanel extends JPanel {
 	protected void paintComponent(Graphics g) {
 		Graphics2D g2 = (Graphics2D) g.create();
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		int w = getWidth(), h = getHeight();
-		Path2D shape = shape(w, h);
-
-		// Base accent gradient, antialiased to the rounded/diagonal outline.
-		g2.setPaint(new GradientPaint(0, 0, ThemeManager.accentLight(2f), 0, h, ThemeManager.getTintColor()));
-		g2.fill(shape);
-
-		// Glossy white overlays, confined to the shape.
-		g2.setClip(shape);
-		g2.setPaint(new GradientPaint(0, 0, new Color(255, 255, 255, 0), 0, h, new Color(255, 255, 255, 255)));
-		g2.fillRect(0, h / 2, w, h - (h / 2));
-		g2.setPaint(new GradientPaint(0, 0, new Color(255, 255, 255, 127), 0, h, new Color(255, 255, 255, 0)));
-		g2.fillRect(0, 1, w, h / 2);
+		((MainWindow)(SwingUtilities.getWindowAncestor(this))).getSkin().paintGlassPanel(this, g2);
+        
 
 		g2.dispose();
 	}

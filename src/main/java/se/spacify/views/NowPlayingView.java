@@ -4,6 +4,8 @@ import se.spacify.navigation.PlayerView;
 import se.spacify.navigation.SPView;
 import se.spacify.service.media.MediaService;
 import se.spacify.ui.SettingsPanel;
+import se.spacify.ui.ToolBar;
+import se.spacify.ui.theme.ThemeManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -17,12 +19,19 @@ public class NowPlayingView extends SPView {
     private final JComboBox<String> viewSelector;
     private final List<PlayerView> playerViews = new ArrayList<>();
     private PlayerView activeView;
+	private JToolBar topToolbar;
 
     public NowPlayingView() {
         panel = new JPanel(new BorderLayout());
         panel.setOpaque(true);
         panel.setBackground(Color.BLACK);
 
+        topToolbar = new ToolBar();
+        topToolbar.setFloatable(false);
+        topToolbar.setOpaque(true);
+        topToolbar.setBackground(ThemeManager.getTintColor());
+        panel.add(topToolbar, BorderLayout.NORTH);
+        topToolbar.add(new JButton("<"));
         // ── Player area ──────────────────────────────────────────────────────
         playerContainer = new JPanel(new BorderLayout());
         playerContainer.setOpaque(false);

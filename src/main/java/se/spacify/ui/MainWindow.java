@@ -30,9 +30,9 @@ public class MainWindow extends JFrame {
 	private static final String LAYOUT_MODE_ITUNES = "LAYOUT_ITUNES";
 
 	private final SPViewStack    viewStack;
-    private final PlayerBar      playerBar;
+    private final AppFooter      appFooter;
     private final NowPlayingView nowPlayingView;
-    private final Sidebar        sidebar;
+    private final LeftLibraryMenu        leftLibraryMenu;
     
     private String layoutMode = LAYOUT_WMP10;
     
@@ -89,20 +89,20 @@ public class MainWindow extends JFrame {
         add(topBar);
         topBar.setMaximumSize(new Dimension(Short.MAX_VALUE, 18));
         topBar.setMinimumSize(new Dimension(0, 18));
-        NavigationBar navBar = new NavigationBar(viewStack);
+        AppHeader navBar = new AppHeader(viewStack);
         navBar.setMaximumSize(new Dimension(Short.MAX_VALUE, 28));
         navBar.setMinimumSize(new Dimension(0, 28));
         add(navBar);
 
-        sidebar = new Sidebar(viewStack);
+        leftLibraryMenu = new LeftLibraryMenu(viewStack);
 
         JPanel centerPanel = new JPanel(new BorderLayout());
         centerPanel.add(viewStack);
 
-        leftSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, sidebar, centerPanel);
+        leftSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftLibraryMenu, centerPanel);
         leftSplit.setDividerLocation(220);
         leftSplit.setDividerSize(6);
-        // Keep the sidebar at its width and let the centre view absorb resizes.
+        // Keep the leftLibraryMenu at its width and let the centre view absorb resizes.
         leftSplit.setResizeWeight(0.0);
         // Empty (non-UIResource) border survives the Nimbus reinstall in
         // rebuildTheme(); a null border would get a default border re-installed.
@@ -112,7 +112,7 @@ public class MainWindow extends JFrame {
         mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftSplit, new NowPlayingPanel(viewStack));
         mainSplit.setDividerLocation(880);
         mainSplit.setDividerSize(6);
-        // Give all extra width to the left (sidebar + centre); the right
+        // Give all extra width to the left (leftLibraryMenu + centre); the right
         // Now Playing / queue panel keeps its width as the window resizes.
         mainSplit.setResizeWeight(1.0);
         mainSplit.setBorder(BorderFactory.createEmptyBorder());
@@ -120,10 +120,10 @@ public class MainWindow extends JFrame {
 
         add(mainSplit, BorderLayout.CENTER);
 
-        playerBar = new PlayerBar();
-        add(playerBar);
-        playerBar.setMaximumSize(new Dimension(Short.MAX_VALUE, 18));
-        playerBar.setMinimumSize(new Dimension(0, 18));
+        appFooter = new AppFooter();
+        add(appFooter);
+        appFooter.setMaximumSize(new Dimension(Short.MAX_VALUE, 18));
+        appFooter.setMinimumSize(new Dimension(0, 18));
 
         // Debounced Nimbus L&F reinstall — the only way to flush SynthStyleFactory
         // caches so all Nimbus-painted panels pick up updated colours.
@@ -141,11 +141,11 @@ public class MainWindow extends JFrame {
             }
         });
 
-        ServiceManager.getInstance().activateFeatures(viewStack, sidebar.getRootNode());
+        ServiceManager.getInstance().activateFeatures(viewStack, leftLibraryMenu.getRootNode());
 
         // Discover and activate plugins (built-in bundle, <app>/plugins, ~/Bungalow).
         // The Local Music plugin registers the media service, so wire it afterwards.
-        se.spacify.plugin.PluginManager.getInstance().init(viewStack, sidebar);
+        se.spacify.plugin.PluginManager.getInstance().init(viewStack, leftLibraryMenu);
         se.spacify.plugin.PluginManager.getInstance().start();
 
         MediaService ms = ServiceManager.getInstance().getService(MediaService.class);
@@ -162,19 +162,19 @@ public class MainWindow extends JFrame {
         navigate("spacify:now-playing");
     }
 
-    /** Toggle the left sidebar; remembers the user's preference. */
+    /** Toggle the left leftLibraryMenu; remembers the user's preference. */
     public void toggleSidebar() {
         setSidebarVisible(!userWantsSidebar);
     }
 
-    /** Explicitly show/hide the left sidebar; remembers the user's preference. */
+    /** Explicitly show/hide the left leftLibraryMenu; remembers the user's preference. */
     public void setSidebarVisible(boolean visible) {
         userWantsSidebar = visible;
         if (!immersive) applySidebar(visible);
     }
 
     private void applySidebar(boolean visible) {
-        sidebar.setVisible(visible);
+        leftLibraryMenu.setVisible(visible);
         leftSplit.setDividerLocation(visible ? 220 : 0);
         leftSplit.revalidate();
         leftSplit.repaint();
@@ -198,9 +198,9 @@ public class MainWindow extends JFrame {
     public void navigate(String uri) {
     	viewStack.navigate(uri);
     	/*if (uri.startsWith("spacify:now-playing")) {
-    		sidebar.setVisible(false);
+    		leftLibraryMenu.setVisible(false);
     	} else {
-    		sidebar.setVisible(true);
+    		leftLibraryMenu.setVisible(true);
     		leftSplit.setDividerLocation(100);
     	}*/
     }
@@ -221,9 +221,9 @@ public class MainWindow extends JFrame {
         SwingUtilities.updateComponentTreeUI(this);
     }
 
-    /** Connects a MediaService to PlayerBar and NowPlayingView. */
+    /** Connects a MediaService to AppFooter and NowPlayingView. */
     public void wireMediaService(MediaService ms) {
-        playerBar.setMediaService(ms);
+        appFooter.setMediaService(ms);
         nowPlayingView.setMediaService(ms);
         // Auto-advance the play queue when a track reaches its natural end.
         ms.addPlaybackListener(new MediaService.PlaybackListener() {
@@ -234,7 +234,7 @@ public class MainWindow extends JFrame {
     }
 
     public SPViewStack    getViewStack()     { return viewStack; }
-    public PlayerBar      getPlayerBar()     { return playerBar; }
+    public AppFooter      getPlayerBar()     { return appFooter; }
     public NowPlayingView getNowPlayingView() { return nowPlayingView; }
-    public Sidebar        getSidebar()       { return sidebar; }
+    public LeftLibraryMenu        getSidebar()       { return leftLibraryMenu; }
 }

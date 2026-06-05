@@ -8,37 +8,28 @@ import se.spacify.ui.theme.ThemeManager;
 import javax.swing.*;
 import java.awt.*;
 
-public class PlayerBar extends JPanel {
+public class AppFooter extends JPanel {
 
     private static final Color HIGHLIGHT = new Color(255, 255, 255, 35);
 
     // Fields exposed for service wiring
     private final JLabel  trackNameLabel;
     private final JLabel  artistLabel;
-    private final JButton playPauseBtn;
-
+    private final GlossyButton playPauseBtn;
 	private JPanel mainBar;
-
 	private GlassPanel leftPanel;
-
 	private JPanel controls;
-
 	private JPanel buttons;
-
 	private GlassPanel rightPanel;
-
 	private JSlider progress;
-
 	private JPanel progressPanel;
+	private GlossyButton backwardButton;
+	private GlossyButton forwardButton;
 
-	private JButton backwardButton;
-
-	private JButton forwardButton;
-
-    public PlayerBar() {
+    public AppFooter() {
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
         setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
-        setPreferredSize(new Dimension(0, 72));
+        setPreferredSize(new Dimension(0, 90));
         setOpaque(true);
   
         progressPanel = new JPanel(new BorderLayout());
@@ -56,6 +47,7 @@ public class PlayerBar extends JPanel {
         progressPanel.add(forwardButton, BorderLayout.EAST);
         mainBar = new JPanel();
         mainBar.setLayout(new BoxLayout(mainBar, BoxLayout.LINE_AXIS));
+        mainBar.setPreferredSize(new Dimension(0, 28));
         mainBar.setOpaque(false);
         add(mainBar);
         
@@ -81,13 +73,14 @@ public class PlayerBar extends JPanel {
         controls.setLayout(new BoxLayout(controls, BoxLayout.Y_AXIS));
         controls.setOpaque(false);
 
-        buttons = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 0));
+        buttons = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 0));
         buttons.setOpaque(false);
-        JButton prevBtn = makeControlButton("⏮");
+        GlossyButton prevBtn = makeControlButton("⏮");
         prevBtn.addActionListener(e -> PlayQueue.getInstance().previous());
         buttons.add(prevBtn);
         playPauseBtn = makeControlButton("▶");
         playPauseBtn.setFont(playPauseBtn.getFont().deriveFont(16f));
+        playPauseBtn.setDiameter(48);
         buttons.add(playPauseBtn);
         JButton nextBtn = makeControlButton("⏭");
         nextBtn.addActionListener(e -> PlayQueue.getInstance().next());
@@ -99,18 +92,17 @@ public class PlayerBar extends JPanel {
         // Right: volume
         //right.add(searchField);
         rightPanel = new GlassPanel();
-        rightPanel.setPreferredSize(new Dimension(300, 46));
+        rightPanel.setPreferredSize(new Dimension(300, 16));
         rightPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 0, 0));
         rightPanel.setLeadingDiagonal(true);   // sharp left edge, bottom longer than top
-        rightPanel.setDiagonalInset(65);
-        rightPanel.setPreferredSize(new Dimension(160, 0));
+        rightPanel.setDiagonalInset(65); 
         JLabel volIcon = new JLabel("🔊");
         volIcon.setForeground(Color.WHITE);
         JSlider volume = new JSlider(0, 100, 70);
         volume.setPreferredSize(new Dimension(100, 20));
         volume.setOpaque(false);
-        rightPanel.add(volIcon);
-        rightPanel.add(volume);
+        controls.add(volIcon);
+        controls.add(volume);
 
         mainBar.add(leftPanel);
         mainBar.add(controls);
@@ -171,9 +163,10 @@ public class PlayerBar extends JPanel {
         g2.dispose();
     }
 
-    private JButton makeControlButton(String text) {
-        JButton btn = new JButton(text);
+    private GlossyButton makeControlButton(String text) {
+        GlossyButton btn = new GlossyButton(text);
         btn.setFocusPainted(false);
+        btn.setDiameter(36);
         btn.setFont(btn.getFont().deriveFont(14f));
         return btn;
     }

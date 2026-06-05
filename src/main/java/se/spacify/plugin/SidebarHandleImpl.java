@@ -1,23 +1,23 @@
 package se.spacify.plugin;
 
 import se.spacify.navigation.SidebarNode;
-import se.spacify.ui.Sidebar;
+import se.spacify.ui.LeftLibraryMenu;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.util.List;
 
 /**
  * {@link SidebarHandle} backed by a live {@link DefaultMutableTreeNode} in the
- * {@link Sidebar}. Plugins only see the interface; this keeps the Swing tree
+ * {@link LeftLibraryMenu}. Plugins only see the interface; this keeps the Swing tree
  * details on the host side.
  */
 final class SidebarHandleImpl implements SidebarHandle {
 
-    private final Sidebar sidebar;
+    private final LeftLibraryMenu leftLibraryMenu;
     private final DefaultMutableTreeNode node;
 
-    SidebarHandleImpl(Sidebar sidebar, DefaultMutableTreeNode node) {
-        this.sidebar = sidebar;
+    SidebarHandleImpl(LeftLibraryMenu leftLibraryMenu, DefaultMutableTreeNode node) {
+        this.leftLibraryMenu = leftLibraryMenu;
         this.node = node;
     }
 
@@ -27,17 +27,17 @@ final class SidebarHandleImpl implements SidebarHandle {
     @Override
     public SidebarHandle child(String uri) {
         DefaultMutableTreeNode found = find(node, uri);
-        return found != null ? new SidebarHandleImpl(sidebar, found) : null;
+        return found != null ? new SidebarHandleImpl(leftLibraryMenu, found) : null;
     }
 
     @Override
     public void setChildren(List<SidebarNode> children) {
-        sidebar.setNodeChildren(node, children);
+        leftLibraryMenu.setNodeChildren(node, children);
     }
 
     @Override
     public void expand() {
-        sidebar.expandNode(node);
+        leftLibraryMenu.expandNode(node);
     }
 
     private static DefaultMutableTreeNode find(DefaultMutableTreeNode n, String uri) {

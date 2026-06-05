@@ -151,9 +151,19 @@ public class ThemeManager {
         put(d, "TextArea.foreground",        currentFg);
     }
 
+    /** Scale a colour's RGB channels by {@code factor} (1.0 = unchanged), preserving alpha. */
+    public static Color scaleRgb(Color base, float factor) {
+        if (factor >= 1f) return base;
+        return new Color(
+            Math.round(base.getRed()   * factor),
+            Math.round(base.getGreen() * factor),
+            Math.round(base.getBlue()  * factor),
+            base.getAlpha());
+    }
+    
     /** Color derived from the background-tint HSL sliders — used for chrome gradients. */
     public static Color getTintColor() {
-        float l = darkMode ? (0.28f + lightness * 0.10f) : (0.42f + lightness * 0.10f);
+        float l = false ? (0.28f + lightness * 0.10f) : (0.42f + lightness * 0.10f);
         return hsl(hue, saturation, l);
     }
 

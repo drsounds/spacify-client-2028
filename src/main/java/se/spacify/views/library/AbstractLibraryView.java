@@ -4,6 +4,7 @@ import se.spacify.library.LibraryEvents;
 import se.spacify.navigation.SPView;
 import se.spacify.service.media.PlayQueue;
 import se.spacify.service.media.PlayQueueItem;
+import se.spacify.ui.ToolBar;
 import se.spacify.ui.theme.ThemeManager;
 
 import javax.swing.*;
@@ -28,7 +29,8 @@ public abstract class AbstractLibraryView extends SPView {
     protected final JTable           table;
     protected final JScrollPane      scroll;
     protected final DefaultTableModel model;
-	private JToolBar bottomToolbar;
+	private ToolBar bottomToolbar;
+	private ToolBar toolbar;
 
     protected AbstractLibraryView() {
         panel = new JPanel(new BorderLayout(0, 8));
@@ -71,7 +73,7 @@ public abstract class AbstractLibraryView extends SPView {
         scroll.getViewport().setOpaque(true);
 
         // ── CRUD toolbar ───────────────────────────────────────────────────────
-        JToolBar toolbar = new JToolBar();
+        toolbar = new ToolBar();
         toolbar.setFloatable(false);
         toolbar.setOpaque(true);
         toolbar.setBackground(ThemeManager.getTintColor());
@@ -114,7 +116,7 @@ public abstract class AbstractLibraryView extends SPView {
         panel.add(north, BorderLayout.NORTH);
         panel.add(scroll, BorderLayout.CENTER);
 
-        bottomToolbar = new JToolBar();
+        bottomToolbar = new ToolBar();
         bottomToolbar.setFloatable(false);
         bottomToolbar.setOpaque(true);
         bottomToolbar.setBackground(ThemeManager.getTintColor());

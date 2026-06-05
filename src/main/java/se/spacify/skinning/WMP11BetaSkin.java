@@ -7,6 +7,7 @@ import java.awt.Graphics2D;
 
 import javax.swing.JPanel;
 
+import se.spacify.ui.GlossyButton;
 import se.spacify.ui.TabButton;
 import se.spacify.ui.theme.ThemeManager;
 
@@ -40,5 +41,19 @@ public class WMP11BetaSkin extends Skin {
 	public void paintTabButton(TabButton button, Graphics2D g2) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public void paintGlossyButton(GlossyButton control, Graphics2D g2, int x, int y, int d) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void paintPlaylist(JPanel control, Graphics2D g2) {
+		// TODO Auto-generated method stub
+		int w = control.getWidth(), h = control.getHeight();
+        Color tintColor = ThemeManager.getTintColor();
+        g2.setPaint(new GradientPaint(0, 0, tintColor, 0, h, ThemeManager.accentLight(2f)));
+        g2.fillRect(0, 0, w, h);
 	}
 }

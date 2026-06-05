@@ -6,6 +6,7 @@ import se.spacify.service.media.PlayQueueItem;
 import se.spacify.ui.theme.ThemeManager;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -25,21 +26,26 @@ public class NowPlayingPanel extends JPanel {
     private final JTable            table;
     private final JScrollPane       scroll;
     private final JLabel            emptyLabel;
+	private JToolBar topToolbar;
+	private JToolBar bottomToolbar;
 
     public NowPlayingPanel(SPViewStack viewStack) {
-        setLayout(new BorderLayout(0, 8));
+        setLayout(new BorderLayout(0, 0));
         setPreferredSize(new Dimension(220, 0));
-        setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 1, 0, 0, new Color(50, 50, 50)),
-            BorderFactory.createEmptyBorder(12, 10, 12, 10)
-        ));
+        setBorder(new EmptyBorder(0, 0, 0, 0));
 
-        JLabel title = new JLabel("Play Queue");
-        title.setForeground(new Color(160, 160, 160));
+        
+        topToolbar = new ToolBar();
+        topToolbar.setFloatable(false);
+        topToolbar.setOpaque(true);
+        topToolbar.setBackground(ThemeManager.getTintColor());
+        add(topToolbar);
+
+        JButton title = new JButton(UIManager.getIcon("FileView.fileIcon"));
         title.setFont(title.getFont().deriveFont(Font.BOLD, 11f));
-
+        
         // ── Queue table ──────────────────────────────────────────────────────
-        model = new DefaultTableModel(new String[]{"Name", "Artists", "Duration"}, 0) {
+        model = new DefaultTableModel(new String[]{"Name", "Duration"}, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
         table = new JTable(model);
@@ -48,7 +54,7 @@ public class NowPlayingPanel extends JPanel {
         table.setShowGrid(false);
         table.setIntercellSpacing(new Dimension(0, 0));
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.getColumnModel().getColumn(2).setMaxWidth(64);
+        table.getColumnModel().getColumn(1).setMaxWidth(64);
         // Transparent so the panel's gradient shows through behind the rows.
         table.setOpaque(false);
 
@@ -80,9 +86,18 @@ public class NowPlayingPanel extends JPanel {
         emptyLabel.setFont(emptyLabel.getFont().deriveFont(12f));
         emptyLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
-        add(title,  BorderLayout.NORTH);
+        add(topToolbar,  BorderLayout.NORTH);
         add(scroll, BorderLayout.CENTER);
 
+        bottomToolbar = new ToolBar();
+        bottomToolbar.setFloatable(false);
+        bottomToolbar.setOpaque(true);
+        bottomToolbar.setBackground(ThemeManager.getTintColor());
+        bottomToolbar.add(new JButton("Sync"));
+        add(bottomToolbar, BorderLayout.SOUTH);
+
+        topToolbar.add(title);
+        
         updateColors();
         refresh();
 
@@ -97,7 +112,7 @@ public class NowPlayingPanel extends JPanel {
         model.setRowCount(0);
         for (PlayQueueItem it : items) {
             model.addRow(new Object[]{
-                it.getName(), it.getArtists(), fmtDuration(it.getDurationMs())
+                it.getName(), fmtDuration(it.getDurationMs())
             });
         }
         int current = PlayQueue.getInstance().getCurrentIndex();
@@ -139,10 +154,8 @@ public class NowPlayingPanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D) g.create();
-        int w = getWidth(), h = getHeight();
-        Color tintColor = ThemeManager.getTintColor();
-        g2.setPaint(new GradientPaint(0, 0, tintColor, 0, h, ThemeManager.accentLight(2f)));
-        g2.fillRect(0, 0, w, h);
+        ((MainWindow)(SwingUtilities.getWindowAncestor(this))).getSkin().paintPlaylist(this, g2);
+        
         g2.dispose();
     }
 

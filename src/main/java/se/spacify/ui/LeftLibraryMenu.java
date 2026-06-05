@@ -17,16 +17,16 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-public class Sidebar extends JPanel implements NavigationListener {
+public class LeftLibraryMenu extends JPanel implements NavigationListener {
 
     private final SPViewStack viewStack;
     private final JTree       tree;
     private final JScrollPane scroll;
     private final DefaultMutableTreeNode root;
     private boolean suppressSelection = false;
-	private JToolBar toolbar;
+	private ToolBar toolbar;
 	private JTextField searchField;
-	private JToolBar bottomToolbar;
+	private ToolBar bottomToolbar;
 	private MenuButton addToLibraryMenuButton;
 	private JPopupMenu addToLibraryMenu;
 	private JMenuItem scanFolderMenuItem;
@@ -39,7 +39,7 @@ public class Sidebar extends JPanel implements NavigationListener {
 		
 	}
 	
-    public Sidebar(SPViewStack viewStack) {
+    public LeftLibraryMenu(SPViewStack viewStack) {
         this.viewStack = viewStack;
         setLayout(new BorderLayout());
         setPreferredSize(new Dimension(220, 0));
@@ -52,7 +52,7 @@ public class Sidebar extends JPanel implements NavigationListener {
         root.add(nodeFor(new SidebarNode("Downloads", "spacify:downloads")));
         root.add(nodeFor(new SidebarNode("Plugins",   "spacify:plugins")));
 
-        toolbar = new JToolBar();
+        toolbar = new ToolBar();
         toolbar.setFloatable(false);
         toolbar.setOpaque(true);
         toolbar.setBackground(ThemeManager.getTintColor());
@@ -103,7 +103,7 @@ public class Sidebar extends JPanel implements NavigationListener {
         scroll.getViewport().setOpaque(true);
         add(scroll, BorderLayout.CENTER);
 
-        bottomToolbar = new JToolBar();
+        bottomToolbar = new ToolBar();
         bottomToolbar.setFloatable(false);
         bottomToolbar.setOpaque(true);
         bottomToolbar.setBackground(ThemeManager.getTintColor());
@@ -168,7 +168,7 @@ public class Sidebar extends JPanel implements NavigationListener {
         }
     }
 
-    // ── Sidebar tree model ────────────────────────────────────────────────────
+    // ── LeftLibraryMenu tree model ────────────────────────────────────────────────────
 
     private DefaultMutableTreeNode nodeFor(SidebarNode sn) {
         DefaultMutableTreeNode node = new DefaultMutableTreeNode(sn);

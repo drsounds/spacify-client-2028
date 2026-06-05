@@ -15,7 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-public class NavigationBar extends JPanel implements NavigationListener {
+public class AppHeader extends JPanel implements NavigationListener {
 
 	private static final Color CHROME_DARK = new Color(14, 14, 14);
 	private static final Color HIGHLIGHT = new Color(255, 255, 255, 35);
@@ -32,7 +32,7 @@ public class NavigationBar extends JPanel implements NavigationListener {
 	private final Map<String, Icon> faviconCache = new HashMap<>();
 	private TabButton mediaGuideTab;
 
-	public NavigationBar(SPViewStack viewStack) {
+	public AppHeader(SPViewStack viewStack) {
 		this.viewStack = viewStack;
 		setLayout(new BorderLayout(8, 0));
 		setPreferredSize(new Dimension(0, 56));

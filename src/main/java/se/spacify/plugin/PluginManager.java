@@ -5,7 +5,7 @@ import se.spacify.navigation.SidebarNode;
 import se.spacify.service.Feature;
 import se.spacify.service.Service;
 import se.spacify.service.ServiceManager;
-import se.spacify.ui.Sidebar;
+import se.spacify.ui.LeftLibraryMenu;
 import se.spacify.navigation.SPViewStack;
 
 import javax.swing.Icon;
@@ -28,7 +28,7 @@ import java.util.Properties;
 /**
  * Singleton registry that discovers plugins, instantiates their main classes,
  * and activates/deactivates them on demand. Activation wires a plugin's
- * contributions (services, features, views, sidebar nodes) into the running app
+ * contributions (services, features, views, leftLibraryMenu nodes) into the running app
  * through a recording {@link PluginContext}; deactivation replays those records
  * in reverse so a disabled or removed plugin leaves no trace.
  *
@@ -52,14 +52,14 @@ public final class PluginManager {
     private final List<Runnable> listeners = new ArrayList<>();
 
     private SPViewStack viewStack;
-    private Sidebar     sidebar;
+    private LeftLibraryMenu     leftLibraryMenu;
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
     /** Wire the manager to the live UI; call once before {@link #start()}. */
-    public void init(SPViewStack viewStack, Sidebar sidebar) {
+    public void init(SPViewStack viewStack, LeftLibraryMenu leftLibraryMenu) {
         this.viewStack = viewStack;
-        this.sidebar = sidebar;
+        this.leftLibraryMenu = leftLibraryMenu;
         loadState();
     }
 
@@ -261,10 +261,10 @@ public final class PluginManager {
         }
 
         @Override public SidebarHandle addSidebarNode(SidebarNode n) {
-            if (sidebar == null) return NoopSidebarHandle.INSTANCE;
-            DefaultMutableTreeNode node = sidebar.addSidebarNode(n);
+            if (leftLibraryMenu == null) return NoopSidebarHandle.INSTANCE;
+            DefaultMutableTreeNode node = leftLibraryMenu.addSidebarNode(n);
             nodes.add(node);
-            return new SidebarHandleImpl(sidebar, node);
+            return new SidebarHandleImpl(leftLibraryMenu, node);
         }
 
         @Override public void registerFeature(Feature f) {
@@ -276,7 +276,7 @@ public final class PluginManager {
 
         /** Replay registrations in reverse, removing every contribution. */
         void undo() {
-            for (DefaultMutableTreeNode n : nodes) if (sidebar != null) sidebar.removeSidebarNode(n);
+            for (DefaultMutableTreeNode n : nodes) if (leftLibraryMenu != null) leftLibraryMenu.removeSidebarNode(n);
             for (SPView v : views) if (viewStack != null) viewStack.unregisterView(v);
             for (Service s : services) ServiceManager.getInstance().unregister(s);
             for (Feature f : features) ServiceManager.getInstance().unregisterFeature(f);
