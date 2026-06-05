@@ -1,9 +1,12 @@
 package se.spacify.ui;
 
+import se.spacify.app.MenuButton;
+import se.spacify.library.LibraryEvents;
 import se.spacify.navigation.NavigationListener;
 import se.spacify.navigation.SPViewStack;
 import se.spacify.navigation.SidebarNode;
 import se.spacify.ui.theme.ThemeManager;
+import se.spacify.views.library.LibraryScanAction;
 
 import javax.swing.*;
 import javax.swing.tree.*;
@@ -23,7 +26,19 @@ public class Sidebar extends JPanel implements NavigationListener {
     private boolean suppressSelection = false;
 	private JToolBar toolbar;
 	private JTextField searchField;
+	private JToolBar bottomToolbar;
+	private MenuButton addToLibraryMenuButton;
+	private JPopupMenu addToLibraryMenu;
+	private JMenuItem scanFolderMenuItem;
 
+	public void reload() {
+		
+	}
+	
+	public void onAdd() {
+		
+	}
+	
     public Sidebar(SPViewStack viewStack) {
         this.viewStack = viewStack;
         setLayout(new BorderLayout());
@@ -88,6 +103,29 @@ public class Sidebar extends JPanel implements NavigationListener {
         scroll.getViewport().setOpaque(true);
         add(scroll, BorderLayout.CENTER);
 
+        bottomToolbar = new JToolBar();
+        bottomToolbar.setFloatable(false);
+        bottomToolbar.setOpaque(true);
+        bottomToolbar.setBackground(ThemeManager.getTintColor());
+        bottomToolbar.add(new JButton("Test"));
+        add(bottomToolbar, BorderLayout.SOUTH);
+        
+        addToLibraryMenuButton = new MenuButton();
+        addToLibraryMenuButton.setText("Add to Library");
+        addToLibraryMenu = addToLibraryMenuButton.getPopup();
+        JMenuItem addBtn    = new JMenuItem("Add");
+        JMenuItem editBtn   = new JMenuItem("Edit");
+        JMenuItem deleteBtn = new JMenuItem("Delete");
+        JMenuItem scanBtn   = new JMenuItem("Scan…");
+
+        scanBtn.addActionListener(e -> LibraryScanAction.run(this,
+            () -> { /*reload();*/ LibraryEvents.fireChanged(); }));
+        addBtn.addActionListener(e -> { onAdd(); reload(); LibraryEvents.fireChanged(); });
+        addToLibraryMenuButton.add(addBtn);
+        addToLibraryMenuButton.add(scanBtn);
+        
+        bottomToolbar.add(addToLibraryMenuButton);
+        	
         viewStack.addNavigationListener(this);
 
         updateColors();

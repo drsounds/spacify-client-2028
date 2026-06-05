@@ -13,11 +13,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Drives the "Scan…" toolbar flow: pick a folder, scan it on a background
  * thread behind a modal progress dialog, then show a summary and refresh.
  */
-final class LibraryScanAction {
+public final class LibraryScanAction {
 
     private LibraryScanAction() {}
 
-    static void run(Component parent, Runnable onComplete) {
+    public static void run(Component parent, Runnable onComplete) {
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Select a folder to scan for MP3 files");
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);

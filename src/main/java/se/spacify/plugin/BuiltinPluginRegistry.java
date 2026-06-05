@@ -21,6 +21,8 @@ final class BuiltinPluginRegistry {
             "se.spacify.plugin.library.LibraryPlugin", cl));
         list.add(builtin("se.spacify.plugin.web", "Web & Sites", "1.0.0",
             "se.spacify.plugin.web.WebPlugin", cl));
+        list.add(builtin("se.spacify.plugin.musicbrainz", "MusicBrainz", "1.0.0",
+            "se.spacify.plugin.musicbrainz.MusicBrainzPlugin", cl));
         return list;
     }
 
