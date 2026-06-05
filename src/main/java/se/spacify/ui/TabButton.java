@@ -7,15 +7,11 @@ import javax.swing.SwingUtilities;
 import javax.swing.BorderFactory;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.LinearGradientPaint;
-import java.awt.RadialGradientPaint;
 import java.awt.RenderingHints;
-import java.awt.geom.Path2D;
-import java.awt.geom.Point2D;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 /**
  * A WMP-style tab: rounded top corners, sharp bottom, meant to sit flush on the
@@ -26,7 +22,14 @@ import java.awt.geom.Point2D;
 public class TabButton extends JToggleButton {
 
 	private static final long serialVersionUID = 1L;
-	private static final int ARC = 12;
+
+	/**
+	 * Explicit hover/press tracking. Under the Synth-based Nimbus L&F, the button
+	 * model's rollover/pressed transitions don't reliably repaint a custom-painted,
+	 * non-opaque button, so we track the state ourselves and force a repaint.
+	 */
+	private boolean hovered;
+	private boolean pressed;
 
 	public TabButton(String text) {
 		super(text);
@@ -38,14 +41,67 @@ public class TabButton extends JToggleButton {
 		setBorder(BorderFactory.createEmptyBorder(10, 32, 8, 32));
 		setFont(getFont().deriveFont(14f));
 		setForeground(ThemeManager.getForeground());
+
+		MouseAdapter mouse = new MouseAdapter() {
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				hovered = true;
+				repaint();
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
+				hovered = false;
+				pressed = false;
+				repaint();
+			}
+
+			@Override
+			public void mousePressed(MouseEvent e) {
+				if (SwingUtilities.isLeftMouseButton(e)) {
+					// Show the active (pressed) state immediately, but defer the
+					// actual navigation until the button is released.
+					pressed = true;
+					repaint();
+				}
+			}
+
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				pressed = false;
+				repaint();
+			}
+		};
+		addMouseListener(mouse);
+
 		ThemeManager.addChangeListener(() -> {
 			if (isSelected()) {
-				setForeground(Color.WHITE);	
+				setForeground(Color.WHITE);
 			} else {
 				setForeground(ThemeManager.accentDark(0.2f));
 			}
 			repaint();
 		});
+	}
+
+	/** True while the pointer is over the tab. */
+	public boolean isHovered() {
+		return hovered;
+	}
+
+	/** True while the tab is being held down (before release). */
+	public boolean isPressedState() {
+		return pressed;
+	}
+
+	@Override
+	public Color getForeground() {
+		// The skin fills the tab with the active background while selected or
+		// pressed, so keep the label white in both cases for legibility.
+		if (pressed && !isSelected()) {
+			return Color.WHITE;
+		}
+		return super.getForeground();
 	}
 
 	@Override
@@ -72,7 +128,7 @@ public class TabButton extends JToggleButton {
 		
 
 		((MainWindow)(SwingUtilities.getWindowAncestor(this))).getSkin().paintTabButton(this, g2);
-			
+
 		g2.dispose();
 
 		super.paintComponent(g);   // draws text/icon (content area is disabled)

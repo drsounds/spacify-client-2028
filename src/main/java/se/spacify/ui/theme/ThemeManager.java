@@ -50,6 +50,14 @@ public class ThemeManager {
     public static Color getForeground()           { return currentFg; }
     public static Color getGridColor()            { return currentGrid; }
 
+    // Fixed highlight for the row matching the currently-playing track,
+    // applied consistently across the play-queue and all library/list views.
+    private static final Color NOW_PLAYING_BG = Color.BLACK;
+    private static final Color NOW_PLAYING_FG = new Color(144, 238, 144);  // light green
+
+    public static Color getNowPlayingBackground() { return NOW_PLAYING_BG; }
+    public static Color getNowPlayingForeground() { return NOW_PLAYING_FG; }
+
     public static void setHue(float h)           { hue = h;           applyToDefaults(); notify_(); }
     public static void setSaturation(float s)    { saturation = s;    applyToDefaults(); notify_(); }
     public static void setLightness(float l)     { lightness = l;     applyToDefaults(); notify_(); }
@@ -151,22 +159,22 @@ public class ThemeManager {
 
     /** Darken the tint: each channel multiplied by ratio (0–1). */
     public static Color accentDark(float ratio) {
-        Color a = getTintColor();
-        return new Color(
-            Math.min(255, (int)(a.getRed()   * ratio)),
-            Math.min(255, (int)(a.getGreen() * ratio)),
-            Math.min(255, (int)(a.getBlue()  * ratio))
-        );
+        return ColorUtils.darken(getAccentColor(), ratio);
+    }
+
+    /** Darken the tint: each channel multiplied by ratio (0–1). */
+    public static Color tintDark(float ratio) {
+        return ColorUtils.darken(getTintColor(), ratio);
     }
 
     /** Brighten the tint: each channel multiplied by ratio (>1 boosts toward white). */
     public static Color accentLight(float ratio) {
-        Color a = getTintColor();
-        return new Color(
-            Math.min(255, (int)(a.getRed()   * ratio)),
-            Math.min(255, (int)(a.getGreen() * ratio)),
-            Math.min(255, (int)(a.getBlue()  * ratio))
-        );
+        return ColorUtils.lighten(getAccentColor(), ratio);
+    }
+
+    /** Brighten the tint: each channel multiplied by ratio (>1 boosts toward white). */
+    public static Color tintLight(float ratio) {
+        return ColorUtils.lighten(getTintColor(), ratio);
     }
 
     // ── HSL conversion ────────────────────────────────────────────────────────

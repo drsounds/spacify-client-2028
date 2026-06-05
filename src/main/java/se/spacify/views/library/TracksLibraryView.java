@@ -122,7 +122,7 @@ public class TracksLibraryView extends AbstractLibraryView {
         Recording rec = t.getRecording();
         String name    = rec != null ? rec.getTitle() : "";
         String artists = rec != null ? LibraryRepository.artistNamesForRecording(rec) : "";
-        return new PlayQueueItem(name, artists, t.getDurationMs(), () -> {
+        return new PlayQueueItem(t.getPlayUri(), name, artists, t.getDurationMs(), () -> {
             // Resolve across services by ISRC, then by title/artist metadata.
             String isrc   = rec != null ? rec.getIsrc()  : null;
             String title  = rec != null ? rec.getTitle() : null;

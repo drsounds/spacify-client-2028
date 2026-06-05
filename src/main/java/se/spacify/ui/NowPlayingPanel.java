@@ -168,8 +168,8 @@ public class NowPlayingPanel extends JPanel {
             stripe = false;
             if (playing) {
                 setOpaque(true);
-                setBackground(ThemeManager.getAccentColor());
-                setForeground(Color.WHITE);
+                setBackground(ThemeManager.getNowPlayingBackground());
+                setForeground(ThemeManager.getNowPlayingForeground());
             } else {
                 setOpaque(false);   // let the gradient show through
                 setForeground(ThemeManager.getForeground());

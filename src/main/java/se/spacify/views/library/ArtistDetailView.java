@@ -66,7 +66,7 @@ public class ArtistDetailView extends AbstractLibraryView {
     @Override
     protected PlayQueueItem queueItemAt(int row) {
         Recording rec = rows.get(row);
-        return new PlayQueueItem(rec.getTitle(),
+        return new PlayQueueItem(rec.getPlayUri(), rec.getTitle(),
                 LibraryRepository.artistNamesForRecording(rec), rec.getDurationMs(), () -> {
             if (!PlaybackCoordinator.play(rec.getIsrc(), rec.getTitle(),
                     LibraryRepository.primaryArtistForRecording(rec))) {

@@ -61,7 +61,7 @@ public class WMP9Skin extends Skin {
 			g2.fill(tab);
 			g2.setPaint(new GradientPaint(0f, 0f, ThemeManager.getAccentColor(), (float)(w), h / 2f, new Color(255, 255 ,255, 0)));
 	
-		} else if (control.getModel().isRollover()) {
+		} else if (control.isHovered()) {
 			g2.setColor(new Color(255, 255, 255, 45));
 			g2.fill(tab);
 		} else {

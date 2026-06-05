@@ -101,7 +101,7 @@ public class RecordingsLibraryView extends AbstractLibraryView {
     @Override
     protected PlayQueueItem queueItemAt(int row) {
         Recording r = rows.get(row);
-        return new PlayQueueItem(r.getTitle(),
+        return new PlayQueueItem(r.getPlayUri(), r.getTitle(),
                 LibraryRepository.artistNamesForRecording(r), r.getDurationMs(), () -> {
             // Resolve across services by ISRC, then by title/artist metadata.
             if (!PlaybackCoordinator.play(r.getIsrc(), r.getTitle(),

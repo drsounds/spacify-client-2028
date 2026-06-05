@@ -60,7 +60,7 @@ public class WMP10Skin extends Skin {
 			g2.setPaint(new GradientPaint(0, 0, new Color(255, 255, 255, 60),
 					0, h / 2f, new Color(255, 255, 255, 0)));
 			g2.fill(tab);
-		} else if (control.getModel().isRollover()) {
+		} else if (control.isHovered()) {
 			g2.setColor(new Color(255, 255, 255, 45));
 			g2.fill(tab);
 		} else {

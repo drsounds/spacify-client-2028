@@ -123,6 +123,8 @@ public abstract class AbstractLibraryView extends SPView {
 
         updateColors();
         ThemeManager.addChangeListener(this::updateColors);
+        // Repaint so the now-playing row highlight follows the active track.
+        PlayQueue.getInstance().addChangeListener(table::repaint);
     }
 
     /** Sets the page header text; pass null/blank to hide it. */
@@ -228,12 +230,17 @@ public abstract class AbstractLibraryView extends SPView {
         table.repaint();
     }
 
-    private static final class ThemedTableCellRenderer extends DefaultTableCellRenderer {
+    private final class ThemedTableCellRenderer extends DefaultTableCellRenderer {
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value,
                 boolean isSelected, boolean hasFocus, int row, int column) {
             super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-            if (isSelected) {
+            PlayQueueItem item = queueItemAt(row);
+            if (item != null && PlayQueue.getInstance().isCurrentKey(item.getKey())) {
+                // Row matches the currently-playing track.
+                setBackground(ThemeManager.getNowPlayingBackground());
+                setForeground(ThemeManager.getNowPlayingForeground());
+            } else if (isSelected) {
                 setBackground(ThemeManager.getAccentColor());
                 setForeground(Color.WHITE);
             } else {

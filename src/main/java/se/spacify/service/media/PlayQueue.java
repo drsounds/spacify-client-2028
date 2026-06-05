@@ -30,6 +30,16 @@ public final class PlayQueue {
     /** Index of the entry currently playing, or -1 when the queue is empty. */
     public int getCurrentIndex() { return current; }
 
+    /** Play-identity of the entry currently playing, or null. */
+    public String getCurrentKey() {
+        return (current >= 0 && current < items.size()) ? items.get(current).getKey() : null;
+    }
+
+    /** Whether {@code key} identifies the entry currently playing. */
+    public boolean isCurrentKey(String key) {
+        return key != null && key.equals(getCurrentKey());
+    }
+
     /**
      * Replace the queue with {@code newItems} and start playing at
      * {@code startIndex}. This is the entry point used when a view "becomes" the

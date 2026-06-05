@@ -105,7 +105,7 @@ public class LocalFileLibraryView extends AbstractLibraryView {
     protected PlayQueueItem queueItemAt(int row) {
         LocalFile f = rows.get(row);
         // A local file is its own playable — resolve straight to the file.
-        return new PlayQueueItem(f.getName(), f.getArtistName(), f.getDurationMs(),
+        return new PlayQueueItem(f.getPlayUri(), f.getName(), f.getArtistName(), f.getDurationMs(),
             () -> PlaybackCoordinator.playLocalFile(f));
     }
 
