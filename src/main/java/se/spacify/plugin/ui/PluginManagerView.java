@@ -1,5 +1,6 @@
 package se.spacify.plugin.ui;
 
+import se.spacify.controls.Table;
 import se.spacify.navigation.SPView;
 import se.spacify.plugin.PluginDescriptor;
 import se.spacify.plugin.PluginManager;
@@ -22,7 +23,7 @@ import java.util.List;
 public class PluginManagerView extends SPView {
 
     private final JPanel           panel;
-    private final JTable           table;
+    private final Table           table;
     private final DefaultTableModel model;
     private final JScrollPane      detail;
     private final List<ManagedPlugin> rows = new ArrayList<>();
@@ -59,7 +60,7 @@ public class PluginManagerView extends SPView {
             @Override public boolean isCellEditable(int r, int c) { return c == 0; }
             @Override public Class<?> getColumnClass(int c) { return c == 0 ? Boolean.class : String.class; }
         };
-        table = new JTable(model);
+        table = new Table(model);
         table.setRowHeight(26);
         table.setShowGrid(false);
         table.getColumnModel().getColumn(0).setMaxWidth(32);
@@ -190,8 +191,6 @@ public class PluginManagerView extends SPView {
         table.setGridColor(ThemeManager.getGridColor());
         table.setSelectionBackground(ThemeManager.getAccentColor());
         table.setSelectionForeground(Color.WHITE);
-        table.getTableHeader().setBackground(ThemeManager.getGridColor());
-        table.getTableHeader().setForeground(fg);
         detail.getViewport().setBackground(bg);
         detail.setBackground(bg);
         panel.repaint();

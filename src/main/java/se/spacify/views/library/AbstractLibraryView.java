@@ -1,10 +1,12 @@
 package se.spacify.views.library;
 
+import se.spacify.controls.Table;
+import se.spacify.controls.ToolBar;
+import se.spacify.controls.ToolButton;
 import se.spacify.library.LibraryEvents;
 import se.spacify.navigation.SPView;
 import se.spacify.service.media.PlayQueue;
 import se.spacify.service.media.PlayQueueItem;
-import se.spacify.ui.ToolBar;
 import se.spacify.ui.theme.ThemeManager;
 
 import javax.swing.*;
@@ -24,241 +26,276 @@ import java.util.List;
  */
 public abstract class AbstractLibraryView extends SPView {
 
-    protected final JPanel           panel;
-    protected final JLabel           headerLabel;
-    protected final JTable           table;
-    protected final JScrollPane      scroll;
-    protected final DefaultTableModel model;
+	protected final JPanel panel;
+	protected final JLabel headerLabel;
+	protected final Table table;
+	protected final JScrollPane scroll;
+	protected final DefaultTableModel model;
 	private ToolBar bottomToolbar;
 	private ToolBar toolbar;
+	private ToolButton refreshBtn;
 
-    protected AbstractLibraryView() {
-        panel = new JPanel(new BorderLayout(0, 8));
-        panel.setOpaque(false);
+	protected AbstractLibraryView() {
+		panel = new JPanel(new BorderLayout(0, 8));
+		panel.setOpaque(false);
 
-        headerLabel = new JLabel();
-        headerLabel.setFont(headerLabel.getFont().deriveFont(Font.BOLD, 18f));
-        headerLabel.setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6));
-        headerLabel.setVisible(false);
+		headerLabel = new JLabel();
+		headerLabel.setFont(headerLabel.getFont().deriveFont(Font.BOLD, 18f));
+		headerLabel.setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6));
+		headerLabel.setVisible(false);
 
-        // ── Table ────────────────────────────────────────────────────────────────
-        model = new DefaultTableModel(getColumns(), 0) {
-            @Override public boolean isCellEditable(int r, int c) { return false; }
-        };
-        table = new JTable(model);
-        table.setFillsViewportHeight(true);
-        table.setRowHeight(28);
-        table.setShowGrid(false);
-        table.setIntercellSpacing(new Dimension(0, 0));
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.addMouseListener(new MouseAdapter() {
-            @Override public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
-                    int row = table.rowAtPoint(e.getPoint());
-                    if (row >= 0) activate(row);
-                }
-            }
-        });
+		// ── Table ────────────────────────────────────────────────────────────────
+		model = new DefaultTableModel(getColumns(), 0) {
+			@Override
+			public boolean isCellEditable(int r, int c) {
+				return false;
+			}
+		};
+		table = new Table(model);
+		table.setFillsViewportHeight(true);
+		table.setRowHeight(28);
+		table.setShowGrid(false);
+		table.setIntercellSpacing(new Dimension(0, 0));
+		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		table.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if (e.getClickCount() == 2) {
+					int row = table.rowAtPoint(e.getPoint());
+					if (row >= 0)
+						activate(row);
+				}
+			}
+		});
 
-        ThemedTableCellRenderer renderer = new ThemedTableCellRenderer();
-        for (int i = 0; i < table.getColumnCount(); i++) {
-            table.getColumnModel().getColumn(i).setCellRenderer(renderer);
-        }
+		ThemedTableCellRenderer renderer = new ThemedTableCellRenderer();
+		for (int i = 0; i < table.getColumnCount(); i++) {
+			table.getColumnModel().getColumn(i).setCellRenderer(renderer);
+		}
 
-        scroll = new JScrollPane(table);
-        // Non-UIResource empty border so the Nimbus reinstall on theme change
-        // doesn't re-install a default scroll-pane border.
-        scroll.setBorder(BorderFactory.createEmptyBorder());
-        scroll.setOpaque(true);
-        scroll.getViewport().setOpaque(true);
+		scroll = new JScrollPane(table);
+		// Non-UIResource empty border so the Nimbus reinstall on theme change
+		// doesn't re-install a default scroll-pane border.
+		scroll.setBorder(BorderFactory.createEmptyBorder());
+		scroll.setOpaque(true);
+		scroll.getViewport().setOpaque(true);
 
-        // ── CRUD toolbar ───────────────────────────────────────────────────────
-        toolbar = new ToolBar();
-        toolbar.setFloatable(false);
-        toolbar.setOpaque(true);
-        toolbar.setBackground(ThemeManager.getTintColor());
-        
+		// ── CRUD toolbar ───────────────────────────────────────────────────────
+		toolbar = new ToolBar();
 
-        JButton refreshBtn = new JButton("Refresh");
-        refreshBtn.addActionListener(e -> reload());
+		refreshBtn = new ToolButton("Refresh");
+		refreshBtn.addActionListener(e -> reload());
 
-        if (isEditable()) {
-            JButton addBtn    = new JButton("Add");
-            JButton editBtn   = new JButton("Edit");
-            JButton deleteBtn = new JButton("Delete");
-            JButton scanBtn   = new JButton("Scan…");
+		if (isEditable()) {
+			ToolButton addBtn = new ToolButton("Add");
+			ToolButton editBtn = new ToolButton("Edit");
+			ToolButton deleteBtn = new ToolButton("Delete");
+			ToolButton scanBtn = new ToolButton("Scan…");
 
-            scanBtn.addActionListener(e -> LibraryScanAction.run(panel,
-                () -> { reload(); LibraryEvents.fireChanged(); }));
-            addBtn.addActionListener(e -> { onAdd(); reload(); LibraryEvents.fireChanged(); });
-            editBtn.addActionListener(e -> {
-                int row = table.getSelectedRow();
-                if (row >= 0) { onEdit(row); reload(); LibraryEvents.fireChanged(); }
-            });
-            deleteBtn.addActionListener(e -> {
-                int row = table.getSelectedRow();
-                if (row >= 0) { onDelete(row); reload(); LibraryEvents.fireChanged(); }
-            });
+			scanBtn.addActionListener(e -> LibraryScanAction.run(panel, () -> {
+				reload();
+				LibraryEvents.fireChanged();
+			}));
+			addBtn.addActionListener(e -> {
+				onAdd();
+				reload();
+				LibraryEvents.fireChanged();
+			});
+			editBtn.addActionListener(e -> {
+				int row = table.getSelectedRow();
+				if (row >= 0) {
+					onEdit(row);
+					reload();
+					LibraryEvents.fireChanged();
+				}
+			});
+			deleteBtn.addActionListener(e -> {
+				int row = table.getSelectedRow();
+				if (row >= 0) {
+					onDelete(row);
+					reload();
+					LibraryEvents.fireChanged();
+				}
+			});
 
-            toolbar.add(addBtn);
-            toolbar.add(editBtn);
-            toolbar.add(deleteBtn);
-            toolbar.addSeparator();
-            toolbar.add(scanBtn);
-        }
-        toolbar.add(refreshBtn);
+			toolbar.add(addBtn);
+			toolbar.add(editBtn);
+			toolbar.add(deleteBtn);
+			toolbar.addSeparator();
+			toolbar.add(scanBtn);
+		}
+		toolbar.add(refreshBtn);
 
-        JPanel north = new JPanel(new BorderLayout());
-        north.setOpaque(false);
-        north.add(toolbar, BorderLayout.CENTER);
-        panel.add(headerLabel, BorderLayout.NORTH);
+		JPanel north = new JPanel(new BorderLayout());
+		north.setOpaque(false);
+		north.add(toolbar, BorderLayout.CENTER);
+		panel.add(headerLabel, BorderLayout.NORTH);
 
-        panel.add(north, BorderLayout.NORTH);
-        panel.add(scroll, BorderLayout.CENTER);
+		panel.add(north, BorderLayout.NORTH);
+		panel.add(scroll, BorderLayout.CENTER);
 
-        bottomToolbar = new ToolBar();
-        bottomToolbar.setFloatable(false);
-        bottomToolbar.setOpaque(true);
-        bottomToolbar.setBackground(ThemeManager.getTintColor());
-        bottomToolbar.add(new JButton("Test"));
-        panel.add(bottomToolbar, BorderLayout.SOUTH);
+		bottomToolbar = new ToolBar();
+		bottomToolbar.add(new JButton("Test"));
+		panel.add(bottomToolbar, BorderLayout.SOUTH);
 
-        updateColors();
-        ThemeManager.addChangeListener(this::updateColors);
-        // Repaint so the now-playing row highlight follows the active track.
-        PlayQueue.getInstance().addChangeListener(table::repaint);
-    }
+		updateColors();
+		ThemeManager.addChangeListener(this::updateColors);
+		// Repaint so the now-playing row highlight follows the active track.
+		PlayQueue.getInstance().addChangeListener(table::repaint);
+	}
 
-    /** Sets the page header text; pass null/blank to hide it. */
-    protected void setHeader(String text) {
-        headerLabel.setText(text == null ? "" : text);
-        headerLabel.setVisible(text != null && !text.isBlank());
-    }
+	/** Sets the page header text; pass null/blank to hide it. */
+	protected void setHeader(String text) {
+		headerLabel.setText(text == null ? "" : text);
+		headerLabel.setVisible(text != null && !text.isBlank());
+	}
 
-    /** Whether this view shows Add/Edit/Delete/Scan; read-only views return false. */
-    protected boolean isEditable() { return true; }
+	/**
+	 * Whether this view shows Add/Edit/Delete/Scan; read-only views return false.
+	 */
+	protected boolean isEditable() {
+		return true;
+	}
 
-    // ── Hooks for subclasses ────────────────────────────────────────────────────
+	// ── Hooks for subclasses ────────────────────────────────────────────────────
 
-    /** Column headers; called once during construction (must be constant). */
-    protected abstract String[] getColumns();
+	/** Column headers; called once during construction (must be constant). */
+	protected abstract String[] getColumns();
 
-    /** Clear and refill {@link #model} from the database. */
-    protected abstract void reload();
+	/** Clear and refill {@link #model} from the database. */
+	protected abstract void reload();
 
-    protected void onAdd() {}
-    protected void onEdit(int row) {}
-    protected void onDelete(int row) {}
+	protected void onAdd() {
+	}
 
-    /** Invoked when a row is double-clicked; default does nothing. */
-    protected void onActivate(int row) {}
+	protected void onEdit(int row) {
+	}
 
-    /**
-     * Supply a {@link PlayQueueItem} for the given model row, or {@code null} if
-     * the row isn't playable. Playable views override this so a double-click can
-     * turn the whole view into the play context. Views that don't override it
-     * fall back to {@link #onActivate(int)}.
-     */
-    protected PlayQueueItem queueItemAt(int row) { return null; }
+	protected void onDelete(int row) {
+	}
 
-    /**
-     * Turn the visible rows into the play queue and start at {@code row}. Every
-     * playable row (per {@link #queueItemAt}) becomes a queue entry; if the view
-     * doesn't produce queue items, falls back to {@link #onActivate(int)}.
-     */
-    private void activate(int row) {
-        List<PlayQueueItem> queue = new ArrayList<>();
-        int startIndex = -1;
-        for (int i = 0; i < model.getRowCount(); i++) {
-            PlayQueueItem item = queueItemAt(i);
-            if (item == null) continue;
-            if (i == row) startIndex = queue.size();
-            queue.add(item);
-        }
-        if (startIndex >= 0) {
-            PlayQueue.getInstance().setQueueAndPlay(queue, startIndex);
-        } else {
-            onActivate(row);
-        }
-    }
+	/** Invoked when a row is double-clicked; default does nothing. */
+	protected void onActivate(int row) {
+	}
 
-    // ── Shared helpers ──────────────────────────────────────────────────────────
+	/**
+	 * Supply a {@link PlayQueueItem} for the given model row, or {@code null} if
+	 * the row isn't playable. Playable views override this so a double-click can
+	 * turn the whole view into the play context. Views that don't override it fall
+	 * back to {@link #onActivate(int)}.
+	 */
+	protected PlayQueueItem queueItemAt(int row) {
+		return null;
+	}
 
-    protected static String fmtDuration(long ms) {
-        if (ms <= 0) return "";
-        long s = ms / 1000;
-        return String.format("%d:%02d", s / 60, s % 60);
-    }
+	/**
+	 * Turn the visible rows into the play queue and start at {@code row}. Every
+	 * playable row (per {@link #queueItemAt}) becomes a queue entry; if the view
+	 * doesn't produce queue items, falls back to {@link #onActivate(int)}.
+	 */
+	private void activate(int row) {
+		List<PlayQueueItem> queue = new ArrayList<>();
+		int startIndex = -1;
+		for (int i = 0; i < model.getRowCount(); i++) {
+			PlayQueueItem item = queueItemAt(i);
+			if (item == null)
+				continue;
+			if (i == row)
+				startIndex = queue.size();
+			queue.add(item);
+		}
+		if (startIndex >= 0) {
+			PlayQueue.getInstance().setQueueAndPlay(queue, startIndex);
+		} else {
+			onActivate(row);
+		}
+	}
 
-    /** Parse "m:ss" or a plain seconds value into milliseconds; 0 on failure. */
-    protected static long parseDuration(String text) {
-        if (text == null) return 0;
-        String t = text.trim();
-        if (t.isEmpty()) return 0;
-        try {
-            if (t.contains(":")) {
-                String[] p = t.split(":");
-                return (Long.parseLong(p[0].trim()) * 60 + Long.parseLong(p[1].trim())) * 1000;
-            }
-            return (long) (Double.parseDouble(t) * 1000);
-        } catch (NumberFormatException e) {
-            return 0;
-        }
-    }
+	// ── Shared helpers ──────────────────────────────────────────────────────────
 
-    protected void showError(Exception e) {
-        JOptionPane.showMessageDialog(panel, e.getMessage(), "Library error",
-            JOptionPane.ERROR_MESSAGE);
-    }
+	protected static String fmtDuration(long ms) {
+		if (ms <= 0)
+			return "";
+		long s = ms / 1000;
+		return String.format("%d:%02d", s / 60, s % 60);
+	}
 
-    protected boolean confirmDelete(String what) {
-        return JOptionPane.showConfirmDialog(panel, "Delete " + what + "?", "Confirm delete",
-            JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION;
-    }
+	/** Parse "m:ss" or a plain seconds value into milliseconds; 0 on failure. */
+	protected static long parseDuration(String text) {
+		if (text == null)
+			return 0;
+		String t = text.trim();
+		if (t.isEmpty())
+			return 0;
+		try {
+			if (t.contains(":")) {
+				String[] p = t.split(":");
+				return (Long.parseLong(p[0].trim()) * 60 + Long.parseLong(p[1].trim())) * 1000;
+			}
+			return (long) (Double.parseDouble(t) * 1000);
+		} catch (NumberFormatException e) {
+			return 0;
+		}
+	}
 
-    private void updateColors() {
-        Color bg   = ThemeManager.getBackground();
-        Color fg   = ThemeManager.getForeground();
-        Color grid = ThemeManager.getGridColor();
+	protected void showError(Exception e) {
+		JOptionPane.showMessageDialog(panel, e.getMessage(), "Library error", JOptionPane.ERROR_MESSAGE);
+	}
 
-        headerLabel.setForeground(fg);
-        table.setBackground(bg);
-        table.setForeground(fg);
-        table.setGridColor(grid);
-        table.getTableHeader().setBackground(grid);
-        table.getTableHeader().setForeground(fg);
-        scroll.setBackground(bg);
-        scroll.getViewport().setBackground(bg);
-        table.repaint();
-    }
+	protected boolean confirmDelete(String what) {
+		return JOptionPane.showConfirmDialog(panel, "Delete " + what + "?", "Confirm delete", JOptionPane.YES_NO_OPTION,
+				JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION;
+	}
 
-    private final class ThemedTableCellRenderer extends DefaultTableCellRenderer {
-        @Override
-        public Component getTableCellRendererComponent(JTable table, Object value,
-                boolean isSelected, boolean hasFocus, int row, int column) {
-            super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-            PlayQueueItem item = queueItemAt(row);
-            if (item != null && PlayQueue.getInstance().isCurrentKey(item.getKey())) {
-                // Row matches the currently-playing track.
-                setBackground(ThemeManager.getNowPlayingBackground());
-                setForeground(ThemeManager.getNowPlayingForeground());
-            } else if (isSelected) {
-                setBackground(ThemeManager.getAccentColor());
-                setForeground(Color.WHITE);
-            } else {
-                setBackground(row % 2 == 0
-                    ? ThemeManager.getBackground()
-                    : ThemeManager.getAlternateBackground());
-                setForeground(ThemeManager.getForeground());
-            }
-            setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 6));
-            return this;
-        }
-    }
+	private void updateColors() {
+		Color bg = ThemeManager.getBackground();
+		Color fg = ThemeManager.getForeground();
+		Color grid = ThemeManager.getGridColor();
 
-    // ── SPView ──────────────────────────────────────────────────────────────────
+		headerLabel.setForeground(fg);
+		table.setBackground(bg);
+		table.setForeground(fg);
+		table.setGridColor(grid);
+		scroll.setBackground(bg);
+		scroll.getViewport().setBackground(bg);
+		table.repaint();
+	}
 
-    @Override public void navigate(String uri) {}
-    @Override public JComponent getComponent() { return panel; }
-    @Override public void onShow() { reload(); }
+	private final class ThemedTableCellRenderer extends DefaultTableCellRenderer {
+		@Override
+		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
+				int row, int column) {
+			super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+			PlayQueueItem item = queueItemAt(row);
+			if (item != null && PlayQueue.getInstance().isCurrentKey(item.getKey())) {
+				// Row matches the currently-playing track.
+				setBackground(ThemeManager.getNowPlayingBackground());
+				setForeground(ThemeManager.getNowPlayingForeground());
+			} else if (isSelected) {
+				setBackground(ThemeManager.getAccentColor());
+				setForeground(Color.WHITE);
+			} else {
+				setBackground(row % 2 == 0 ? ThemeManager.getBackground() : ThemeManager.getAlternateBackground());
+				setForeground(ThemeManager.getForeground());
+			}
+			setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 6));
+			return this;
+		}
+	}
+
+	// ── SPView ──────────────────────────────────────────────────────────────────
+
+	@Override
+	public void navigate(String uri) {
+	}
+
+	@Override
+	public JComponent getComponent() {
+		return panel;
+	}
+
+	@Override
+	public void onShow() {
+		reload();
+	}
 }

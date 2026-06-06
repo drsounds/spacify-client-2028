@@ -9,12 +9,17 @@ import java.awt.Shape;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Path2D;
 
+import javax.swing.ButtonModel;
 import javax.swing.JPanel;
+import javax.swing.JTable;
+import javax.swing.table.TableCellRenderer;
 
-import se.spacify.ui.GlassPanel;
-import se.spacify.ui.GlossyButton;
-import se.spacify.ui.TabButton;
-import se.spacify.ui.ToolBar;
+import se.spacify.controls.GlassPanel;
+import se.spacify.controls.GlossyButton;
+import se.spacify.controls.TabButton;
+import se.spacify.controls.ToolBar;
+import se.spacify.controls.ToolButton;
+import se.spacify.ui.theme.ColorUtils;
 import se.spacify.ui.theme.ThemeManager;
 
 public class WMP10Skin extends Skin {
@@ -53,6 +58,8 @@ public class WMP10Skin extends Skin {
 	@Override
 	public void paintTabButton(TabButton control, Graphics2D g2) {
 		int w = control.getWidth(), h = control.getHeight();
+		
+		ButtonModel model = control.getModel();
 
 		// Top-rounded, bottom-sharp shape flush with the panel's bottom edge.
 		Path2D tab = new Path2D.Float();
@@ -64,12 +71,12 @@ public class WMP10Skin extends Skin {
 		tab.lineTo(w, h);
 		tab.closePath();
 
-		if (control.isSelected()) {
+		if (model.isSelected() || model.isPressed() || control.isPressedState()) {
 			g2.setColor(ThemeManager.getTintColor());
 			g2.fill(tab);
 			g2.setPaint(new GradientPaint(0, 0, new Color(255, 255, 255, 60), 0, h / 2f, new Color(255, 255, 255, 0)));
 			g2.fill(tab);
-		} else if (control.isHovered()) {
+		} else if (model.isRollover() || control.isHovered()) {
 			g2.setColor(new Color(255, 255, 255, 45));
 			g2.fill(tab);
 		} else {
@@ -158,6 +165,43 @@ public class WMP10Skin extends Skin {
 		g2.setPaint(ThemeManager.getTintColor());
 		g2.fillRect(0, 0, w, h);
 	}
+
+	@Override
+	public void paintToolButton(ToolButton control, Graphics2D g2) {
+		int w = control.getWidth(), h = control.getHeight();
+		Color background = ThemeManager.getTintColor();
+        ButtonModel model = control.getModel();
+		g2.setPaint(background);
+		g2.fillRect(0, 0, w, h);
+		if (model.isPressed()) {
+			background = ColorUtils.darken(background, 0.9f);
+			g2.setPaint(background);
+			g2.fillRect(0, 0, w, h);
+			background = ColorUtils.darken(background, 0.5f);
+			g2.setPaint(background);
+			g2.fillRect(0, 0, w, 2);
+			g2.fillRect(0, 0, 2, h);
+			g2.setPaint(ColorUtils.lighten(background, 5));
+			g2.fillRect(w - 2, 0, 2, h);
+			g2.fillRect(0, h - 2, 2, h);
+		} else if (model.isRollover()) {
+			background = ColorUtils.darken(background, 2f);
+			g2.setPaint(background);
+			g2.fillRect(0, 0, w, h);
+			background = ColorUtils.lighten(background, 2);
+			g2.setPaint(background);
+			g2.fillRect(0, 0, w, h);
+			g2.setPaint(ColorUtils.darken(background, 3));
+			g2.fillRect(0, 0, w, 2);
+			g2.fillRect(0, 0, 2, h);
+			g2.setPaint(ColorUtils.lighten(background, 3));
+			g2.fillRect(w, 0, 2, h);
+			g2.fillRect(0, h, 2, h);
+			
+		}
+	}
+	
+	
 	@Override
 	public void paintPlaylist(JPanel control, Graphics2D g2) {
 		// TODO Auto-generated method stub
@@ -165,5 +209,13 @@ public class WMP10Skin extends Skin {
         Color tintColor = ThemeManager.getTintColor();
         g2.setPaint(new GradientPaint(0, 0, tintColor, 0, h, ThemeManager.tintLight(2f)));
         g2.fillRect(0, 0, w, h);
+	}
+
+	@Override
+	public void paintTableHeader(JTable table, int width, int height, Graphics2D g2) {
+		// TODO Auto-generated method stub
+		g2.setPaint(new Color(235, 234, 219));
+		g2.fillRect(0, 0, width, height);
+		
 	}
 }

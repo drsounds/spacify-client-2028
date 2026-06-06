@@ -8,12 +8,16 @@ import java.awt.RadialGradientPaint;
 import java.awt.RenderingHints;
 import java.awt.geom.Path2D;
 
+import javax.swing.ButtonModel;
 import javax.swing.JPanel;
+import javax.swing.JTable;
 
-import se.spacify.ui.GlassPanel;
-import se.spacify.ui.GlossyButton;
-import se.spacify.ui.TabButton;
-import se.spacify.ui.ToolBar;
+import se.spacify.controls.GlassPanel;
+import se.spacify.controls.GlossyButton;
+import se.spacify.controls.TabButton;
+import se.spacify.controls.ToolBar;
+import se.spacify.controls.ToolButton;
+import se.spacify.ui.theme.ColorUtils;
 import se.spacify.ui.theme.ThemeManager;
 
 public class WMP9Skin extends Skin {
@@ -99,4 +103,48 @@ public class WMP9Skin extends Skin {
 		// TODO Auto-generated method stub
 		
 	}
+
+	@Override
+	public void paintToolButton(ToolButton control, Graphics2D g2) {
+		int w = control.getWidth(), h = control.getHeight();
+		Color background = ThemeManager.getTintColor();
+        ButtonModel model = control.getModel();
+		g2.setPaint(background);
+		g2.fillRect(0, 0, w, h);
+		if (model.isPressed()) {
+			background = ColorUtils.darken(background, 0.9f);
+			g2.setPaint(background);
+			g2.fillRect(0, 0, w, h);
+			background = ColorUtils.darken(background, 0.5f);
+			g2.setPaint(background);
+			g2.fillRect(0, 0, w, 2);
+			g2.fillRect(0, 0, 2, h);
+			g2.setPaint(ColorUtils.lighten(background, 5));
+			g2.fillRect(w - 2, 0, 2, h);
+			g2.fillRect(0, h - 2, 2, h);
+		} else if (model.isRollover()) {
+			background = ColorUtils.darken(background, 2f);
+			g2.setPaint(background);
+			g2.fillRect(0, 0, w, h);
+			background = ColorUtils.lighten(background, 2);
+			g2.setPaint(background);
+			g2.fillRect(0, 0, w, h);
+			g2.setPaint(ColorUtils.darken(background, 3));
+			g2.fillRect(0, 0, w, 2);
+			g2.fillRect(0, 0, 2, h);
+			g2.setPaint(ColorUtils.lighten(background, 3));
+			g2.fillRect(w, 0, 2, h);
+			g2.fillRect(0, h, 2, h);
+			
+		}
+	}
+
+	@Override
+	public void paintTableHeader(JTable table, int width, int height, Graphics2D g2) {
+		// TODO Auto-generated method stub
+		g2.setPaint(new Color(235, 234, 219));
+		g2.fillRect(0, 0, width, height);
+		
+	}
+}
 }

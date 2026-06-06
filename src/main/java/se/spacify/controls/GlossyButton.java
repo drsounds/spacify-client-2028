@@ -1,5 +1,6 @@
-package se.spacify.ui;
+package se.spacify.controls;
 
+import se.spacify.ui.MainWindow;
 import se.spacify.ui.theme.ThemeManager;
 
 import javax.swing.BorderFactory;

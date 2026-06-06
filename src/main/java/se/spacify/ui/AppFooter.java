@@ -1,5 +1,7 @@
 package se.spacify.ui;
 
+import se.spacify.controls.GlassPanel;
+import se.spacify.controls.GlossyButton;
 import se.spacify.service.media.MediaService;
 import se.spacify.service.media.MediaService.PlaybackState;
 import se.spacify.service.media.PlayQueue;

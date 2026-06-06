@@ -1,5 +1,6 @@
-package se.spacify.ui;
+package se.spacify.controls;
 
+import se.spacify.ui.MainWindow;
 import se.spacify.ui.theme.ThemeManager;
 
 import javax.swing.JToggleButton;
@@ -19,7 +20,7 @@ import java.awt.event.MouseEvent;
  * the content background so it reads as the foremost tab; unselected tabs are
  * flat and show a subtle highlight on hover.
  */
-public class TabButton extends JToggleButton {
+public class TabButton extends ToggleButton {
 
 	private static final long serialVersionUID = 1L;
 
@@ -72,6 +73,7 @@ public class TabButton extends JToggleButton {
 				repaint();
 			}
 		};
+		
 		addMouseListener(mouse);
 
 		ThemeManager.addChangeListener(() -> {

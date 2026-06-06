@@ -1,17 +1,16 @@
 package se.spacify.skinning;
 
-import java.awt.Color;
-import java.awt.GradientPaint;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
 
 import javax.swing.JPanel;
+import javax.swing.JTable;
+import javax.swing.table.TableCellRenderer;
 
-import se.spacify.ui.GlassPanel;
-import se.spacify.ui.GlossyButton;
-import se.spacify.ui.TabButton;
-import se.spacify.ui.ToolBar;
-import se.spacify.ui.theme.ThemeManager;
+import se.spacify.controls.GlassPanel;
+import se.spacify.controls.GlossyButton;
+import se.spacify.controls.TabButton;
+import se.spacify.controls.ToolBar;
+import se.spacify.controls.ToolButton;
 
 public abstract class Skin {
 	public abstract void paintTopBar(JPanel control, Graphics2D g2);
@@ -22,4 +21,6 @@ public abstract class Skin {
 	public abstract void paintPlaylist(JPanel control, Graphics2D g2);
 	public abstract void paintGlassPanel(GlassPanel control, Graphics2D g2);
 	public abstract void paintToolBar(ToolBar control, Graphics2D g2);
+	public abstract void paintTableHeader(JTable table, int width, int height, Graphics2D g2);
+	public abstract void paintToolButton(ToolButton control, Graphics2D g2);
 }

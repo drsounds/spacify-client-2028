@@ -1,4 +1,4 @@
-package se.spacify.ui;
+package se.spacify.controls;
 
 import java.awt.Color;
 import java.awt.GradientPaint;
@@ -10,6 +10,7 @@ import java.awt.geom.Path2D;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import se.spacify.ui.MainWindow;
 import se.spacify.ui.theme.ThemeManager;
 
 /**
@@ -19,7 +20,7 @@ import se.spacify.ui.theme.ThemeManager;
  * {@link #setTrailingDiagonal(boolean)}. A diagonal edge slants so its bottom is
  * longer than its top by {@link #setDiagonalInset(int)} pixels.
  */
-public class GlassPanel extends JPanel {
+public class GlassPanel extends Panel {
 
 	private static final long serialVersionUID = -6838852001495396343L;
 
@@ -86,8 +87,8 @@ public class GlassPanel extends JPanel {
 	protected void paintComponent(Graphics g) {
 		Graphics2D g2 = (Graphics2D) g.create();
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		((MainWindow)(SwingUtilities.getWindowAncestor(this))).getSkin().paintGlassPanel(this, g2);
-        
+
+		getSkin().paintGlassPanel(this, g2);
 
 		g2.dispose();
 	}

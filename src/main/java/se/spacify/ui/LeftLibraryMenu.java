@@ -1,6 +1,8 @@
 package se.spacify.ui;
 
-import se.spacify.app.MenuButton;
+import se.spacify.controls.MenuToolButton;
+import se.spacify.controls.ToolBar;
+import se.spacify.controls.ToolMenuItem;
 import se.spacify.library.LibraryEvents;
 import se.spacify.navigation.NavigationListener;
 import se.spacify.navigation.SPViewStack;
@@ -27,7 +29,7 @@ public class LeftLibraryMenu extends JPanel implements NavigationListener {
 	private ToolBar toolbar;
 	private JTextField searchField;
 	private ToolBar bottomToolbar;
-	private MenuButton addToLibraryMenuButton;
+	private MenuToolButton addToLibraryMenuButton;
 	private JPopupMenu addToLibraryMenu;
 	private JMenuItem scanFolderMenuItem;
 
@@ -104,19 +106,14 @@ public class LeftLibraryMenu extends JPanel implements NavigationListener {
         add(scroll, BorderLayout.CENTER);
 
         bottomToolbar = new ToolBar();
-        bottomToolbar.setFloatable(false);
-        bottomToolbar.setOpaque(true);
-        bottomToolbar.setBackground(ThemeManager.getTintColor());
         bottomToolbar.add(new JButton("Test"));
         add(bottomToolbar, BorderLayout.SOUTH);
         
-        addToLibraryMenuButton = new MenuButton();
+        addToLibraryMenuButton = new MenuToolButton();
         addToLibraryMenuButton.setText("Add to Library");
         addToLibraryMenu = addToLibraryMenuButton.getPopup();
-        JMenuItem addBtn    = new JMenuItem("Add");
-        JMenuItem editBtn   = new JMenuItem("Edit");
-        JMenuItem deleteBtn = new JMenuItem("Delete");
-        JMenuItem scanBtn   = new JMenuItem("Scan…");
+        ToolMenuItem addBtn    = new ToolMenuItem("Add");
+        ToolMenuItem scanBtn   = new ToolMenuItem("Scan…");
 
         scanBtn.addActionListener(e -> LibraryScanAction.run(this,
             () -> { /*reload();*/ LibraryEvents.fireChanged(); }));

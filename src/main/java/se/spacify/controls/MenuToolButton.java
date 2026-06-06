@@ -1,4 +1,4 @@
-package se.spacify.app;
+package se.spacify.controls;
 
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -18,13 +18,13 @@ import javax.swing.event.PopupMenuListener;
  * {@linkplain https://stackoverflow.com/questions/1692677/how-to-create-a-jbutton-with-a-menu}
  * Clicks outside the menu will dismiss it.
 */
-public class MenuButton extends JLabel 
+public class MenuToolButton extends ToolButton 
         implements MouseListener, PopupMenuListener {
     private static final long serialVersionUID = -4883820504200506311L;
 	JPopupMenu popMenu;
 
     @SuppressWarnings("")
-    public MenuButton() {
+    public MenuToolButton() {
         super();
         popMenu = new JPopupMenu();
         addMouseListener(this);
@@ -56,4 +56,4 @@ public class MenuButton extends JLabel
     @Override public void popupMenuWillBecomeVisible(PopupMenuEvent e) { }
     @Override public void popupMenuCanceled(PopupMenuEvent e) { }
 
-} // end MenuButton
+} // end MenuToolButton

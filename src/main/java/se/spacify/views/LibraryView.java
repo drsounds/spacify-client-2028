@@ -1,5 +1,6 @@
 package se.spacify.views;
 
+import se.spacify.controls.Table;
 import se.spacify.navigation.SPView;
 import se.spacify.ui.theme.ThemeManager;
 
@@ -10,7 +11,7 @@ import java.awt.*;
 public class LibraryView extends SPView {
 
     private final JPanel     panel;
-    private final JTable     table;
+    private final Table     table;
     private final JScrollPane scroll;
 
     public LibraryView() {
@@ -23,7 +24,7 @@ public class LibraryView extends SPView {
         		
         };
 
-        table = new JTable(data, columns);
+        table = new Table(data, columns);
         table.setFillsViewportHeight(true);
         table.setRowHeight(28);
         table.setOpaque(true);
@@ -53,8 +54,6 @@ public class LibraryView extends SPView {
         table.setBackground(bg);
         table.setForeground(fg);
         table.setGridColor(grid);
-        table.getTableHeader().setBackground(grid);
-        table.getTableHeader().setForeground(fg);
         scroll.setBackground(bg);
         scroll.getViewport().setBackground(bg);
         table.repaint();

@@ -137,8 +137,8 @@ public class ThemeManager {
         put(d, "Table.selectionBackground",  accentColor);
         put(d, "Table.selectionForeground",  Color.WHITE);
         put(d, "Table.gridColor",            currentGrid);
-        put(d, "TableHeader.background",     currentGrid);
-        put(d, "TableHeader.foreground",     currentFg);
+        put(d, "TableHeader.background",     new Color(235, 234, 219));
+        put(d, "TableHeader.foreground",     new Color(0, 0, 0));
         put(d, "List.background",            currentBg);
         put(d, "List.foreground",            currentFg);
         put(d, "List.selectionBackground",   accentColor);

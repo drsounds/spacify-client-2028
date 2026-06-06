@@ -1,10 +1,10 @@
 package se.spacify.views;
 
+import se.spacify.controls.ToolBar;
 import se.spacify.navigation.PlayerView;
 import se.spacify.navigation.SPView;
 import se.spacify.service.media.MediaService;
 import se.spacify.ui.SettingsPanel;
-import se.spacify.ui.ToolBar;
 import se.spacify.ui.theme.ThemeManager;
 
 import javax.swing.*;

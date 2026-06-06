@@ -1,5 +1,6 @@
 package se.spacify.ui;
 
+import se.spacify.controls.SplitPane;
 import se.spacify.navigation.SPViewStack;
 import se.spacify.service.ServiceManager;
 import se.spacify.service.media.MediaService;
@@ -60,8 +61,8 @@ public class MainWindow extends JFrame {
     }
     
 
-	private JSplitPane leftSplit;
-	private JSplitPane mainSplit;
+	private SplitPane leftSplit;
+	private SplitPane mainSplit;
     private boolean userWantsSidebar = true;  // user's manual show/hide preference
     private boolean immersive = false;        // full-width store browsing
 
@@ -99,7 +100,7 @@ public class MainWindow extends JFrame {
         JPanel centerPanel = new JPanel(new BorderLayout());
         centerPanel.add(viewStack);
 
-        leftSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftLibraryMenu, centerPanel);
+        leftSplit = new SplitPane(SplitPane.HORIZONTAL_SPLIT, leftLibraryMenu, centerPanel);
         leftSplit.setDividerLocation(220);
         leftSplit.setDividerSize(6);
         // Keep the leftLibraryMenu at its width and let the centre view absorb resizes.
@@ -109,7 +110,7 @@ public class MainWindow extends JFrame {
         leftSplit.setBorder(BorderFactory.createEmptyBorder());
         leftSplit.setContinuousLayout(true);
 
-        mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftSplit, new NowPlayingPanel(viewStack));
+        mainSplit = new SplitPane(SplitPane.HORIZONTAL_SPLIT, leftSplit, new NowPlayingPanel(viewStack));
         mainSplit.setDividerLocation(880);
         mainSplit.setDividerSize(6);
         // Give all extra width to the left (leftLibraryMenu + centre); the right

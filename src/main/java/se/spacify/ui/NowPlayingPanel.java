@@ -1,5 +1,7 @@
 package se.spacify.ui;
 
+import se.spacify.controls.Table;
+import se.spacify.controls.ToolBar;
 import se.spacify.navigation.SPViewStack;
 import se.spacify.service.media.PlayQueue;
 import se.spacify.service.media.PlayQueueItem;
@@ -22,8 +24,9 @@ import java.util.List;
  */
 public class NowPlayingPanel extends JPanel {
 
-    private final DefaultTableModel model;
-    private final JTable            table;
+    private static final long serialVersionUID = 1L;
+	private final DefaultTableModel model;
+    private final Table            table;
     private final JScrollPane       scroll;
     private final JLabel            emptyLabel;
 	private JToolBar topToolbar;
@@ -48,7 +51,7 @@ public class NowPlayingPanel extends JPanel {
         model = new DefaultTableModel(new String[]{"Name", "Duration"}, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
-        table = new JTable(model);
+        table = new Table(model);
         table.setFillsViewportHeight(true);
         table.setRowHeight(24);
         table.setShowGrid(false);
@@ -82,7 +85,7 @@ public class NowPlayingPanel extends JPanel {
         scroll.getViewport().setScrollMode(JViewport.SIMPLE_SCROLL_MODE);
 
         emptyLabel = new JLabel("Nothing playing");
-        emptyLabel.setForeground(new Color(100, 100, 100));
+        emptyLabel.setForeground(Color.WHITE);
         emptyLabel.setFont(emptyLabel.getFont().deriveFont(12f));
         emptyLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
@@ -136,12 +139,11 @@ public class NowPlayingPanel extends JPanel {
     }
 
     private void updateColors() {
-        Color fg   = ThemeManager.getForeground();
+        // This sticky panel always renders white text on its accent gradient,
+        // regardless of the light/dark theme setting.
         Color grid = ThemeManager.getGridColor();
-        table.setForeground(fg);
+        table.setForeground(Color.WHITE);
         table.setGridColor(grid);
-        table.getTableHeader().setBackground(grid);
-        table.getTableHeader().setForeground(fg);
         table.repaint();
     }
 
@@ -166,41 +168,27 @@ public class NowPlayingPanel extends JPanel {
     }
 
     /**
-     * Theme-aware renderer that keeps the gradient visible: the playing row is
-     * filled with the accent colour, alternate rows get a subtle translucent
-     * stripe (when striping is on), and every other row stays transparent.
+     * Renderer that keeps the gradient visible and never stripes rows. The playing
+     * row keeps its distinct light-green-on-black highlight; every other row is
+     * transparent with white text, regardless of the light/dark theme.
      */
     private static final class QueueCellRenderer extends DefaultTableCellRenderer {
-        private boolean stripe;
 
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value,
                 boolean isSelected, boolean hasFocus, int row, int column) {
             super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
             boolean playing = row == PlayQueue.getInstance().getCurrentIndex();
-            stripe = false;
             if (playing) {
                 setOpaque(true);
                 setBackground(ThemeManager.getNowPlayingBackground());
                 setForeground(ThemeManager.getNowPlayingForeground());
             } else {
                 setOpaque(false);   // let the gradient show through
-                setForeground(ThemeManager.getForeground());
-                stripe = ThemeManager.isStripedRows() && (row % 2 == 1);
+                setForeground(Color.WHITE);
             }
             setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 6));
             return this;
         }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            if (stripe) {
-                g.setColor(STRIPE);
-                g.fillRect(0, 0, getWidth(), getHeight());
-            }
-            super.paintComponent(g);
-        }
-
-        private static final Color STRIPE = new Color(0, 0, 0, 38);
     }
 }

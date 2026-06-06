@@ -1,5 +1,7 @@
 package se.spacify.ui;
 
+import se.spacify.controls.GlassPanel;
+import se.spacify.controls.TabButton;
 import se.spacify.navigation.NavigationListener;
 import se.spacify.navigation.SPViewStack;
 import se.spacify.ui.theme.ThemeManager;
