@@ -83,6 +83,7 @@ public class AppFooter extends JPanel {
         buttons.add(prevBtn);
         playPauseBtn = makeControlButton("▶");
         playPauseBtn.setFont(playPauseBtn.getFont().deriveFont(16f));
+        playPauseBtn.setPrimary(true);
         playPauseBtn.setDiameter(48);
         buttons.add(playPauseBtn);
         JButton nextBtn = makeControlButton("⏭");
