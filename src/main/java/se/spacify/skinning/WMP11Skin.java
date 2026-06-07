@@ -3,10 +3,12 @@ package se.spacify.skinning;
 import java.awt.Color;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.RadialGradientPaint;
 import java.awt.Shape;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Path2D;
+import java.awt.geom.Point2D;
 
 import javax.swing.ButtonModel;
 import javax.swing.JPanel;
@@ -17,6 +19,7 @@ import se.spacify.controls.GlossyButton;
 import se.spacify.controls.TabButton;
 import se.spacify.controls.ToolBar;
 import se.spacify.controls.ToolButton;
+import se.spacify.graphics.StretchableRadialGradient;
 import se.spacify.ui.theme.ColorUtils;
 import se.spacify.ui.theme.ThemeManager;
 
@@ -70,10 +73,7 @@ public class WMP11Skin extends Skin {
 
 
 	 	if (control.isSelected() || control.isPressedState()) {
-			g2.setPaint(new RadialGradientPaint((float)(w / 2), (float)h, 120f, new float[] { 0, 1 }, new Color[] { ThemeManager.getTintColor(), ThemeManager.tintDark(0.5f)}));
-			g2.fill(tab);
-			g2.setPaint(new GradientPaint(0f, 0f, ThemeManager.getTintColor(), (float)(w), h / 2f, new Color(255, 255 ,255, 0)));
-
+			paintGlossy(g2, false, 0, 0, control.getWidth(), control.getHeight(), false, true, false);
 		} else if (control.isHovered()) {
 			g2.setColor(new Color(255, 255, 255, 45));
 			g2.fill(tab);
@@ -85,29 +85,30 @@ public class WMP11Skin extends Skin {
 	@Override
 	public void paintGlossyButton(GlossyButton control, Graphics2D g2, int x, int y, int d) {
 		// TODO Auto-generated method stub
+		paintGlossy(g2, true, x, y, control.getWidth(), control.getHeight(), control.getHovered(), control.getPrimary(), control.getPressed());
+	}
+	
+	private void paintGlossy(Graphics2D g2, boolean round, int x, int y, int width, int height, boolean hovered, boolean primary, boolean pressed) {
 		Color accent = ThemeManager.getAccentColor();
 		Color tint = ThemeManager.getTintColor();
 
 		Color glowColor = new Color(255, 255, 255, 0);
-		if (control.getPrimary()) {
+		if (primary) {
 			glowColor = ColorUtils.saturate(tint, 125.2f);
 		}
-		int sheenAlpha = control.getPressed() ? 110 : 220;
-		Color[] lights = new Color[] { ColorUtils.alpha(ColorUtils.lighten(glowColor, 25f), sheenAlpha), ColorUtils.alpha(ColorUtils.lighten(glowColor, 25f), 0f) };
+		int sheenAlpha = pressed ? 110 : 220;
+		Color[] lights = new Color[] { ColorUtils.alpha(ColorUtils.lighten(glowColor, 25f), 255f), ColorUtils.alpha(ColorUtils.lighten(glowColor, 25f), 0f) };
 		
-		int width = control.getWidth(), height = control.getHeight();
 		// Darker outer rim, slightly inset face sits on top of it.
 		//Ellipse2D outer = new Ellipse2D.Float(x, y, d, d);
 		
-		g2.setPaint(new GradientPaint(x, y, ThemeManager.tintDark(0.9f), x, y + d, ThemeManager.tintDark(0.5f)));
+		g2.setPaint(new GradientPaint(x, y, ThemeManager.tintDark(0.9f), x, y + height, ThemeManager.tintDark(0.5f)));
 		//g2.fill(outer);
 
-		int inset = Math.max(2, d / 24);
-		int fd = d - inset * 2;
-		int fx = x + inset, fy = y + inset;
 		Ellipse2D face = new Ellipse2D.Float(x - 4, y - 4, width + 8, height + 8);
-		g2.setClip(face);
-		
+		if (round) {
+			g2.setClip(face);
+		}
 		g2.setPaint(new GradientPaint(0, 0, new Color(0, 0, 0, 0), width,
 				y + height / 2, new Color(255, 255, 255, 127)));
 		g2.fillRect(x, y, width + 4, height + 4);
@@ -115,69 +116,73 @@ public class WMP11Skin extends Skin {
 		Ellipse2D face2 = new Ellipse2D.Float(x, y, width, height);
 		// Base vertical gradient — brighter when hovered, dimmer/inverted when pressed.
 		Color top, bottom;
-		if (control.getPressed()) {
+		if (pressed) {
 			top = ThemeManager.accentDark(0.2f);
 			bottom = ThemeManager.scaleRgb(accent, 0.9f);
-		} else if (control.getHovered()) {
+		} else if (hovered) {
 			top = ThemeManager.accentLight(1.7f);
 			bottom = tint;
 		} else {
 			top = ThemeManager.accentLight(1.4f);
 			bottom = tint;
 		}
-		g2.setPaint(new GradientPaint(fx + 2, fy + 2, top, fx, fy + fd, bottom));
-		g2.fill(face2);
+		if (primary) {
+			top = ColorUtils.saturate(top, 255);
+			bottom = ColorUtils.saturate(bottom, 255);
+		}
+		if (primary) {
 
+			g2.setPaint(tint);
+		} else {
+			g2.setPaint(new GradientPaint(x + 2, y + 2, top, x, y + height, bottom));
+		}
 		Shape oldClip = g2.getClip();
-		g2.setClip(face2);
-		g2.setPaint(new GradientPaint(x, y + height, ColorUtils.alpha(glowColor, control.getPressed() ? 30 : 90), x,
-				y + height / 2, ColorUtils.alpha(glowColor, 0)));
-		g2.fillRect(0, 0, x, height - height / 2);
-
-		// Bottom reflection: faint upward light from the lower edge.
-		g2.setPaint(new GradientPaint(fx, fy + fd, ColorUtils.alpha(glowColor, control.getPressed() ? 30 : 90), x,
-				y + height / 2, new Color(255, 255, 255, 0)));
-		g2.fillRect(x, y + height / 2, x, y - y / 2);
-
-		// Top "bubble" sheen: a bright ellipse narrower than the face, fading down.
-		// This is the signature Aqua highlight.
-		int hlInsetX = Math.round(fd * 0.16f);
-		int hlTop = Math.round(fd * 0.06f);
-		int hlW = fd - hlInsetX * 2;
-		int hlH = Math.round(fd * 0.5f);
-		Ellipse2D sheen = new Ellipse2D.Float(x, y + height - 10, width, height / 1.5f);
+		if (round) {
+			g2.fill(face2);
+	
+			g2.setClip(face2);
+			
+		} else {
+			g2.fillRect(x, y, width, height);
+		}
 		g2.setPaint(
 			new RadialGradientPaint(
-				control.getWidth() / 2,
-				control.getHeight(),
-				27,
-				new float[] { 0.2f, 1 },
+				width / 2f,
+				height * 1f,
+				25,
+				new float[] { 0.0f, 1 },
 				lights
 			)
 		);
-		g2.fill(sheen);
+		g2.fillRect(x, y + height -20, width, 20);
 		
 		Ellipse2D sheen2 = new Ellipse2D.Float(0, 0, width, height / 2);
 		g2.setPaint(
-			new RadialGradientPaint(
-				control.getWidth() / 2f,
-				control.getHeight() / 2f,
+			new StretchableRadialGradient(
+				new Point2D.Float(width / 2f,
+				height / 2f),
 				15,
-				new float[] { 0.8f, 1 },
+				new float[] { 0.0f, 1 },
 				new Color[] { 
 					new Color(255, 255, 255, 0),
 					new Color(255, 255, 255, 127)
-				}
+				},
+				width,
+				height,
+				0
 			)
 
 		);
-		g2.fill(sheen2);
-		g2.setClip(oldClip);
-
+		g2.fillRect(0, 0, width, height / 2);
+		if (round) {
+			g2.setClip(oldClip);
+		}
 		// Thin inner ring to crisp up the rim/face boundary.
-		g2.setStroke(new java.awt.BasicStroke(1f));
-		g2.setColor(new Color(255, 255, 255, 60));
-		g2.draw(new Ellipse2D.Float(x + 0.5f, y + 0.5f, width - 1, height - 1));
+		if (round) {
+			g2.setStroke(new java.awt.BasicStroke(1f));
+			g2.setColor(new Color(255, 255, 255, 60));
+			g2.draw(new Ellipse2D.Float(x + 0.5f, y + 0.5f, width - 1, height - 1));
+		}
 	}
 	
 
