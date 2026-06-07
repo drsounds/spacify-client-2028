@@ -1,8 +1,13 @@
 package se.spacify.service.media;
 
 import se.spacify.db.entity.LocalFile;
+import se.spacify.db.entity.MusicServiceTrack;
+import se.spacify.db.entity.Recording;
 import se.spacify.service.ServiceManager;
+import se.spacify.ui.ServiceMatchDialog;
 
+import javax.swing.JOptionPane;
+import javax.swing.SwingWorker;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -106,5 +111,126 @@ public final class PlaybackCoordinator {
         local.loadLocalFile(file);
         local.play();
         return true;
+    }
+
+    // ── "Play with…" resolution ─────────────────────────────────────────────────
+
+    /**
+     * Play {@code req}, honouring the user's saved "Play with…" choice. If a saved
+     * {@link MusicServiceTrack} exists for this track it plays straight away on
+     * that service; otherwise the track is "unresolved" and the cross-service
+     * matches are gathered (off the EDT) and offered in the
+     * {@link ServiceMatchDialog} so the user can choose — optionally remembering
+     * the pick. Call on the EDT.
+     */
+    public static void resolveAndPlay(PlayRequest req) {
+        resolveAndPlay(req, false);
+    }
+
+    /**
+     * As {@link #resolveAndPlay(PlayRequest)}, but {@code forceChooser} skips any
+     * saved choice and always shows the chooser — the "Play with…" / re-lookup
+     * action behind the right-click menu.
+     */
+    public static void resolveAndPlay(PlayRequest req, boolean forceChooser) {
+        if (req == null) return;
+        if (!forceChooser) {
+            MusicServiceTrack saved = ResolutionStore.find(req);
+            if (saved != null && playSaved(saved)) return;
+        }
+        gatherAndChoose(req);
+    }
+
+    /** Replay a saved pick on its service; false if that service is gone. */
+    private static boolean playSaved(MusicServiceTrack saved) {
+        MusicService ms = findService(saved.getServiceId());
+        if (ms == null) return false;
+        setActiveService(ms);
+        if (notBlank(saved.getMatchIsrc())) {
+            ms.loadByIsrc(saved.getMatchIsrc());
+        } else if (notBlank(saved.getMatchTitle())) {
+            ms.loadByTitleArtist(saved.getMatchTitle(), saved.getMatchArtist());
+        } else if (notBlank(saved.getMatchUri())) {
+            ms.loadUri(saved.getMatchUri());
+        } else {
+            return false;
+        }
+        ms.play();
+        return true;
+    }
+
+    /** Gather matches in the background, then offer the chooser (and play the pick). */
+    private static void gatherAndChoose(PlayRequest req) {
+        new SwingWorker<List<ServiceMatch>, Void>() {
+            @Override protected List<ServiceMatch> doInBackground() { return gatherMatches(req); }
+
+            @Override protected void done() {
+                List<ServiceMatch> matches;
+                try { matches = get(); } catch (Exception e) { matches = List.of(); }
+
+                if (matches.isEmpty()) {
+                    if (req.fallbackUri() != null) {
+                        playUri(req.fallbackUri());
+                    } else {
+                        JOptionPane.showMessageDialog(null,
+                            "No installed service can play \"" + req.title() + "\".",
+                            "Couldn't play track", JOptionPane.INFORMATION_MESSAGE);
+                    }
+                    return;
+                }
+
+                String label = req.title() + (req.artist().isBlank() ? "" : " — " + req.artist());
+                ServiceMatchDialog.Result result = ServiceMatchDialog.choose(null, label, matches);
+                if (result == null) return;          // cancelled
+                playMatch(result.match(), req);
+                if (result.always()) ResolutionStore.save(req, result.match());
+            }
+        }.execute();
+    }
+
+    /**
+     * Ask every registered {@link MusicService} whether it can resolve {@code req}
+     * — by ISRC first, then by title/artist — collecting one match per service.
+     * Performs blocking network I/O; never call on the EDT.
+     */
+    public static List<ServiceMatch> gatherMatches(PlayRequest req) {
+        List<ServiceMatch> matches = new ArrayList<>();
+        for (MusicService ms : ServiceManager.getInstance().getServices(MusicService.class)) {
+            Recording match = null;
+            boolean byIsrc = false;
+            if (req.isrc() != null) {
+                match = ms.lookup(req.isrc());
+                if (match != null) byIsrc = true;
+            }
+            if (match == null && !req.title().isBlank()) {
+                match = ms.lookupByTitleArtist(req.title(), req.artist());
+            }
+            if (match != null) matches.add(new ServiceMatch(ms, match, byIsrc));
+        }
+        return matches;
+    }
+
+    /** Load and play a chosen match on its service. */
+    private static void playMatch(ServiceMatch match, PlayRequest req) {
+        MusicService ms = match.service();
+        setActiveService(ms);
+        if (match.byIsrc() && req.isrc() != null) {
+            ms.loadByIsrc(req.isrc());
+        } else {
+            ms.loadByTitleArtist(req.title(), req.artist());
+        }
+        ms.play();
+    }
+
+    private static MusicService findService(String serviceId) {
+        if (serviceId == null) return null;
+        for (MusicService ms : ServiceManager.getInstance().getServices(MusicService.class)) {
+            if (serviceId.equals(ms.getServiceId())) return ms;
+        }
+        return null;
+    }
+
+    private static boolean notBlank(String s) {
+        return s != null && !s.isBlank();
     }
 }

@@ -22,4 +22,21 @@ public interface MusicCatalogueService extends Service {
     Release   getReleaseByMbid(String mbid);
     Recording getRecordingByIsrc(String isrc);
     Artist    getArtistByIsni(String isni);
+
+    // ── Browsing (contextual; drives the catalogue tree's drill-down) ───────────
+    //
+    // Most catalogues (MusicBrainz included) have no global "list everything"
+    // feed — browse requests hang off a parent entity. These let the catalogue
+    // views drill Artist → Releases → Recordings. Default to empty so catalogues
+    // that don't support browsing simply show nothing rather than break.
+
+    /** Releases credited to the given artist (by catalogue id, e.g. MBID). */
+    default List<Release> browseReleasesByArtist(String artistId, int offset, int limit) {
+        return List.of();
+    }
+
+    /** Recordings (tracks) appearing on the given release (by catalogue id). */
+    default List<Recording> browseRecordingsByRelease(String releaseId, int offset, int limit) {
+        return List.of();
+    }
 }

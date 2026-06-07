@@ -1,12 +1,17 @@
 package se.spacify.views.library;
 
+import se.spacify.controls.GroupedListPanel;
 import se.spacify.controls.Table;
+import se.spacify.controls.ToggleButton;
 import se.spacify.controls.ToolBar;
 import se.spacify.controls.ToolButton;
+import se.spacify.graphics.GroupAvatar;
 import se.spacify.library.LibraryEvents;
 import se.spacify.navigation.SPView;
+import se.spacify.service.media.PlaybackCoordinator;
 import se.spacify.service.media.PlayQueue;
 import se.spacify.service.media.PlayQueueItem;
+import se.spacify.service.media.PlayRequest;
 import se.spacify.ui.theme.ThemeManager;
 
 import javax.swing.*;
@@ -16,7 +21,9 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Base for the data-backed library views. Provides a themed {@link JTable} with
@@ -34,6 +41,28 @@ public abstract class AbstractLibraryView extends SPView {
 	private ToolBar bottomToolbar;
 	private ToolBar toolbar;
 	private ToolButton refreshBtn;
+
+	// ── Optional grouped presentation (see supportsGrouping/groupings) ──────────
+	private GroupedListPanel groupedPanel;
+	private ToggleButton groupToggle;
+	private JComboBox<Grouping> groupingChooser;
+	private boolean grouped;
+
+	/**
+	 * Identity and display text of the group a row belongs to. {@code key} is the
+	 * stable group identity (drives the placeholder image colour and de-dupes
+	 * rows into sections); {@code title}/{@code subtitle} are shown in the section
+	 * header — e.g. an album name and its artists.
+	 */
+	public record GroupRef(String key, String title, String subtitle) {}
+
+	/** A named way of grouping the current rows (e.g. "Release", "Playlist"). */
+	public interface Grouping {
+		String name();
+
+		/** The group the given model row belongs to. */
+		GroupRef groupOf(int modelRow);
+	}
 
 	protected AbstractLibraryView() {
 		panel = new JPanel(new BorderLayout(0, 8));
@@ -60,12 +89,18 @@ public abstract class AbstractLibraryView extends SPView {
 		table.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
+				int row = table.rowAtPoint(e.getPoint());
+				if (row < 0)
+					return;
 				if (e.getClickCount() == 2) {
-					int row = table.rowAtPoint(e.getPoint());
-					if (row >= 0)
-						activate(row);
+					activate(row);
+				} else if (e.getClickCount() == 1) {
+					onCellClicked(row, table.columnAtPoint(e.getPoint()));
 				}
 			}
+
+			@Override public void mousePressed(MouseEvent e)  { maybeShowRowMenu(e); }
+			@Override public void mouseReleased(MouseEvent e) { maybeShowRowMenu(e); }
 		});
 
 		ThemedTableCellRenderer renderer = new ThemedTableCellRenderer();
@@ -84,7 +119,7 @@ public abstract class AbstractLibraryView extends SPView {
 		toolbar = new ToolBar();
 
 		refreshBtn = new ToolButton("Refresh");
-		refreshBtn.addActionListener(e -> reload());
+		refreshBtn.addActionListener(e -> reloadAndRegroup());
 
 		if (isEditable()) {
 			ToolButton addBtn = new ToolButton("Add");
@@ -93,19 +128,19 @@ public abstract class AbstractLibraryView extends SPView {
 			ToolButton scanBtn = new ToolButton("Scan…");
 
 			scanBtn.addActionListener(e -> LibraryScanAction.run(panel, () -> {
-				reload();
+				reloadAndRegroup();
 				LibraryEvents.fireChanged();
 			}));
 			addBtn.addActionListener(e -> {
 				onAdd();
-				reload();
+				reloadAndRegroup();
 				LibraryEvents.fireChanged();
 			});
 			editBtn.addActionListener(e -> {
 				int row = table.getSelectedRow();
 				if (row >= 0) {
 					onEdit(row);
-					reload();
+					reloadAndRegroup();
 					LibraryEvents.fireChanged();
 				}
 			});
@@ -113,7 +148,7 @@ public abstract class AbstractLibraryView extends SPView {
 				int row = table.getSelectedRow();
 				if (row >= 0) {
 					onDelete(row);
-					reload();
+					reloadAndRegroup();
 					LibraryEvents.fireChanged();
 				}
 			});
@@ -125,6 +160,40 @@ public abstract class AbstractLibraryView extends SPView {
 			toolbar.add(scanBtn);
 		}
 		toolbar.add(refreshBtn);
+
+		// ── Optional grouped-view switch ────────────────────────────────────────
+		// supportsGrouping() must be a constant (it's called mid-construction);
+		// the actual Grouping list is read lazily once the subclass is built.
+		if (supportsGrouping()) {
+			groupedPanel = new GroupedListPanel();
+			groupingChooser = new JComboBox<>();
+			groupingChooser.setRenderer(new DefaultListCellRenderer() {
+				private static final long serialVersionUID = 1L;
+				@Override
+				public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+						boolean isSelected, boolean hasFocus) {
+					super.getListCellRendererComponent(list, value, index, isSelected, hasFocus);
+					setText(value instanceof Grouping g ? g.name() : "");
+					return this;
+				}
+			});
+			groupingChooser.setVisible(false);
+			groupingChooser.addActionListener(e -> { if (grouped) rebuildGroups(); });
+
+			groupToggle = new ToggleButton("Grouped");
+			groupToggle.addActionListener(e -> setGrouped(groupToggle.isSelected()));
+
+			toolbar.addSeparator();
+			toolbar.add(groupToggle);
+			toolbar.add(groupingChooser);
+		}
+
+		// Subclass-contributed toolbar control (e.g. a catalogue search field).
+		JComponent accessory = toolbarAccessory();
+		if (accessory != null) {
+			toolbar.addSeparator();
+			toolbar.add(accessory);
+		}
 
 		JPanel north = new JPanel(new BorderLayout());
 		north.setOpaque(false);
@@ -157,6 +226,24 @@ public abstract class AbstractLibraryView extends SPView {
 		return true;
 	}
 
+	/**
+	 * Whether this view offers the optional grouped presentation (a "Grouped"
+	 * toggle plus a grouping chooser). Must be constant — it is queried during
+	 * construction. Views that return true must also override {@link #groupings()}
+	 * and produce play-queue items via {@link #queueItemAt(int)}.
+	 */
+	protected boolean supportsGrouping() {
+		return false;
+	}
+
+	/**
+	 * The grouping options offered when {@link #supportsGrouping()} is true; read
+	 * lazily after construction. The first entry is the default selection.
+	 */
+	protected List<Grouping> groupings() {
+		return List.of();
+	}
+
 	// ── Hooks for subclasses ────────────────────────────────────────────────────
 
 	/** Column headers; called once during construction (must be constant). */
@@ -178,14 +265,66 @@ public abstract class AbstractLibraryView extends SPView {
 	protected void onActivate(int row) {
 	}
 
+	/** Invoked on a single click of a cell; default does nothing. Used e.g. by the
+	 *  catalogue recordings view to toggle a row's "in library" (＋/✓) column. */
+	protected void onCellClicked(int row, int col) {
+	}
+
+	/**
+	 * An optional component contributed to the right of the toolbar — e.g. a
+	 * catalogue search field. Called once during construction; returning a freshly
+	 * built component (not a re-initialised field) keeps the reference stable.
+	 */
+	protected JComponent toolbarAccessory() {
+		return null;
+	}
+
+	/**
+	 * Supply a {@link PlayRequest} for the given model row, or {@code null} if the
+	 * row isn't playable. This is the preferred hook for metadata-resolved views:
+	 * the default {@link #queueItemAt(int)} builds a queue entry from it whose
+	 * playback runs through {@link PlaybackCoordinator#resolveAndPlay}, and the
+	 * right-click "Play with…" menu uses it too. Views that play something concrete
+	 * (a local file) may instead override {@link #queueItemAt(int)} directly.
+	 */
+	protected PlayRequest playRequestAt(int row) {
+		return null;
+	}
+
 	/**
 	 * Supply a {@link PlayQueueItem} for the given model row, or {@code null} if
-	 * the row isn't playable. Playable views override this so a double-click can
-	 * turn the whole view into the play context. Views that don't override it fall
-	 * back to {@link #onActivate(int)}.
+	 * the row isn't playable. By default this derives from {@link #playRequestAt}
+	 * (routing playback through the "Play with…" resolver); views that play a
+	 * concrete target may override it. Views that produce neither fall back to
+	 * {@link #onActivate(int)}.
 	 */
 	protected PlayQueueItem queueItemAt(int row) {
-		return null;
+		PlayRequest req = playRequestAt(row);
+		if (req == null)
+			return null;
+		return new PlayQueueItem(req.key(), req.title(), req.artist(), req.durationMs(),
+				() -> PlaybackCoordinator.resolveAndPlay(req), req);
+	}
+
+	/**
+	 * Pop the row context menu ("Play with…") on a platform popup trigger, when the
+	 * row under the cursor is playable.
+	 */
+	private void maybeShowRowMenu(MouseEvent e) {
+		if (!e.isPopupTrigger())
+			return;
+		int row = table.rowAtPoint(e.getPoint());
+		if (row < 0)
+			return;
+		table.setRowSelectionInterval(row, row);
+		PlayRequest req = playRequestAt(row);
+		if (req == null)
+			return;
+		JPopupMenu menu = new JPopupMenu();
+		JMenuItem playWith = new JMenuItem("Play with…");
+		playWith.addActionListener(a -> PlaybackCoordinator.resolveAndPlay(req, true));
+		menu.add(playWith);
+		menu.show(e.getComponent(), e.getX(), e.getY());
 	}
 
 	/**
@@ -208,6 +347,73 @@ public abstract class AbstractLibraryView extends SPView {
 			PlayQueue.getInstance().setQueueAndPlay(queue, startIndex);
 		} else {
 			onActivate(row);
+		}
+	}
+
+	// ── Grouped presentation ────────────────────────────────────────────────────
+
+	/** Repopulate the model, then refresh the grouped view if it's showing. */
+	protected void reloadAndRegroup() {
+		reload();
+		if (grouped)
+			rebuildGroups();
+	}
+
+	private void setGrouped(boolean on) {
+		grouped = on;
+		groupingChooser.setVisible(on);
+		if (on) {
+			if (groupingChooser.getItemCount() == 0)
+				for (Grouping g : groupings())
+					groupingChooser.addItem(g);
+			rebuildGroups();
+			scroll.setViewportView(groupedPanel);
+		} else {
+			scroll.setViewportView(table);
+		}
+		scroll.revalidate();
+		scroll.repaint();
+	}
+
+	/** Rebuild the grouped sections from the current model rows. */
+	private void rebuildGroups() {
+		if (groupedPanel == null)
+			return;
+		Grouping g = (Grouping) groupingChooser.getSelectedItem();
+		if (g == null) {
+			groupedPanel.setGroups(List.of());
+			return;
+		}
+		// Preserve model row order within each section (rows already arrive in
+		// album order), and section order by first appearance.
+		Map<String, GroupBucket> buckets = new LinkedHashMap<>();
+		for (int row = 0; row < model.getRowCount(); row++) {
+			PlayQueueItem item = queueItemAt(row);
+			if (item == null)
+				continue;
+			GroupRef maybe = g.groupOf(row);
+			final GroupRef ref = maybe != null ? maybe : new GroupRef("none", "Unknown", "");
+			GroupBucket bucket = buckets.computeIfAbsent(ref.key(), k -> new GroupBucket(ref));
+			final int r = row;
+			bucket.items.add(new GroupedListPanel.Item(
+					item.getName(), item.getArtists(), fmtDuration(item.getDurationMs()),
+					item.getKey(), () -> activate(r)));
+		}
+		List<GroupedListPanel.Group> groups = new ArrayList<>();
+		for (GroupBucket bucket : buckets.values()) {
+			Image image = GroupAvatar.of(bucket.ref.key(), bucket.ref.title(), 64);
+			groups.add(new GroupedListPanel.Group(
+					image, bucket.ref.title(), bucket.ref.subtitle(), bucket.items));
+		}
+		groupedPanel.setGroups(groups);
+	}
+
+	private static final class GroupBucket {
+		final GroupRef ref;
+		final List<GroupedListPanel.Item> items = new ArrayList<>();
+
+		GroupBucket(GroupRef ref) {
+			this.ref = ref;
 		}
 	}
 
@@ -298,6 +504,6 @@ public abstract class AbstractLibraryView extends SPView {
 
 	@Override
 	public void onShow() {
-		reload();
+		reloadAndRegroup();
 	}
 }

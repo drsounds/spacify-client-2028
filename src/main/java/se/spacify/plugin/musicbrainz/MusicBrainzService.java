@@ -101,6 +101,39 @@ public class MusicBrainzService implements MusicCatalogueService {
         return out;
     }
 
+    // ── Browsing ────────────────────────────────────────────────────────────────
+
+    @Override
+    public List<Release> browseReleasesByArtist(String artistMbid, int offset, int limit) {
+        List<Release> out = new ArrayList<>();
+        if (isBlank(artistMbid)) return out;
+        JsonObject root = get("release?artist=" + encode(artistMbid)
+            + "&limit=" + clampLimit(limit) + "&offset=" + Math.max(0, offset));
+        if (root == null) return out;
+        for (JsonElement e : array(root, "releases")) {
+            out.add(toRelease(e.getAsJsonObject()));
+        }
+        return out;
+    }
+
+    @Override
+    public List<Recording> browseRecordingsByRelease(String releaseMbid, int offset, int limit) {
+        List<Recording> out = new ArrayList<>();
+        if (isBlank(releaseMbid)) return out;
+        JsonObject root = get("recording?release=" + encode(releaseMbid)
+            + "&limit=" + clampLimit(limit) + "&offset=" + Math.max(0, offset));
+        if (root == null) return out;
+        for (JsonElement e : array(root, "recordings")) {
+            out.add(toRecording(e.getAsJsonObject()));
+        }
+        return out;
+    }
+
+    /** MusicBrainz caps browse/search page size at 100. */
+    private static int clampLimit(int limit) {
+        return limit <= 0 ? SEARCH_LIMIT : Math.min(limit, 100);
+    }
+
     // ── Lookups ───────────────────────────────────────────────────────────────
 
     @Override

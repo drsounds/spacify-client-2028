@@ -8,6 +8,7 @@ import se.spacify.service.media.MediaServicePlayerComponent;
 import se.spacify.service.media.PlaybackCoordinator;
 import se.spacify.service.media.PlayQueue;
 import se.spacify.service.media.PlayQueueItem;
+import se.spacify.service.media.PlayRequest;
 import se.spacify.ui.theme.ThemeManager;
 
 import javax.swing.*;
@@ -78,6 +79,9 @@ public class NowPlayingPanel extends JPanel {
                     if (row >= 0) PlayQueue.getInstance().playAt(row);
                 }
             }
+
+            @Override public void mousePressed(MouseEvent e)  { maybeShowQueueMenu(e); }
+            @Override public void mouseReleased(MouseEvent e) { maybeShowQueueMenu(e); }
         });
 
         scroll = new JScrollPane(table);
@@ -135,6 +139,23 @@ public class NowPlayingPanel extends JPanel {
      * replacing any previous one. Components get {@code onDeactivated}/
      * {@code onActivated} callbacks around the swap.
      */
+    /** Right-click a queue entry to re-pick which service plays it ("Play with…"). */
+    private void maybeShowQueueMenu(MouseEvent e) {
+        if (!e.isPopupTrigger()) return;
+        int row = table.rowAtPoint(e.getPoint());
+        if (row < 0) return;
+        table.setRowSelectionInterval(row, row);
+        List<PlayQueueItem> items = PlayQueue.getInstance().getItems();
+        if (row >= items.size()) return;
+        PlayRequest req = items.get(row).getSource();
+        if (req == null) return;
+        JPopupMenu menu = new JPopupMenu();
+        JMenuItem playWith = new JMenuItem("Play with…");
+        playWith.addActionListener(a -> PlaybackCoordinator.resolveAndPlay(req, true));
+        menu.add(playWith);
+        menu.show(e.getComponent(), e.getX(), e.getY());
+    }
+
     private void setActivePlayer(MediaService service) {
         MediaServicePlayerComponent next = service != null ? service.getPlayerComponent() : null;
         if (next == currentPlayer) return;

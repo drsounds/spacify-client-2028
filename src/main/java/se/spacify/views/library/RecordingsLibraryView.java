@@ -3,8 +3,7 @@ package se.spacify.views.library;
 import se.spacify.db.DatabaseManager;
 import se.spacify.db.LibraryRepository;
 import se.spacify.db.entity.Recording;
-import se.spacify.service.media.PlaybackCoordinator;
-import se.spacify.service.media.PlayQueueItem;
+import se.spacify.service.media.PlayRequest;
 
 import javax.swing.*;
 import java.util.ArrayList;
@@ -99,16 +98,11 @@ public class RecordingsLibraryView extends AbstractLibraryView {
     }
 
     @Override
-    protected PlayQueueItem queueItemAt(int row) {
+    protected PlayRequest playRequestAt(int row) {
         Recording r = rows.get(row);
-        return new PlayQueueItem(r.getPlayUri(), r.getTitle(),
-                LibraryRepository.artistNamesForRecording(r), r.getDurationMs(), () -> {
-            // Resolve across services by ISRC, then by title/artist metadata.
-            if (!PlaybackCoordinator.play(r.getIsrc(), r.getTitle(),
-                    LibraryRepository.primaryArtistForRecording(r))) {
-                PlaybackCoordinator.playUri(r.getPlayUri());
-            }
-        });
+        // No local Track here; the saved "Play with…" pick is keyed by ISRC/URI.
+        return new PlayRequest(null, r.getIsrc(), r.getTitle(),
+                LibraryRepository.primaryArtistForRecording(r), r.getPlayUri(), r.getDurationMs());
     }
 
     private static String blankToNull(String s) {

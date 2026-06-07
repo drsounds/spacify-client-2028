@@ -5,11 +5,9 @@ import se.spacify.db.LibraryRepository;
 import se.spacify.db.entity.Recording;
 import se.spacify.db.entity.Release;
 import se.spacify.db.entity.Track;
-import se.spacify.service.media.PlaybackCoordinator;
-import se.spacify.service.media.PlayQueueItem;
+import se.spacify.service.media.PlayRequest;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,7 +48,7 @@ public class ReleaseDetailView extends AbstractLibraryView {
             setHeader(artists.isBlank() ? release.getTitle() : release.getTitle() + " — " + artists);
 
             List<Track> tracks = DatabaseManager.getInstance().trackDao().queryForEq("release_id", releaseId);
-            tracks.sort(Comparator.comparingInt(Track::getTrackNumber));
+            tracks.sort(LibraryRepository.ALBUM_ORDER);
             for (Track t : tracks) {
                 rows.add(t);
                 Recording rec = t.getRecording();
@@ -66,19 +64,13 @@ public class ReleaseDetailView extends AbstractLibraryView {
     }
 
     @Override
-    protected PlayQueueItem queueItemAt(int row) {
+    protected PlayRequest playRequestAt(int row) {
         Track t = rows.get(row);
         Recording rec = t.getRecording();
-        String name    = rec != null ? rec.getTitle() : "";
-        String artists = rec != null ? LibraryRepository.artistNamesForRecording(rec) : "";
-        return new PlayQueueItem(t.getPlayUri(), name, artists, t.getDurationMs(), () -> {
-            String isrc   = rec != null ? rec.getIsrc()  : null;
-            String title  = rec != null ? rec.getTitle() : null;
-            String artist = rec != null ? LibraryRepository.primaryArtistForRecording(rec) : null;
-            if (!PlaybackCoordinator.play(isrc, title, artist)) {
-                PlaybackCoordinator.playUri(t.getPlayUri());
-            }
-        });
+        String isrc   = rec != null ? rec.getIsrc()  : null;
+        String title  = rec != null ? rec.getTitle() : "";
+        String artist = rec != null ? LibraryRepository.primaryArtistForRecording(rec) : "";
+        return new PlayRequest(t, isrc, title, artist, t.getPlayUri(), t.getDurationMs());
     }
 
     @Override public boolean acceptsUri(String uri) { return uri != null && URI.matcher(uri).matches(); }

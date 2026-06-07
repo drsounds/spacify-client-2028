@@ -21,6 +21,17 @@ public final class LibraryRepository {
 
     private static DatabaseManager db() { return DatabaseManager.getInstance(); }
 
+    /**
+     * Canonical ordering of tracks within an album: first by side/disc — nulls
+     * first, then natural case-insensitive order so {@code "1" < "2"} and
+     * {@code "A" < "B"} — and then by track number ascending. Use this anywhere
+     * an album's tracks are presented so they always read in release order.
+     */
+    public static final Comparator<Track> ALBUM_ORDER =
+        Comparator.comparing(Track::getSide,
+                             Comparator.nullsFirst(String.CASE_INSENSITIVE_ORDER))
+                  .thenComparingInt(Track::getTrackNumber);
+
     // ── Joined display helpers ──────────────────────────────────────────────────
 
     /** Comma-joined artist names for a recording, primary credits first. */
