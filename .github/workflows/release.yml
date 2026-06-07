@@ -40,11 +40,11 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
-      - name: Set up JDK 21 (provides jpackage)
+      - name: Set up JDK 25 (provides jpackage)
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '25'
           cache: maven
 
       - name: Build self-contained app directory (target/app)
