@@ -4,7 +4,6 @@ import java.awt.Graphics2D;
 
 import javax.swing.JPanel;
 import javax.swing.JTable;
-import javax.swing.table.TableCellRenderer;
 
 import se.spacify.controls.GlassPanel;
 import se.spacify.controls.GlossyButton;

@@ -11,7 +11,9 @@ import java.awt.event.*;
  */
 public final class WindowResizer extends JComponent {
 
-    private static final int GRIP = 6;
+    private static final long serialVersionUID = -2686619096872991739L;
+
+	private static final int GRIP = 6;
 
     // Direction bitmask constants
     private static final int N = 1, S = 2, W = 4, E = 8;

@@ -262,6 +262,8 @@ public abstract class AbstractLibraryView extends SPView {
 	}
 
 	private final class ThemedTableCellRenderer extends DefaultTableCellRenderer {
+		private static final long serialVersionUID = -8803742448587818781L;
+
 		@Override
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
 				int row, int column) {

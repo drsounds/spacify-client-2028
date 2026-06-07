@@ -8,7 +8,8 @@ import java.awt.*;
 
 public class SettingsPanel extends JPanel {
 
-    private static final Color BG   = Color.BLACK;
+    private static final long serialVersionUID = 4436865841340299032L;
+	private static final Color BG   = Color.BLACK;
     private static final Color FG   = Color.WHITE;
     private static final Color FG_DIM = new Color(180, 180, 180);
 
@@ -137,11 +138,11 @@ public class SettingsPanel extends JPanel {
         accentSection.add(Box.createVerticalGlue());
 
         // ── Listeners ────────────────────────────────────────────────────────
-        hueSlider.addChangeListener(e   -> ThemeManager.setHue(hueSlider.getValue() / 360f));
-        satSlider.addChangeListener(e   -> ThemeManager.setSaturation(satSlider.getValue() / 100f));
+        hueSlider.addChangeListener(e -> ThemeManager.setHue(hueSlider.getValue() / 360f));
+        satSlider.addChangeListener(e -> ThemeManager.setSaturation(satSlider.getValue() / 100f));
         lightSlider.addChangeListener(e -> ThemeManager.setLightness(lightSlider.getValue() / 100f));
-        darkBtn.addActionListener(e     -> ThemeManager.setDarkMode(true));
-        lightBtn.addActionListener(e    -> ThemeManager.setDarkMode(false));
+        darkBtn.addActionListener(e -> ThemeManager.setDarkMode(true));
+        lightBtn.addActionListener(e -> ThemeManager.setDarkMode(false));
 
         JPanel right = new JPanel() {
             @Override public void updateUI() { super.updateUI(); setOpaque(false); }

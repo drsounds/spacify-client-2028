@@ -62,7 +62,9 @@ public class LibraryView extends SPView {
     // ── Custom renderer ───────────────────────────────────────────────────────
 
     private static final class ThemedTableCellRenderer extends DefaultTableCellRenderer {
-        @Override
+        private static final long serialVersionUID = 6139658182597024812L;
+
+		@Override
         public Component getTableCellRendererComponent(JTable table, Object value,
                 boolean isSelected, boolean hasFocus, int row, int column) {
             super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);

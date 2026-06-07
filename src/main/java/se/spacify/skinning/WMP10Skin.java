@@ -3,6 +3,7 @@ package se.spacify.skinning;
 import java.awt.Color;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
+import java.awt.RadialGradientPaint;
 import java.awt.Shape;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Path2D;
@@ -85,16 +86,29 @@ public class WMP10Skin extends Skin {
 		Color accent = ThemeManager.getAccentColor();
 		Color tint = ThemeManager.getTintColor();
 
+		Color glowColor = new Color(255, 255, 255, 0);
+		if (control.getPrimary()) {
+			glowColor = ThemeManager.tintLight(2.2f);
+		}
+		
+		int width = control.getWidth(), height = control.getHeight();
 		// Darker outer rim, slightly inset face sits on top of it.
 		//Ellipse2D outer = new Ellipse2D.Float(x, y, d, d);
+		
 		g2.setPaint(new GradientPaint(x, y, ThemeManager.tintDark(0.9f), x, y + d, ThemeManager.tintDark(0.5f)));
 		//g2.fill(outer);
 
 		int inset = Math.max(2, d / 24);
 		int fd = d - inset * 2;
 		int fx = x + inset, fy = y + inset;
-		Ellipse2D face = new Ellipse2D.Float(fx, fy, fd, fd);
+		Ellipse2D face = new Ellipse2D.Float(x - 4, y - 4, width + 8, height + 8);
+		g2.setClip(face);
+		
+		g2.setPaint(new GradientPaint(0, 0, new Color(0, 0, 0, 0), width,
+				y + height / 2, new Color(255, 255, 255, 127)));
+		g2.fillRect(x, y, width + 4, height + 4);
 
+		Ellipse2D face2 = new Ellipse2D.Float(x, y, width, height);
 		// Base vertical gradient — brighter when hovered, dimmer/inverted when pressed.
 		Color top, bottom;
 		if (control.getPressed()) {
@@ -107,16 +121,19 @@ public class WMP10Skin extends Skin {
 			top = ThemeManager.accentLight(1.4f);
 			bottom = tint;
 		}
-		g2.setPaint(new GradientPaint(fx, fy, top, fx, fy + fd, bottom));
-		g2.fill(face);
+		g2.setPaint(new GradientPaint(fx + 2, fy + 2, top, fx, fy + fd, bottom));
+		g2.fill(face2);
 
 		Shape oldClip = g2.getClip();
-		g2.setClip(face);
+		g2.setClip(face2);
+		g2.setPaint(new GradientPaint(x, y + height, ColorUtils.alpha(glowColor, control.getPressed() ? 30 : 90), x,
+				y + height / 2, ColorUtils.alpha(glowColor, 0)));
+		g2.fillRect(0, 0, x, height - height / 2);
 
 		// Bottom reflection: faint upward light from the lower edge.
-		g2.setPaint(new GradientPaint(fx, fy + fd, new Color(255, 255, 255, control.getPressed() ? 30 : 90), fx,
-				fy + fd / 2, new Color(255, 255, 255, 0)));
-		g2.fillRect(fx, fy + fd / 2, fd, fd - fd / 2);
+		g2.setPaint(new GradientPaint(fx, fy + fd, ColorUtils.alpha(glowColor, control.getPressed() ? 30 : 90), x,
+				y + height / 2, new Color(255, 255, 255, 0)));
+		g2.fillRect(x, y + height / 2, x, y - y / 2);
 
 		// Top "bubble" sheen: a bright ellipse narrower than the face, fading down.
 		// This is the signature Aqua highlight.
@@ -124,18 +141,21 @@ public class WMP10Skin extends Skin {
 		int hlTop = Math.round(fd * 0.06f);
 		int hlW = fd - hlInsetX * 2;
 		int hlH = Math.round(fd * 0.5f);
-		Ellipse2D sheen = new Ellipse2D.Float(fx + hlInsetX, fy + hlTop, hlW, hlH);
+		Ellipse2D sheen = new Ellipse2D.Float(fx + hlInsetX, 25, hlW, hlH);
 		int sheenAlpha = control.getPressed() ? 110 : 220;
-		g2.setPaint(new GradientPaint(fx, fy + hlTop, new Color(255, 255, 255, sheenAlpha), fx, fy + hlTop + hlH,
-				new Color(255, 255, 255, 0)));
+		g2.setPaint(new RadialGradientPaint(control.getWidth() / 2, control.getHeight(), 15, new float[] { 0, 1 }, new Color[] { new Color(255, 255, 255, sheenAlpha), new Color(255, 255, 255, 0) }));
 		g2.fill(sheen);
-
+		
+		Ellipse2D sheen2 = new Ellipse2D.Float(0, 0, width, height / 2);
+		g2.setPaint(new GradientPaint(0, 0, ColorUtils.alpha(glowColor, 127), width, height, glowColor
+				));
+		g2.fill(sheen2);
 		g2.setClip(oldClip);
 
 		// Thin inner ring to crisp up the rim/face boundary.
 		g2.setStroke(new java.awt.BasicStroke(1f));
 		g2.setColor(new Color(255, 255, 255, 60));
-		g2.draw(new Ellipse2D.Float(fx + 0.5f, fy + 0.5f, fd - 1, fd - 1));
+		g2.draw(new Ellipse2D.Float(x + 0.5f, y + 0.5f, width - 1, height - 1));
 	}
 	
 	@Override
@@ -144,7 +164,7 @@ public class WMP10Skin extends Skin {
 		Path2D shape = control.shape(w, h);
 
 		// Base accent gradient, antialiased to the rounded/diagonal outline.
-		g2.setPaint(new GradientPaint(0, 0, ThemeManager.accentLight(2f), 0, h, ThemeManager.getTintColor()));
+		g2.setPaint(new GradientPaint(0, 0, new Color(0.5f, 0.5f, .5f), 0, h, ThemeManager.getTintColor()));
 		g2.fill(shape);
 
 		// Glossy white overlays, confined to the shape.

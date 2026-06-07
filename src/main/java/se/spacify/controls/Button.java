@@ -1,8 +1,5 @@
 package se.spacify.controls;
 
-import java.awt.Component;
-import java.awt.Graphics;
-
 import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.SwingUtilities;
@@ -11,6 +8,13 @@ import se.spacify.skinning.Skin;
 import se.spacify.ui.MainWindow;
 
 public class Button extends JButton implements Control {
+	private boolean primary = false;
+	public boolean getPrimary() {
+		return primary;
+	}
+	public void setPrimary(boolean value) {
+		primary = value;
+	}
 	public Button() {
 
         java.awt.event.MouseAdapter mouse = new java.awt.event.MouseAdapter() {

@@ -1,6 +1,7 @@
 package se.spacify.ui;
 
 import se.spacify.controls.GlassPanel;
+import se.spacify.controls.GlossyButton;
 import se.spacify.controls.TabButton;
 import se.spacify.navigation.NavigationListener;
 import se.spacify.navigation.SPViewStack;
@@ -23,8 +24,8 @@ public class AppHeader extends JPanel implements NavigationListener {
 	private static final Color HIGHLIGHT = new Color(255, 255, 255, 35);
 
 	private final SPViewStack viewStack;
-	private final JButton backBtn;
-	private final JButton forwardBtn;
+	private final GlossyButton backBtn;
+	private final GlossyButton forwardBtn;
 	private final JTextField uriField;
 	private final JTextField searchField;
 	private TabButton nowPlayingTab;
@@ -48,7 +49,10 @@ public class AppHeader extends JPanel implements NavigationListener {
 		});
 
 		backBtn = makeNavButton("◄");
+		backBtn.setDiameter(48);
+		backBtn.setPrimary(true);
 		forwardBtn = makeNavButton("►");
+		forwardBtn.setDiameter(36);
 		backBtn.setEnabled(false);
 		forwardBtn.setEnabled(false);
 
@@ -57,7 +61,7 @@ public class AppHeader extends JPanel implements NavigationListener {
 
 		JPanel navButtons = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
 		navButtons.setOpaque(false);
-		navButtons.add(sidebarToggle);
+		// navButtons.add(sidebarToggle);
 		navButtons.add(backBtn);
 		navButtons.add(forwardBtn);
 		navButtons.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
@@ -214,8 +218,8 @@ public class AppHeader extends JPanel implements NavigationListener {
 		g2.dispose();
 	}
 
-	private JButton makeNavButton(String text) {
-		JButton btn = new JButton(text);
+	private GlossyButton makeNavButton(String text) {
+		GlossyButton btn = new GlossyButton(text);
 		btn.setFocusPainted(false);
 		btn.setPreferredSize(new Dimension(32, 32));
 		btn.setFont(btn.getFont().deriveFont(11f));

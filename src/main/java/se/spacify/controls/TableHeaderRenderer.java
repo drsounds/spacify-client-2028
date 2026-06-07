@@ -37,7 +37,6 @@ public class TableHeaderRenderer extends DefaultTableCellRenderer {
     protected void paintComponent(Graphics g) {
     	Graphics2D g2 = (Graphics2D)g;
     	
-    	getSkin().paintTableHeader(table, getWidth(), getHeight(), g2);
         super.paintComponent(g);
     }
 }

@@ -10,10 +10,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.GradientPaint;
 import java.awt.RenderingHints;
-import java.awt.Shape;
-import java.awt.geom.Ellipse2D;
 
 /**
  * A circular, glossy push button in the Frutiger Aero / Aqua idiom of Windows
@@ -27,7 +24,7 @@ import java.awt.geom.Ellipse2D;
  * Nimbus L&amp;F doesn't reliably repaint a custom-painted, non-opaque button on
  * those transitions (same approach as {@link TabButton}).
  */
-public class GlossyButton extends JButton {
+public class GlossyButton extends Button {
 
     private static final long serialVersionUID = 1L;
     private static final int DEFAULT_DIAMETER = 64;

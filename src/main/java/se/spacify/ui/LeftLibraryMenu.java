@@ -30,8 +30,8 @@ public class LeftLibraryMenu extends JPanel implements NavigationListener {
 	private JTextField searchField;
 	private ToolBar bottomToolbar;
 	private MenuToolButton addToLibraryMenuButton;
+	@SuppressWarnings("unused")
 	private JPopupMenu addToLibraryMenu;
-	private JMenuItem scanFolderMenuItem;
 
 	public void reload() {
 		
@@ -143,7 +143,9 @@ public class LeftLibraryMenu extends JPanel implements NavigationListener {
     // ── Custom cell renderer ──────────────────────────────────────────────────
 
     private static final class ThemedTreeCellRenderer extends DefaultTreeCellRenderer {
-        @Override
+        private static final long serialVersionUID = -3474131119330495091L;
+
+		@Override
         public Component getTreeCellRendererComponent(JTree tree, Object value,
                 boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
             super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);

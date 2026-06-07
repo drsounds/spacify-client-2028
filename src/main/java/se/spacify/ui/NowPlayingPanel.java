@@ -218,7 +218,9 @@ public class NowPlayingPanel extends JPanel {
      */
     private static final class QueueCellRenderer extends DefaultTableCellRenderer {
 
-        @Override
+        private static final long serialVersionUID = 5721808300261876002L;
+
+		@Override
         public Component getTableCellRendererComponent(JTable table, Object value,
                 boolean isSelected, boolean hasFocus, int row, int column) {
             super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);

@@ -18,7 +18,8 @@ import java.util.function.Supplier;
  */
 class PluginSettingsEditor extends JPanel {
 
-    private final PluginSettings settings;
+    private static final long serialVersionUID = 4892696129856064121L;
+	private final PluginSettings settings;
     private final List<Runnable> writers = new ArrayList<>();
 
     PluginSettingsEditor(ManagedPlugin plugin) {

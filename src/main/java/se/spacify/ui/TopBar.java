@@ -1,16 +1,14 @@
 package se.spacify.ui;
 
-import java.awt.Color;
-import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
-import se.spacify.ui.theme.ThemeManager;
-
 public class TopBar extends JPanel {
+	private static final long serialVersionUID = -4103483010651019343L;
+
 	public TopBar() {
 		
 	}

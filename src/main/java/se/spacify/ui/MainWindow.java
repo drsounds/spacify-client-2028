@@ -4,7 +4,6 @@ import se.spacify.controls.SplitPane;
 import se.spacify.navigation.SPViewStack;
 import se.spacify.service.ServiceManager;
 import se.spacify.service.media.MediaService;
-import se.spacify.service.media.MediaService.PlaybackState;
 import se.spacify.service.media.PlayQueue;
 import se.spacify.skinning.Skin;
 import se.spacify.skinning.WMP8Skin;
@@ -14,11 +13,8 @@ import se.spacify.skinning.WMP11BetaSkin;
 import se.spacify.skinning.WMP11Skin;
 import se.spacify.ui.theme.ThemeManager;
 import se.spacify.views.*;
-import se.spacify.views.library.*;
-import se.spacify.views.web.*;
 
 import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
 import java.awt.*;
 
 public class MainWindow extends JFrame {

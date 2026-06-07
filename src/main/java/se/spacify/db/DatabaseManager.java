@@ -9,7 +9,6 @@ import se.spacify.db.entity.*;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.SQLException;
 
 /**
  * Singleton that owns the SQLite connection and exposes ORMLite DAOs.

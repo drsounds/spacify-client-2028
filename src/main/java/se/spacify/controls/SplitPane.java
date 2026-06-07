@@ -1,13 +1,10 @@
 package se.spacify.controls;
 
 import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
 
 import javax.swing.JComponent;
 import javax.swing.JSplitPane;
 
-import se.spacify.ui.NowPlayingPanel;
 import se.spacify.ui.theme.ThemeManager;
 
 public class SplitPane extends JSplitPane {

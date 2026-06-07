@@ -12,7 +12,8 @@ import java.util.List;
 
 public class SPViewStack extends JPanel {
 
-    private final List<SPView> registeredViews = new ArrayList<>();
+    private static final long serialVersionUID = 6893909424664812987L;
+	private final List<SPView> registeredViews = new ArrayList<>();
     private final Deque<String> backStack = new ArrayDeque<>();
     private final Deque<String> forwardStack = new ArrayDeque<>();
     private final List<NavigationListener> listeners = new ArrayList<>();
