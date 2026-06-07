@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>spacify</groupId>
   <artifactId>spacify</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.0.0</version>
   <name>Spacify</name>
 
   <properties>
@@ -49,6 +49,9 @@
   </dependencies>
 
   <build>
+    <!-- Fixed final name so the GitHub Actions jpackage workflow can refer to a
+         stable main jar (spacify.jar) regardless of the project version. -->
+    <finalName>spacify</finalName>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -63,12 +66,40 @@
         <artifactId>maven-jar-plugin</artifactId>
         <version>3.3.0</version>
         <configuration>
+          <!-- Emit the app jar and its dependencies side by side under
+               target/app so the directory can be handed to jpackage as its
+               input directory. -->
+          <outputDirectory>${project.build.directory}/app</outputDirectory>
           <archive>
             <manifest>
               <mainClass>se.spacify.app.SpacifyApp</mainClass>
+              <!-- Reference the copied dependency jars (target/app/lib) so the
+                   bundled runtime can launch without an external classpath. -->
+              <addClasspath>true</addClasspath>
+              <classpathPrefix>lib/</classpathPrefix>
             </manifest>
           </archive>
         </configuration>
+      </plugin>
+      <!-- Copy every runtime dependency next to the app jar so jpackage's
+           input directory (target/app) is fully self-contained. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.7.1</version>
+        <executions>
+          <execution>
+            <id>copy-runtime-dependencies</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/app/lib</outputDirectory>
+              <includeScope>runtime</includeScope>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <!-- Convenience: `mvn exec:exec` launches the app in a forked JVM so the
            Swing window stays open until closed (java-cef downloads its native

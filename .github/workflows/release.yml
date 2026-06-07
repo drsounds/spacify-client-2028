@@ -1,0 +1,92 @@
+name: Release
+
+# Build native installers with jpackage and publish them to a GitHub Release.
+#
+# Push a semantic-version tag to trigger a release, e.g.:
+#   git tag v1.0.0 && git push origin v1.0.0
+#
+# jpackage requires the app version's first component to be >= 1 (a macOS
+# constraint), so use tags like v1.0.0 rather than v0.x.
+on:
+  push:
+    tags:
+      - 'v*'
+  # Allow a manual dry run that builds installers as workflow artifacts only.
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'App version for a manual build (e.g. 1.0.0)'
+        required: false
+        default: '1.0.0'
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            type: deb
+          - os: windows-latest
+            type: msi
+          - os: macos-latest
+            type: dmg
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (provides jpackage)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Build self-contained app directory (target/app)
+        run: mvn -B -DskipTests clean package
+
+      # Derive the jpackage --app-version from the tag (strip the leading "v"),
+      # falling back to the workflow_dispatch input for manual runs.
+      - name: Determine app version
+        id: version
+        shell: bash
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION="${{ github.event.inputs.version }}"
+          fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Building Spacify ${VERSION} for ${{ matrix.type }}"
+
+      - name: Run jpackage
+        shell: bash
+        run: |
+          jpackage \
+            --type "${{ matrix.type }}" \
+            --name Spacify \
+            --app-version "${{ steps.version.outputs.version }}" \
+            --input target/app \
+            --main-jar spacify.jar \
+            --main-class se.spacify.app.SpacifyApp \
+            --dest dist \
+            --vendor "Spacify" \
+            --copyright "Copyright (c) Spacify" \
+            --description "Spacify music player"
+
+      - name: Upload installer as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: spacify-${{ matrix.type }}
+          path: dist/*
+
+      - name: Attach installer to the GitHub Release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
