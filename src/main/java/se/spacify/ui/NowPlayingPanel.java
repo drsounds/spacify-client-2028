@@ -3,6 +3,9 @@ package se.spacify.ui;
 import se.spacify.controls.Table;
 import se.spacify.controls.ToolBar;
 import se.spacify.navigation.SPViewStack;
+import se.spacify.service.media.MediaService;
+import se.spacify.service.media.MediaServicePlayerComponent;
+import se.spacify.service.media.PlaybackCoordinator;
 import se.spacify.service.media.PlayQueue;
 import se.spacify.service.media.PlayQueueItem;
 import se.spacify.ui.theme.ThemeManager;
@@ -31,6 +34,9 @@ public class NowPlayingPanel extends JPanel {
     private final JLabel            emptyLabel;
 	private JToolBar topToolbar;
 	private JToolBar bottomToolbar;
+	/** Hosts the active service's player surface, if any, at the bottom of the panel. */
+	private final JPanel playerHost = new JPanel(new BorderLayout());
+	private MediaServicePlayerComponent currentPlayer;
 
     public NowPlayingPanel(SPViewStack viewStack) {
         setLayout(new BorderLayout(0, 0));
@@ -97,16 +103,54 @@ public class NowPlayingPanel extends JPanel {
         bottomToolbar.setOpaque(true);
         bottomToolbar.setBackground(ThemeManager.getTintColor());
         bottomToolbar.add(new JButton("Sync"));
-        add(bottomToolbar, BorderLayout.SOUTH);
+
+        // The active media service's player surface sits below the queue and above
+        // the toolbar; it's part of this sticky panel, so navigation never hides it.
+        playerHost.setOpaque(false);
+        playerHost.setVisible(false);
+
+        JPanel south = new JPanel();
+        south.setOpaque(false);
+        south.setLayout(new BoxLayout(south, BoxLayout.PAGE_AXIS));
+        south.add(playerHost);
+        south.add(bottomToolbar);
+        add(south, BorderLayout.SOUTH);
 
         topToolbar.add(title);
-        
+
         updateColors();
         refresh();
+        setActivePlayer(PlaybackCoordinator.getActiveService());
 
         PlayQueue.getInstance().addChangeListener(() ->
             SwingUtilities.invokeLater(this::refresh));
         ThemeManager.addChangeListener(() -> { updateColors(); refresh(); });
+        // Swap in the player surface of whichever service is handling the current play.
+        PlaybackCoordinator.addActiveServiceListener(ms ->
+            SwingUtilities.invokeLater(() -> setActivePlayer(ms)));
+    }
+
+    /**
+     * Show {@code service}'s player component (if it has one) in the bottom host,
+     * replacing any previous one. Components get {@code onDeactivated}/
+     * {@code onActivated} callbacks around the swap.
+     */
+    private void setActivePlayer(MediaService service) {
+        MediaServicePlayerComponent next = service != null ? service.getPlayerComponent() : null;
+        if (next == currentPlayer) return;
+
+        if (currentPlayer != null) {
+            currentPlayer.onDeactivated();
+            playerHost.remove(currentPlayer);
+        }
+        currentPlayer = next;
+        if (currentPlayer != null) {
+            playerHost.add(currentPlayer, BorderLayout.CENTER);
+            currentPlayer.onActivated();
+        }
+        playerHost.setVisible(currentPlayer != null);
+        playerHost.revalidate();
+        playerHost.repaint();
     }
 
     /** Rebuild the table rows from the current queue and keep the selection on the playing row. */

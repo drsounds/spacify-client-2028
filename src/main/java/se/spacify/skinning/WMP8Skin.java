@@ -2,7 +2,6 @@ package se.spacify.skinning;
 
 import java.awt.Color;
 import java.awt.GradientPaint;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RadialGradientPaint;
 import java.awt.RenderingHints;
@@ -141,5 +140,12 @@ public class WMP8Skin extends Skin {
 		g2.fillRect(0, 0, width, height);
 		
 	}
-}
+	@Override
+	public void paintPlaylist(JPanel control, Graphics2D g2) {
+		// TODO Auto-generated method stub
+		Color tintColor = ThemeManager.getTintColor();
+        g2.setPaint(tintColor);
+        g2.fillRect(0, 0, control.getWidth(), control.getHeight());
+		
+	}
 }

@@ -4,6 +4,7 @@ import se.spacify.controls.GlassPanel;
 import se.spacify.controls.GlossyButton;
 import se.spacify.service.media.MediaService;
 import se.spacify.service.media.MediaService.PlaybackState;
+import se.spacify.service.media.PlaybackCoordinator;
 import se.spacify.service.media.PlayQueue;
 import se.spacify.ui.theme.ThemeManager;
 
@@ -88,6 +89,16 @@ public class AppFooter extends JPanel {
         nextBtn.addActionListener(e -> PlayQueue.getInstance().next());
         buttons.add(nextBtn);
 
+        // Transport acts on whichever service is currently active, regardless of
+        // which one is playing. Wired once here; per-service event observation is
+        // added separately via setMediaService.
+        playPauseBtn.addActionListener(e -> {
+            MediaService active = PlaybackCoordinator.getActiveService();
+            if (active == null) return;
+            if (active.getPlaybackState() == PlaybackState.PLAYING) active.pause();
+            else active.play();
+        });
+
         controls.add(buttons);
         controls.add(Box.createVerticalStrut(4));
        
@@ -114,32 +125,33 @@ public class AppFooter extends JPanel {
     }
 
     /**
-     * Wire this bar to a MediaService.
-     * Playback events update labels and progress; controls drive the service.
+     * Observe a MediaService so its playback events update the bar's labels and
+     * play/pause state. May be called for several services; transport controls
+     * are wired once (in the constructor) and act on the active service. So that
+     * only the active service drives the labels, events from a non-active service
+     * are ignored.
      */
     public void setMediaService(MediaService ms) {
-        playPauseBtn.addActionListener(e -> {
-            if (ms.getPlaybackState() == PlaybackState.PLAYING) ms.pause();
-            else ms.play();
-        });
-
         ms.addPlaybackListener(new MediaService.PlaybackListener() {
+            private boolean active() { return PlaybackCoordinator.getActiveService() == ms; }
+
             @Override
             public void onStateChanged(PlaybackState state) {
+                if (!active()) return;
                 SwingUtilities.invokeLater(() ->
                     playPauseBtn.setText(state == PlaybackState.PLAYING ? "⏸" : "▶"));
             }
 
             @Override
             public void onPositionChanged(long posMs, long durMs) {
-                if (durMs <= 0) return;
-                SwingUtilities.invokeLater(() -> {
-                   
-                });
+                if (!active() || durMs <= 0) return;
+                int value = (int) Math.round(1000.0 * posMs / durMs);
+                SwingUtilities.invokeLater(() -> progress.setValue(value));
             }
 
             @Override
             public void onTrackChanged(String title, String artist, String album) {
+                if (!active()) return;
                 SwingUtilities.invokeLater(() -> {
                     trackNameLabel.setText(title  != null ? title  : "");
                     artistLabel.setText(artist != null ? artist : "");
@@ -148,6 +160,7 @@ public class AppFooter extends JPanel {
 
             @Override
             public void onError(Exception e) {
+                if (!active()) return;
                 SwingUtilities.invokeLater(() -> trackNameLabel.setText("Error: " + e.getMessage()));
             }
         });

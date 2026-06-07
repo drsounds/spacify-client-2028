@@ -42,4 +42,14 @@ public interface MediaService extends Service {
     PlaybackState getPlaybackState();
     long getPositionMs();
     long getDurationMs();
+
+    // ── Optional visual surface ─────────────────────────────────────────────────
+
+    /**
+     * The playback surface this service contributes to the Now Playing panel, or
+     * {@code null} if it needs none (e.g. audio-only local playback). Services
+     * that integrate an embedded player (YouTube via JCEF, …) return their
+     * component here; the panel shows the active service's component.
+     */
+    default MediaServicePlayerComponent getPlayerComponent() { return null; }
 }

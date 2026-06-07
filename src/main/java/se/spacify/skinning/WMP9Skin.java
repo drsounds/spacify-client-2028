@@ -146,5 +146,11 @@ public class WMP9Skin extends Skin {
 		g2.fillRect(0, 0, width, height);
 		
 	}
-}
+	@Override
+	public void paintPlaylist(JPanel control, Graphics2D g2) {
+		// TODO Auto-generated method stub
+		Color tintColor = ThemeManager.getTintColor();
+        g2.setPaint(tintColor);
+        g2.fillRect(0, 0, control.getWidth(), control.getHeight());
+	}
 }

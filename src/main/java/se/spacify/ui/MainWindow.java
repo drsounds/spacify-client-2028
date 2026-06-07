@@ -149,8 +149,11 @@ public class MainWindow extends JFrame {
         se.spacify.plugin.PluginManager.getInstance().init(viewStack, leftLibraryMenu);
         se.spacify.plugin.PluginManager.getInstance().start();
 
-        MediaService ms = ServiceManager.getInstance().getService(MediaService.class);
-        if (ms != null) wireMediaService(ms);
+        // Wire every registered media service for events; the footer/queue follow
+        // whichever one PlaybackCoordinator marks active for the current play.
+        for (MediaService ms : ServiceManager.getInstance().getServices(MediaService.class)) {
+            wireMediaService(ms);
+        }
 
         applySidebar(false);
         // Glass-pane resize handler — intercepts edge events, redispatches others

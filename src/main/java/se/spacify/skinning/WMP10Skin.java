@@ -2,9 +2,7 @@ package se.spacify.skinning;
 
 import java.awt.Color;
 import java.awt.GradientPaint;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Path2D;
@@ -12,8 +10,6 @@ import java.awt.geom.Path2D;
 import javax.swing.ButtonModel;
 import javax.swing.JPanel;
 import javax.swing.JTable;
-import javax.swing.table.TableCellRenderer;
-
 import se.spacify.controls.GlassPanel;
 import se.spacify.controls.GlossyButton;
 import se.spacify.controls.TabButton;
@@ -90,7 +86,7 @@ public class WMP10Skin extends Skin {
 		Color tint = ThemeManager.getTintColor();
 
 		// Darker outer rim, slightly inset face sits on top of it.
-		Ellipse2D outer = new Ellipse2D.Float(x, y, d, d);
+		//Ellipse2D outer = new Ellipse2D.Float(x, y, d, d);
 		g2.setPaint(new GradientPaint(x, y, ThemeManager.tintDark(0.9f), x, y + d, ThemeManager.tintDark(0.5f)));
 		//g2.fill(outer);
 
@@ -200,7 +196,14 @@ public class WMP10Skin extends Skin {
 			
 		}
 	}
-	
+
+	@Override
+	public void paintTableHeader(JTable table, int width, int height, Graphics2D g2) {
+		// TODO Auto-generated method stub
+		g2.setPaint(new Color(235, 234, 219));
+		g2.fillRect(0, 0, width, height);
+		
+	}
 	
 	@Override
 	public void paintPlaylist(JPanel control, Graphics2D g2) {
@@ -211,11 +214,4 @@ public class WMP10Skin extends Skin {
         g2.fillRect(0, 0, w, h);
 	}
 
-	@Override
-	public void paintTableHeader(JTable table, int width, int height, Graphics2D g2) {
-		// TODO Auto-generated method stub
-		g2.setPaint(new Color(235, 234, 219));
-		g2.fillRect(0, 0, width, height);
-		
-	}
 }

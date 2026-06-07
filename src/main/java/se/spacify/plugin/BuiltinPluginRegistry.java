@@ -23,6 +23,9 @@ final class BuiltinPluginRegistry {
             "se.spacify.plugin.web.WebPlugin", cl));
         list.add(builtin("se.spacify.plugin.musicbrainz", "MusicBrainz", "1.0.0",
             "se.spacify.plugin.musicbrainz.MusicBrainzPlugin", cl));
+        // After local music so YouTube resolves as a fallback for tracks not held locally.
+        list.add(builtin("se.spacify.plugin.youtube", "YouTube", "1.0.0",
+            "se.spacify.plugin.youtube.YouTubePlugin", cl));
         return list;
     }
 

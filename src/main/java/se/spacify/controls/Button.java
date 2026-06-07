@@ -11,10 +11,6 @@ import se.spacify.skinning.Skin;
 import se.spacify.ui.MainWindow;
 
 public class Button extends JButton implements Control {
-	@Override
-	public void paintComponent(Graphics g) {
-		super.paintComponent(g);
-	}
 	public Button() {
 
         java.awt.event.MouseAdapter mouse = new java.awt.event.MouseAdapter() {

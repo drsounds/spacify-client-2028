@@ -2,10 +2,8 @@ package se.spacify.skinning;
 
 import java.awt.Color;
 import java.awt.GradientPaint;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RadialGradientPaint;
-import java.awt.RenderingHints;
 import java.awt.geom.Path2D;
 
 import javax.swing.ButtonModel;
@@ -105,12 +103,6 @@ public class WMP11Skin extends Skin {
 	}
 
 	@Override
-	public void paintToolBar(ToolBar control, Graphics2D g2) {
-		int w = control.getWidth(), h = control.getHeight();
-		g2.setPaint(ThemeManager.getTintColor());
-		g2.fillRect(0, 0, w, h);
-	}
-	@Override
 	public void paintPlaylist(JPanel control, Graphics2D g2) {
 		// TODO Auto-generated method stub
 		int w = control.getWidth(), h = control.getHeight();
@@ -167,5 +159,4 @@ public class WMP11Skin extends Skin {
 		g2.fillRect(0, 0, width, height);
 		
 	}
-	
 }
