@@ -10,6 +10,7 @@ import se.spacify.controls.GlossyButton;
 import se.spacify.controls.TabButton;
 import se.spacify.controls.ToolBar;
 import se.spacify.controls.ToolButton;
+import se.spacify.controls.VerticalPanel;
 
 public abstract class Skin {
 	public abstract void paintTopBar(JPanel control, Graphics2D g2);
@@ -22,4 +23,5 @@ public abstract class Skin {
 	public abstract void paintToolBar(ToolBar control, Graphics2D g2);
 	public abstract void paintTableHeader(JTable table, int width, int height, Graphics2D g2);
 	public abstract void paintToolButton(ToolButton control, Graphics2D g2);
+	public abstract void paintVerticalPanel(VerticalPanel verticalPanel, Graphics2D g2);
 }

@@ -23,6 +23,8 @@ import java.awt.event.MouseEvent;
 public class TabButton extends ToggleButton {
 
 	private static final long serialVersionUID = 1L;
+	public static final String ORIENTATION_HORIZONTAL = "horizontal";
+	public static final String ORIENTATION_VERTICAL = "vertical";
 
 	/**
 	 * Explicit hover/press tracking. Under the Synth-based Nimbus L&F, the button
@@ -31,6 +33,7 @@ public class TabButton extends ToggleButton {
 	 */
 	private boolean hovered;
 	private boolean pressed;
+	private String orientation = ORIENTATION_HORIZONTAL;
 
 	public TabButton(String text) {
 		super(text);
@@ -86,6 +89,13 @@ public class TabButton extends ToggleButton {
 		});
 	}
 
+	public String getOrientation() {
+		return orientation;
+	}
+	public void setOrientation(String value) {
+		orientation = value;
+	}
+	
 	/** True while the pointer is over the tab. */
 	public boolean isHovered() {
 		return hovered;

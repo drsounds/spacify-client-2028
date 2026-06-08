@@ -19,6 +19,7 @@ import se.spacify.controls.GlossyButton;
 import se.spacify.controls.TabButton;
 import se.spacify.controls.ToolBar;
 import se.spacify.controls.ToolButton;
+import se.spacify.controls.VerticalPanel;
 import se.spacify.graphics.StretchableRadialGradient;
 import se.spacify.ui.theme.ColorUtils;
 import se.spacify.ui.theme.ThemeManager;
@@ -76,7 +77,11 @@ public class WMP11Skin extends Skin {
 			paintGlossy(g2, false, 0, 0, control.getWidth(), control.getHeight(), false, true, false);
 		} else if (control.isHovered()) {
 			g2.setColor(new Color(255, 255, 255, 45));
-			g2.fill(tab);
+			if (control.getOrientation() == TabButton.ORIENTATION_HORIZONTAL) {
+				g2.fill(tab);
+			} else {
+				g2.fillRect(0, 0, w, h);
+			}
 		} else {
 		}
 	 	
@@ -262,5 +267,19 @@ public class WMP11Skin extends Skin {
 		g2.setPaint(new Color(235, 234, 219));
 		g2.fillRect(0, 0, width, height);
 		
+	}
+	@Override
+	public void paintVerticalPanel(VerticalPanel control, Graphics2D g2) {
+		// TODO Auto-generated method stub
+		int w = control.getWidth(), h = control.getHeight();
+
+		g2.setPaint(Color.BLACK);
+		g2.fillRect(0, 0, w, h);
+		
+		g2.setPaint(new GradientPaint(0, 0, ColorUtils.saturate(ThemeManager.getTintColor(), 0.5f), w, 0, new Color(0, 0, 0 ,0)));
+		g2.fillRect(0, 0, w, h / 2);
+	
+		g2.setPaint(new GradientPaint(0, h / 2, new Color(0, 0, 0, 0), w, 0,  ThemeManager.getTintColor()));
+		g2.fillRect(0, h / 2, w, (h / 2));
 	}
 }

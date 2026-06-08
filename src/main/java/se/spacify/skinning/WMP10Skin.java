@@ -16,6 +16,7 @@ import se.spacify.controls.GlossyButton;
 import se.spacify.controls.TabButton;
 import se.spacify.controls.ToolBar;
 import se.spacify.controls.ToolButton;
+import se.spacify.controls.VerticalPanel;
 import se.spacify.ui.theme.ColorUtils;
 import se.spacify.ui.theme.ThemeManager;
 
@@ -70,12 +71,24 @@ public class WMP10Skin extends Skin {
 
 		if (model.isSelected() || model.isPressed() || control.isPressedState()) {
 			g2.setColor(ThemeManager.getTintColor());
-			g2.fill(tab);
+			if (control.getOrientation() == TabButton.ORIENTATION_HORIZONTAL) {
+				g2.fill(tab);
+			} else {
+				g2.fillRect(0, 0, w, h);
+			}
 			g2.setPaint(new GradientPaint(0, 0, new Color(255, 255, 255, 60), 0, h / 2f, new Color(255, 255, 255, 0)));
-			g2.fill(tab);
+			if (control.getOrientation() == TabButton.ORIENTATION_HORIZONTAL) {
+				g2.fill(tab);
+			} else {
+				g2.fillRect(0, 0, w, h);
+			}
 		} else if (model.isRollover() || control.isHovered()) {
 			g2.setColor(new Color(255, 255, 255, 45));
-			g2.fill(tab);
+			if (control.getOrientation() == TabButton.ORIENTATION_HORIZONTAL) {
+				g2.fill(tab);
+			} else {
+				g2.fillRect(0, 0, w, h);
+			}
 		} else {
 		}
 	}
@@ -147,7 +160,7 @@ public class WMP10Skin extends Skin {
 		g2.fill(sheen);
 		
 		Ellipse2D sheen2 = new Ellipse2D.Float(0, 0, width, height / 2);
-		g2.setPaint(new GradientPaint(0, 0, ColorUtils.alpha(glowColor, 127), width, height, glowColor
+		g2.setPaint(new GradientPaint(0, 0, ColorUtils.alpha(Color.white, 127), 0, height, ColorUtils.alpha(Color.white, 0f)
 				));
 		g2.fill(sheen2);
 		g2.setClip(oldClip);
@@ -232,6 +245,17 @@ public class WMP10Skin extends Skin {
         Color tintColor = ThemeManager.getTintColor();
         g2.setPaint(new GradientPaint(0, 0, tintColor, 0, h, ThemeManager.tintLight(2f)));
         g2.fillRect(0, 0, w, h);
+	}
+
+	@Override
+	public void paintVerticalPanel(VerticalPanel control, Graphics2D g2) {
+		// TODO Auto-generated method stub
+
+		int w = control.getWidth(), h = control.getHeight();
+		g2.setPaint(new GradientPaint(0, 0, Color.WHITE, w, 0, ThemeManager.getTintColor()));
+		g2.fillRect(0, 0, w, h);
+		g2.setPaint(new GradientPaint(0, 0, new Color(255, 255, 255, 127), w, 0, new Color(255, 255, 255, 0)));
+		g2.fillRect(0, 1, w, (h / 2));
 	}
 
 }

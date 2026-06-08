@@ -17,12 +17,20 @@ import se.spacify.controls.GlossyButton;
 import se.spacify.controls.TabButton;
 import se.spacify.controls.ToolBar;
 import se.spacify.controls.ToolButton;
+import se.spacify.controls.VerticalPanel;
 import se.spacify.ui.theme.ColorUtils;
 import se.spacify.ui.theme.ThemeManager;
 
 public class WMP9Skin extends Skin {
 
 	private static final int ARC = 12;
+	
+	@Override
+	public void paintVerticalPanel(VerticalPanel control, Graphics2D g2) {
+        int w = control.getWidth(), h = control.getHeight();
+		g2.setPaint(new GradientPaint(0, 0, Color.WHITE, w, 0, ColorUtils.saturate(ColorUtils.lighten(ThemeManager.getTintColor(), 2f), 0.3f)));
+		g2.fillRect(0, 0, w, h);
+	}
 	@Override
 	public void paintTopBar(JPanel control, Graphics2D g2) {
         int w = control.getWidth(), h = control.getHeight();
@@ -32,7 +40,7 @@ public class WMP9Skin extends Skin {
 	@Override
 	public void paintHeader(JPanel control, Graphics2D g2) {
         int w = control.getWidth(), h = control.getHeight();
-		g2.setPaint(new GradientPaint(0, 0, Color.WHITE, 0, h, ThemeManager.accentLight(2f)));
+		g2.setPaint(new GradientPaint(0, 0, Color.WHITE, 0, h, ColorUtils.saturate(ColorUtils.lighten(ThemeManager.getTintColor(), 2f), 0.3f)));
 		g2.fillRect(0, 0, w, h);
 	}
 	@Override
@@ -87,8 +95,12 @@ public class WMP9Skin extends Skin {
 
 
 	 	if (control.isSelected()) {
-			g2.setPaint(new RadialGradientPaint((float)(w / 2), (float)h, 20f, new float[] {}, new Color[] { ThemeManager.getTintColor(), ThemeManager.accentDark(0.5f)}));
-			g2.fill(tab);
+			g2.setPaint(new RadialGradientPaint((float)(w / 2), (float)h, 20f, new float[] {0, 1}, new Color[] { ThemeManager.getTintColor(), ThemeManager.accentDark(0.5f)}));
+			if (control.getOrientation() == TabButton.ORIENTATION_HORIZONTAL) {
+				g2.fill(tab);
+			} else {
+				g2.fillRect(0, 0, w, h);
+			}
 			g2.setPaint(new GradientPaint(0f, 0f, ThemeManager.getAccentColor(), (float)(w), h / 2f, new Color(255, 255 ,255, 0)));
 	
 		} else if (control.isHovered()) {
