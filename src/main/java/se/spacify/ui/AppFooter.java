@@ -124,6 +124,22 @@ public class AppFooter extends JPanel {
 
         ThemeManager.addChangeListener(this::repaint);
     }
+    private LayoutMode layoutMode = LayoutMode.WMP10;
+    public LayoutMode getLayoutMode() {
+    	return layoutMode;
+    }
+    public void setLayoutMode(LayoutMode value) {
+    	layoutMode = value;
+    	if (value == LayoutMode.WMP11) {
+    		leftPanel.setVisible(true);
+    	}
+    	if (value == LayoutMode.WMP10) {
+    		leftPanel.setVisible(false);
+    	}
+    	if (value == LayoutMode.WMP9) {
+    		leftPanel.setVisible(false);
+    	}
+    }
 
     /**
      * Observe a MediaService so its playback events update the bar's labels and

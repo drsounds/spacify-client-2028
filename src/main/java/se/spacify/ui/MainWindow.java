@@ -5,6 +5,7 @@ import se.spacify.navigation.SPViewStack;
 import se.spacify.service.ServiceManager;
 import se.spacify.service.media.MediaService;
 import se.spacify.service.media.PlayQueue;
+import se.spacify.controls.Panel;
 import se.spacify.skinning.Skin;
 import se.spacify.skinning.WMP8Skin;
 import se.spacify.skinning.WMP9Skin;
@@ -20,33 +21,28 @@ import java.awt.*;
 public class MainWindow extends JFrame {
     private static final long serialVersionUID = 2144395787232553079L;
 
-	private static final String LAYOUT_WMP10 = "LAYOUT_WMP10";
-	private static final String LAYOUT_WMP11 = "LAYOUT_WMP11";
-	private static final String LAYOUT_WMP8 = "LAYOUT_WMP9";
-	private static final String LAYOUT_WMP9 = "LAYOUT_WMP9";
-	private static final String LAYOUT_MODE_SPOTIFY = "LAYOUT_SPOTIFY";
-	private static final String LAYOUT_MODE_ITUNES = "LAYOUT_ITUNES";
 
 	private final SPViewStack    viewStack;
     private final AppFooter      appFooter;
     private final NowPlayingView nowPlayingView;
     private final LeftLibraryMenu        leftLibraryMenu;
     
-    private String layoutMode = LAYOUT_WMP10;
+    private LayoutMode layoutMode = LayoutMode.WMP10;
     
     private Skin skin = skinForStyle(ThemeManager.getDesignStyle());
     public Skin getSkin() {
     	return skin;
     }
     
-    public void setAppLayoutMode(String value) {
-    	if (value == LAYOUT_WMP10 || value == LAYOUT_WMP11) {
+    public void setAppLayoutMode(LayoutMode value) {
+    	if (value == LayoutMode.WMP10 || value == LayoutMode.WMP11) {
     		leftMenuPanel.setVisible(false);
     		navBar.setVisible(true);
-    	} else if (value == LAYOUT_WMP9 || value == LAYOUT_WMP8) {
+    	} else if (value == LayoutMode.WMP9 || value == LayoutMode.WMP8) {
     		navBar.setVisible(false);
     		leftMenuPanel.setVisible(true);
     	}
+		getPlayerBar().setLayoutMode(value);
     }
 
     /** Maps a {@link ThemeManager} design-style constant to its Skin implementation. */
@@ -63,7 +59,7 @@ public class MainWindow extends JFrame {
     }
     
     
-    public String getLayoutMode() {
+    public LayoutMode getLayoutMode() {
     	return layoutMode;
     }
     
@@ -99,22 +95,27 @@ public class MainWindow extends JFrame {
         // are contributed by built-in plugins during PluginManager.start().
         viewStack.registerView(nowPlayingView);
         viewStack.registerView(new se.spacify.plugin.ui.PluginManagerView());
-
         getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.LINE_AXIS));
         
         leftMenuPanel = new LeftMenuPanel();
         leftMenuPanel.setMinimumSize(new Dimension(100, 0));
         leftMenuPanel.setMaximumSize(new Dimension(100, Short.MAX_VALUE));
         leftMenuPanel.setPreferredSize(new Dimension(100, Short.MAX_VALUE));
-        
+        leftMenuPanel.setOpaque(false);
         appPanel = new Panel();
         
         add(leftMenuPanel);
         leftMenuPanel.setVisible(false);
         add(appPanel);
+        appPanel.setOpaque(false);
         leftMenuPanel.setLayout(new BoxLayout(leftMenuPanel, BoxLayout.PAGE_AXIS));
         appPanel.setLayout(new BoxLayout(appPanel, BoxLayout.PAGE_AXIS));
         
+        Panel topSpacing = new Panel();
+        topSpacing.setMinimumSize(new Dimension(0, 1660));
+        topSpacing.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1660));
+        topSpacing.setOpaque(false);
+        appPanel.add(topSpacing);
         topBar = new TopBar();
         topBar.add(new JButton());
         appPanel.add(topBar);
@@ -192,7 +193,7 @@ public class MainWindow extends JFrame {
         // Store pages browse full-width with the side panels collapsed.
         viewStack.addNavigationListener((uri, b, f) ->
             applyImmersive(uri != null && uri.startsWith("spacify:store:")));
-        setAppLayoutMode(LAYOUT_WMP9);
+        setAppLayoutMode(LayoutMode.WMP9);
         navigate("spacify:now-playing");
     }
 

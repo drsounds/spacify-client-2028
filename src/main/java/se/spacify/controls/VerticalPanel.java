@@ -1,10 +1,13 @@
 package se.spacify.controls;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 
 import se.spacify.ui.MainWindow;
@@ -16,6 +19,8 @@ public class VerticalPanel extends Panel {
 	private TabButton libraryTab;
 	private TabButton mediaGuideTab;
 	public VerticalPanel() {
+		setOpaque(false);
+        setBorder(BorderFactory.createEmptyBorder(0, 80, 0, 0));
 		// WMP-style tab strip, flush with the bottom edge of the nav bar.
 		nowPlayingTab = new TabButton("Now Playing");
 		nowPlayingTab.addActionListener(e -> {
@@ -40,17 +45,18 @@ public class VerticalPanel extends Panel {
 				mw.setSidebarVisible(true);
 				mw.navigate("spacify:store:www.last.fm");
 			}
-		});
-		JPanel tabBar = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 0));
-		tabBar.setOpaque(false);
-		tabBar.add(nowPlayingTab);
-		tabBar.add(libraryTab);
-		tabBar.add(mediaGuideTab);
-		add(tabBar);
+		}); 
+		
+		add(nowPlayingTab);
+		add(libraryTab);
+		add(mediaGuideTab);
+		
 	}
 	@Override
 	public void paintComponent(Graphics g) {
 		Graphics2D g2 = (Graphics2D)g.create();
 		getSkin().paintVerticalPanel(this, g2);
+		g2.dispose();
+		super.paintComponent(g);
 	}
 }
