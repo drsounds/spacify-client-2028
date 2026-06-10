@@ -193,7 +193,7 @@ public class MainWindow extends JFrame {
         // Store pages browse full-width with the side panels collapsed.
         viewStack.addNavigationListener((uri, b, f) ->
             applyImmersive(uri != null && uri.startsWith("spacify:store:")));
-        setAppLayoutMode(LayoutMode.WMP9);
+        setAppLayoutMode(LayoutMode.WMP10);
         navigate("spacify:now-playing");
     }
 
